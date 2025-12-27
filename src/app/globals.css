@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* 1. Configure Dark Mode Variant */
+@variant dark (&:where(.dark, .dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/* 2. Define the Variables */
+@layer base {
+  /* LIGHT MODE (Default) */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --primary: hsl(242, 80%, 60%);
+    --secondary: hsl(244, 65%, 52%);
+
+    --background: hsl(220, 25%, 97%);
+    --surface: hsl(0, 0%, 100%);
+    --surface-highlight: hsl(220, 20%, 95%);
+
+    --text-main: hsl(216, 28%, 18%);
+    --text-secondary: hsl(218, 15%, 45%);
+
+    --success: hsl(150, 60%, 40%);
+    --warning: hsl(45, 93%, 47%);
+    --error: hsl(0, 75%, 55%);
+
+    --border: hsl(220, 20%, 90%);
+    --border-focus: var(--primary);
+
+    /* Shadows */
+    --shadow-color: hsla(220, 30%, 85%, 0.5);
+
+      /* OVERRIDE BROWSER AUTOFILL STYLES */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+    /* Mask the background color with an inner shadow matching your theme */
+    -webkit-box-shadow: 0 0 0 30px var(--background) inset !important;
+    /* Force the text color to match your theme */
+    -webkit-text-fill-color: var(--text-main) !important;
+    /* Prevent the background color transition */
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* DARK MODE (Override) */
+  .dark {
+    --primary: hsl(239, 84%, 67%);
+    --secondary: hsl(243, 75%, 58%);
+
+    --background: hsl(215, 39%, 11%);
+    --surface: hsl(215, 28%, 17%);
+    --surface-highlight: hsl(215, 28%, 22%);
+
+    --text-main: hsl(210, 14%, 82%);
+    --text-secondary: hsl(215, 14%, 65%);
+
+    --success: hsl(159, 82%, 40%);
+    --warning: hsl(45, 93%, 47%);
+    --error: hsl(0, 84%, 60%);
+
+    --border: hsl(215, 19%, 27%);
+    --border-focus: var(--primary);
+
+    /* Shadows */
+    --shadow-color: hsla(0, 0%, 0%, 0.3);
+  }
+
+  /* Apply defaults to body */
+  body {
+    @apply bg-background text-text-main antialiased transition-colors duration-300;
+  }
+}
+
+/* 3. Register Variables to Tailwind */
+@theme {
+  /* Colors */
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-highlight: var(--surface-highlight);
+
+  --color-text-main: var(--text-main);
+  --color-text-secondary: var(--text-secondary);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  --color-border: var(--border);
+  --color-border-focus: var(--border-focus);
+
+  /* Shadows */
+  --shadow-glow: 0 0 30px -5px var(--primary);
+}
+
+/* 4. Components */
+@layer components {
+  /* Error Message */
+  .inline-error {
+    @apply ml-2 text-xs font-bold text-error;
+    animation: fadeScaleIn 0.2s ease-out forwards;
+  }
+
+  /* Input Fields */
+  .input-base {
+    @apply w-full px-4 py-3 rounded-lg bg-background border text-text-main placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-surface-highlight;
+  }
+
+  .input-default {
+    @apply border-border focus:border-primary focus:ring-primary/50;
+  }
+
+  .input-error {
+    @apply border-error focus:border-error focus:ring-error/30;
+  }
+}
+
+/* 5. Utilities */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--text-secondary);
+    border-radius: 20px;
+    opacity: 0.5;
+  }
+
+  /* Animations */
+  @keyframes fadeScaleIn {
+    0% {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes popIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(5px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-price {
+    animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
 }
