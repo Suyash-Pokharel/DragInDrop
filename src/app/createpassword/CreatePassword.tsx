@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Lock, Check, Circle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Reveal } from "../components/Reveal";
 
 // --- MOVED OUTSIDE THE COMPONENT ---
 const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
@@ -95,6 +96,7 @@ export default function CreatePassword() {
 
     return (
         <div className="w-full flex justify-center p-4 animate-in fade-in duration-500">
+            <Reveal delay={0.1}>
             <div className="w-full max-w-sm bg-surface border border-border rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
 
                 <div className="text-center mb-8">
@@ -224,6 +226,7 @@ export default function CreatePassword() {
                     </button>
                 </form>
             </div>
+            </Reveal>
         </div>
     );
 }

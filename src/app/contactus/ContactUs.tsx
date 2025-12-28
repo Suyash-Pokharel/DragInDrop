@@ -109,14 +109,14 @@ export default function ContactUs() {
                 <div className="w-full max-w-sm md:min-w-sm md:max-w-lg mx-auto lg:mx-0 text-center lg:text-left flex flex-col justify-center h-full p-4 lg:pt-0">
                     
                     {/* 2. Reveal Title */}
-                    <Reveal>
+                    <Reveal delay={0.1}>
                         <h1 className="text-5xl sm:text-6xl font-bold text-primary mb-6 tracking-tight">
                             Contact Us
                         </h1>
                     </Reveal>
 
                     {/* 3. Reveal Text with Delay */}
-                    <Reveal delay={0.1}>
+                    <Reveal delay={0.2}>
                         <p className="text-lg sm:text-xl text-text-secondary leading-relaxed">
                             Got a question about DragInDrop? Whether it&apos;s troubleshooting, feature
                             requests or general feedback, we&apos;re here to help. Drop us a line and
@@ -127,7 +127,7 @@ export default function ContactUs() {
 
                 {/* --- RIGHT COLUMN: FORM --- */}
                 {/* 4. Reveal the Form Card with more Delay */}
-                <Reveal width="100%" delay={0.2}>
+                <Reveal width="100%" delay={0.3}>
                     <div className="w-full max-w-sm md:min-w-sm md:max-w-lg mx-auto lg:mx-0 bg-surface border border-border rounded-2xl shadow-lg p-6 md:p-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
                         {isSuccess ? (
                             // Success State
@@ -155,6 +155,7 @@ export default function ContactUs() {
                                 {/* Row: Names */}
                                 <div className="flex flex-col md:flex-row gap-4">
                                     <div className="space-y-1.5 w-full">
+                                        
                                         <label htmlFor="firstName" className="block text-sm font-medium text-text-main">
                                             First Name
                                             {isFirstNameError && <span className="inline-error">REQUIRED</span>}
