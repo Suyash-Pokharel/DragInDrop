@@ -95,20 +95,24 @@ export default function CreatePassword() {
     };
 
     return (
+        <Reveal width="100%" delay={0.05}>
         <div className="w-full flex justify-center p-4 animate-in fade-in duration-500">
-            <Reveal delay={0.1}>
+            
             <div className="w-full max-w-sm bg-surface border border-border rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-
+            
                 <div className="text-center mb-8">
+                    <Reveal width="100%" delay={0.1}>
                     <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
                         <Lock size={32} />
                     </div>
+                    </Reveal>
+                    <Reveal width="100%" delay={0.15}>
                     <h1 className="text-3xl font-bold text-text-main mb-2">Set Password</h1>
                     <p className="text-text-secondary text-sm">
                         Create a secure password to finish setting up your account.
-                    </p>
+                    </p></Reveal>
                 </div>
-
+            <Reveal width="100%" delay={0.2}>
                 <form onSubmit={handleSubmit} className="space-y-2">
                     {/* New Password */}
                     <div className="space-y-1.5">
@@ -225,8 +229,10 @@ export default function CreatePassword() {
                         )}
                     </button>
                 </form>
+                </Reveal>
             </div>
-            </Reveal>
-        </div>
+            
+            
+        </div></Reveal>
     );
 }

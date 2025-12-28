@@ -12,35 +12,35 @@ export const Reveal = ({ children, width = "fit-content", delay = 0 }: RevealPro
     const ref = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
 
-    useEffect(() => {
-        // 1. Capture the ref value in a local variable
-        const currentRef = ref.current;
+useEffect(() => {
+    // 1. Capture the ref value in a local variable
+    const currentRef = ref.current;
 
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    // Use the captured variable (or the observer instance directly)
-                    if (currentRef) observer.unobserve(currentRef);
-                }
-            },
-            {
-                root: null,
-                rootMargin: "0px",
-                threshold: 0.1,
-            }
-        );
-
-        // 2. Use the variable to observe
-        if (currentRef) {
-            observer.observe(currentRef);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          // Use the captured variable (or the observer instance directly)
+          if (currentRef) observer.unobserve(currentRef);
         }
+      },
+      {
+        root: null,
+        rootMargin: "0px",
+        threshold: 0.1,
+      }
+    );
 
-        return () => {
-            // 3. Use the variable in cleanup
-            if (currentRef) observer.disconnect();
-        };
-    }, []);
+    // 2. Use the variable to observe
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      // 3. Use the variable in cleanup
+      if (currentRef) observer.disconnect();
+    };
+  }, []);
 
     return (
         <div
