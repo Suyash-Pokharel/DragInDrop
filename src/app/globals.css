@@ -156,4 +156,45 @@
   .animate-price {
     animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  @keyframes smoothFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 1. Navbar loads immediately */
+  .load-step-1 {
+    opacity: 0; /* Start invisible */
+    animation: smoothFadeIn 0.5s ease-out forwards;
+  }
+
+  /* 2. Sidebar loads 200ms later */
+  .load-step-2 {
+    opacity: 0;
+    animation: smoothFadeIn 0.5s ease-out 0.2s forwards; /* 0.2s delay */
+  }
+
+  /* 3. Page Content loads 400ms later */
+  .load-step-3 {
+    opacity: 0;
+    animation: smoothFadeIn 0.5s ease-out 0.4s forwards; /* 0.4s delay */
+  }
+
+    /* --- SCROLL REVEAL ANIMATION --- */
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(30px); /* Start 30px down */
+    transition: all 0.8s cubic-bezier(0.17, 0.55, 0.55, 1); /* Smooth "ease" curve */
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

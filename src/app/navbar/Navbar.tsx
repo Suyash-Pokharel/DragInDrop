@@ -7,39 +7,49 @@ import UserNavbar from "./UserNavbar";
 import PublicNavbar from "./PublicNavbar";
 
 interface NavbarProps {
-    imageSrc?: string | StaticImageData;
+  imageSrc?: string | StaticImageData;
 }
-const userRole = "admin"; // This would come from logic/hooks
+
+// Placeholder for future auth logic
+const userRole = "admin";
 const isAdminUser = userRole === "admin";
 
 const NavbarWrapper = ({ imageSrc }: NavbarProps) => {
-    const pathname = usePathname();
+  const pathname = usePathname();
 
-    // 1. Pages with NO Navbar (Login, Register, etc.)
-    // Note: Add any other "standalone" pages here
-    if (
-        pathname === "/login" ||
-        pathname === "/register" ||
-        pathname === "/createpassword" ||
-        pathname === "/verification-sent"
-    ) {
-        return null;
-    }
+  // 1. Pages with NO Navbar (Login, Register, etc.)
+  if (
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/createpassword" ||
+    pathname === "/verification-sent"
+  ) {
+    return null;
+  }
 
-    // 2. Public Pages -> Show PublicNavbar
-    // Add "/" for home, and any other public landing pages
-    if (
-        pathname === "/" ||
-        pathname === "/pricing" ||
-        pathname === "/contactus" ||
-        pathname === "/terms" ||
-        pathname === "/privacy"
-    ) {
-        return <PublicNavbar />;
-    }
+  // 2. Public Pages -> Show PublicNavbar
+  if (
+    pathname === "/" ||
+    pathname === "/pricing" ||
+    pathname === "/contactus" ||
+    pathname === "/terms" ||
+    pathname === "/privacy"
+  ) {
+    // Wrapped in load-step-1 for the staggered animation
+    return (
+      <div className="load-step-1 relative z-50">
+        <PublicNavbar />
+      </div>
+    );
+  }
 
-    // 3. All other pages (Dashboard, Calendar, etc.) -> Show UserNavbar
-    return <UserNavbar imageSrc={imageSrc} isAdmin={isAdminUser} />;
+  // 3. User Pages (Default) -> Show UserNavbar
+  // This executes if none of the IF statements above matched
+  return (
+    <div className="load-step-1 relative z-50">
+      <UserNavbar imageSrc={imageSrc} isAdmin={isAdminUser} />
+    </div>
+  );
 };
 
 export default NavbarWrapper;

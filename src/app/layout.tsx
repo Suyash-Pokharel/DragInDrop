@@ -24,8 +24,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
+          {/* Navbar loads first (Step 1) */}
           <Navbar imageSrc={localProfile} />
-          {children}
+          
+          {/* Page Content loads last (Step 3) */}
+          <div className="load-step-3">
+            {children}
+          </div>
         </Providers>
       </body>
     </html>
