@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image, { StaticImageData } from "next/image";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
-// --- IMPORTS ---
+// --- IMPORTS --- //
 import facebookLogo from "../assets/logo/Facebook.webp";
 import googleLogo from "../assets/logo/Google.webp";
 import instagramLogo from "../assets/logo/Instagram.webp";
@@ -14,7 +14,7 @@ import tiktokLogo from "../assets/logo/TikTok.webp";
 import xLogo from "../assets/logo/X.webp";
 import youtubeLogo from "../assets/logo/Youtube.webp";
 
-// --- TYPES ---
+// --- TYPES --- //
 type Platform =
   | "Facebook"
   | "Google"

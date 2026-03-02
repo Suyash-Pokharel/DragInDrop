@@ -2,33 +2,49 @@
   "name": "dragindrop",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.22.0",
+  "packageManager": "pnpm@10.30.3",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:generate": "dotenv -e .env.local -- prisma generate",
+    "db:studio": "dotenv -e .env.local -- prisma studio"
   },
-  
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "dependencies": {
+    "@prisma/client": "^7.4.1",
+    "bcryptjs": "^3.0.3",
+    "ioredis": "^5.9.3",
     "lucide-react": "^0.555.0",
     "next": "16.1.1",
     "next-themes": "^0.4.6",
+    "rate-limiter-flexible": "^9.1.1",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "resend": "^6.9.2"
   },
   "devDependencies": {
+    "@prisma/config": "^7.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.8.32",
+    "dotenv": "^17.3.1",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "prisma": "^7.4.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   }
 }

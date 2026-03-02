@@ -67,7 +67,7 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
 
     return createPortal(
         <div
-            className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${showModal ? "opacity-100" : "opacity-0"
+            className={`fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${showModal ? "opacity-100" : "opacity-0"
                 }`}
         >
             {/* Modal Container */}

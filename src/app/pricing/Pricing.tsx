@@ -3,12 +3,9 @@
 import Link from "next/link";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-// 1. Import the Reveal component
 import { Reveal } from "../components/Reveal";
 
-{
   /* --- FAQ Section --- */
-}
 const FAQS = [
   {
     question: "Can I change my plan later?",

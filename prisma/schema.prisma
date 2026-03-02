@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Remember: these are handled by config, not here
+}
+
+enum TokenType {
+  VERIFY
+  RESET_PASSWORD
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String    @unique
+  password      String?   // Optional (until set)
+  profilePic    String?
+  emailVerified DateTime? 
+  role          Role      @default(USER)
+  
+  // Relation to tokens
+  tokens        VerificationToken[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+
+// New Separate Model
+model VerificationToken {
+  id        String   @id @default(cuid())
+  // Store only a hashed token server-side for safety
+  tokenHash String   @unique
+  type      TokenType 
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  
+  // Link to User
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailQueue {
+  id        String   @id @default(cuid())
+  to        String
+  from      String
+  subject   String
+  html      String
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model RegistrationAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  createdAt DateTime @default(now())
+  @@index([ip, createdAt])
+}

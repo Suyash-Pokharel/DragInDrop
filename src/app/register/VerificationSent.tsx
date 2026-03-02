@@ -27,7 +27,7 @@ useEffect(() => {
     if (!mounted) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
             {/* Modal Container */}
             <div className="w-full max-w-md bg-surface rounded-2xl shadow-2xl p-8 relative border border-border">
                 

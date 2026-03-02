@@ -3,11 +3,19 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-// Removed 'X' from import as it is now in the other file
 import GoogleLogo from "../assets/logo/Google.webp";
-// Import the new component
 import VerificationSent from "./VerificationSent";
 import { Reveal } from "../components/Reveal";
+
+// Client-side wrapper: call the API route which extracts IP and accepts a fingerprint.
+async function callRegisterApi(data: { firstName: string; lastName: string; email: string; fingerprint?: string }) {
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
 
 // 1. Define Allowed Domains
 const ALLOWED_DOMAINS = [
@@ -20,7 +28,6 @@ const ALLOWED_DOMAINS = [
 ];
 
 export default function Register() {
-  // --- STATE ---
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -71,14 +78,14 @@ export default function Register() {
     setTouched({ ...touched, [field]: true });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 2. Block submission if any validation fails
+    // 1. Validation Check
     if (
       !formData.firstName.trim() ||
       !formData.lastName.trim() ||
-      !isEmailSupported // Block if email domain is not supported
+      !isEmailSupported
     ) {
       setTouched({ firstName: true, lastName: true, email: true });
       return;
@@ -86,12 +93,42 @@ export default function Register() {
 
     setIsLoading(true);
 
-    // Simulate API Call
-    setTimeout(() => {
-      setIsLoading(false);
-      setShowSuccessModal(true);
-    }, 1500);
-  };
+    // Build a stable client fingerprint and store it in localStorage
+    let fp: string | undefined;
+    try {
+      const key = "dragindrop_fp";
+      fp = localStorage.getItem(key) || undefined;
+      if (!fp && typeof navigator !== "undefined") {
+        const raw = [navigator.userAgent, navigator.platform, screen.width, screen.height, navigator.language].join("|");
+        try {
+          fp = btoa(raw);
+        } catch {
+          fp = encodeURIComponent(raw);
+        }
+        try {
+          localStorage.setItem(key, fp);
+        } catch {}
+      }
+    } catch {}
+
+    // 2. Call API wrapper which will extract IP server-side and pass fingerprint
+    const result = await callRegisterApi({
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      fingerprint: fp,
+    });
+
+    setIsLoading(false);
+
+    // 3. Handle Success/Error
+    if (result.success) {
+        setShowSuccessModal(true);
+    } else {
+        // In a real app, you might want to show this error in the UI
+        alert(result.error); 
+    }
+};
 
   return (
     <Reveal width="100%" delay={0.05}>

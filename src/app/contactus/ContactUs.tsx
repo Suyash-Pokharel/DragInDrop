@@ -2,13 +2,11 @@
 
 import React, { useState } from "react";
 import { ChevronDown, CheckCircle, Loader2 } from "lucide-react";
-// 1. Import the Reveal component
 import { Reveal } from "../components/Reveal";
 
 const WORD_LIMIT = 200;
 
 export default function ContactUs() {
-    // --- STATE ---
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",

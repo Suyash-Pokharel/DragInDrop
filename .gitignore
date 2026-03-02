@@ -90,3 +90,8 @@ docker-compose.override.yml
 # Misc
 *.zip
 *.tar
+
+.vercel
+.env*.local
+
+/src/generated/prisma
