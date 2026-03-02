@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -81,6 +81,8 @@ export async function registerUser(
       };
     }
     // If a user exists, allow resend but enforce cooldown; otherwise create user.
+    const prisma = getPrisma();
+
     let user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -252,6 +254,8 @@ export async function setPassword(
 
   try {
     // Hash incoming token and look up by `tokenHash`.
+    const prisma = getPrisma();
+
     const incomingHash = crypto
       .createHash("sha256")
       .update(token)
@@ -357,6 +361,7 @@ export async function loginUser(
     }
 
     // Look up user
+    const prisma = getPrisma();
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });

@@ -1,15 +1,19 @@
 import { PrismaClient } from "@prisma/client";
 
-// Prevent multiple instances of Prisma Client in development
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-export const prisma =
-  globalForPrisma.prisma ||
-  // Rely on `DATABASE_URL` from the environment for the runtime datasource.
-  // The Prisma client accepts datasource URLs via environment variables,
-  // passing `datasourceUrl` directly is not a known/typed option.
-  new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+declare global {
+  var __prismaClient: PrismaClient | undefined;
 }
+
+export function getPrisma(): PrismaClient {
+  // Use a global variable to preserve the client across hot reloads in dev
+  if (global.__prismaClient) return global.__prismaClient;
+
+  const client = new PrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    global.__prismaClient = client;
+  }
+  return client;
+}
+
+// Note: call `getPrisma()` inside request handlers or functions to avoid
+// creating a PrismaClient at module-evaluation time (helps with Edge/Turbopack).

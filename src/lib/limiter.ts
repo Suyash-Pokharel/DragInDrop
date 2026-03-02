@@ -1,5 +1,5 @@
 import { RateLimiterRedis, RateLimiterMemory } from "rate-limiter-flexible";
-import { redis } from "./redis";
+import { getRedis } from "./redis";
 
 /**
  * Create a rate limiter that uses Redis when available, falling back to
@@ -17,8 +17,9 @@ function createResilientLimiter(opts: {
   });
 
   try {
+    const redisClient = getRedis();
     const redisLimiter = new RateLimiterRedis({
-      storeClient: redis,
+      storeClient: redisClient,
       keyPrefix: opts.keyPrefix,
       points: opts.points,
       duration: opts.duration,

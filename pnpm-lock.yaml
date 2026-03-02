@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@prisma/client':
-        specifier: ^7.4.2
+        specifier: ^7.4.1
         version: 7.4.2(prisma@7.4.2(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3))(typescript@5.9.3)
       bcryptjs:
         specifier: ^3.0.3
@@ -40,7 +40,7 @@ importers:
         version: 6.9.2
     devDependencies:
       '@prisma/config':
-        specifier: ^7.4.2
+        specifier: ^7.4.1
         version: 7.4.2
       '@tailwindcss/postcss':
         specifier: ^4
@@ -70,7 +70,7 @@ importers:
         specifier: 16.1.1
         version: 16.1.1(@typescript-eslint/parser@8.51.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       prisma:
-        specifier: ^7.4.2
+        specifier: ^7.4.1
         version: 7.4.2(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       tailwindcss:
         specifier: ^4

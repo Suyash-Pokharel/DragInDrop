@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { verifySignedToken } from "./session";
 
 export type PublicUser = {
@@ -24,6 +24,7 @@ export async function getCurrentUserFromToken(
   const payload = verifySignedToken(token);
   if (!payload || !payload.sub) return null;
 
+  const prisma = getPrisma();
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
     select: {
