@@ -22,7 +22,7 @@
     ]
   },
   "dependencies": {
-    "@prisma/client": "^7.4.1",
+    "@prisma/client": "^7.4.2",
     "bcryptjs": "^3.0.3",
     "ioredis": "^5.9.3",
     "lucide-react": "^0.555.0",
@@ -34,7 +34,7 @@
     "resend": "^6.9.2"
   },
   "devDependencies": {
-    "@prisma/config": "^7.4.1",
+    "@prisma/config": "^7.4.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -44,7 +44,7 @@
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
-    "prisma": "^7.4.1",
+    "prisma": "^7.4.2",
     "tailwindcss": "^4",
     "typescript": "^5.9.3"
   }
