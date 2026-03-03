@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import {
   extractSessionFromCookieHeader,
   getCurrentUserFromToken,
 } from "./getCurrentUser";
 
-/** Ensure the request belongs to an admin; returns the user or NextResponse.redirect/403 */
-export async function ensureAdmin(req: Request | NextRequest) {
+/** Ensure the request belongs to an admin; returns the user or NextResponse.json 401/403 */
+export async function ensureAdmin(req: Request) {
   try {
-    const cookieHeader = (req as any).headers?.get
-      ? (req as any).headers.get("cookie") || ""
-      : typeof window === "undefined"
-        ? undefined
-        : undefined;
+    const cookieHeader = req.headers.get("cookie") ?? "";
 
-    // If running in Node API route, Request.headers.get is available; handle both
     const token = cookieHeader
       ? extractSessionFromCookieHeader(cookieHeader)
       : undefined;
@@ -29,7 +23,7 @@ export async function ensureAdmin(req: Request | NextRequest) {
     }
 
     return user;
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

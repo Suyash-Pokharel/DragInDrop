@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import { registerUser } from "@/app/actions/auth";
 
 export async function POST(req: Request) {

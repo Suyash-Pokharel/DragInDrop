@@ -27,11 +27,13 @@
     /* Shadows */
     --shadow-color: hsla(220, 30%, 85%, 0.5);
 
-      /* OVERRIDE BROWSER AUTOFILL STYLES */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
-    input:-webkit-autofill:active {
+    }
+
+  /* OVERRIDE BROWSER AUTOFILL STYLES */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
     /* Mask the background color with an inner shadow matching your theme */
     -webkit-box-shadow: 0 0 0 30px var(--background) inset !important;
     /* Force the text color to match your theme */
@@ -39,7 +41,6 @@
     /* Prevent the background color transition */
     transition: background-color 5000s ease-in-out 0s;
   }
-}
 
   /* DARK MODE (Override) */
   .dark {

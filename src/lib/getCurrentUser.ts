@@ -32,8 +32,7 @@ export async function getCurrentUserFromToken(
       firstName: true,
       lastName: true,
       email: true,
-      // `role` may not be selectable depending on generated Prisma client
-      // so omit it here to avoid type mismatch; callers can infer role separately if needed.
+      role: true,
       profilePic: true,
       emailVerified: true,
       createdAt: true,

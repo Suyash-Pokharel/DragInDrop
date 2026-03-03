@@ -186,7 +186,7 @@ const MonthCalendar = () => {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto text-text-main select-none">
+    <div className="w-full max-w-350 mx-auto text-text-main select-none">
       {/* --- HEADER --- */}
       <div className="flex items-center justify-between mb-4 px-2">
         <h2 className="text-xl md:text-2xl font-bold text-text-main uppercase tracking-tight">
@@ -239,7 +239,7 @@ const MonthCalendar = () => {
           {prevMonthPadding.map((day) => (
             <div
               key={`prev-${day}`}
-              className="h-[70px] sm:h-20 lg:h-[100px] border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
+              className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
             >
               <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
             </div>
@@ -254,7 +254,7 @@ const MonthCalendar = () => {
             return (
               <div
                 key={`curr-${day}`}
-                className={`group relative h-[70px] sm:h-20 lg:h-[100px] rounded-xl p-1.5 md:p-2 flex flex-col gap-1.5 transition-all duration-200 overflow-hidden
+                className={`group relative h-17.5 sm:h-20 lg:h-25 rounded-xl p-1.5 md:p-2 flex flex-col gap-1.5 transition-all duration-200 overflow-hidden
                   border
                   ${
                     today
@@ -320,7 +320,7 @@ const MonthCalendar = () => {
           {nextMonthPadding.map((day) => (
             <div
               key={`next-${day}`}
-              className="h-[70px] sm:h-20 lg:h-[100px] border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
+              className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
             >
               <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
             </div>

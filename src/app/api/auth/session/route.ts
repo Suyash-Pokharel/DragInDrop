@@ -9,12 +9,16 @@ export async function POST(req: Request) {
     const secure = process.env.NODE_ENV === "production";
     const maxAge = 7 * 24 * 60 * 60; // 7 days
 
-    const cookie = `session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${
-      secure ? "; Secure" : ""
-    }`;
-
     const res = NextResponse.json({ ok: true });
-    res.headers.set("Set-Cookie", cookie);
+
+    res.cookies.set("session", token, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure,
+      maxAge,
+    });
+
     return res;
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

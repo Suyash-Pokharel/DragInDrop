@@ -231,7 +231,7 @@ export async function registerUser(
     // ✅ Uses strict 'unknown' from Code 3
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
-      (error as Prisma.PrismaClientKnownRequestError).code === "P2002"
+      error.code === "P2002"
     ) {
       return { success: false, error: "User already exists with this email." };
     }
