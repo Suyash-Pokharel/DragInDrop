@@ -65,7 +65,7 @@ async function verifyTokenEdge(token: string, secret: string) {
 }
 
 // Routes that require a valid session to access
-const PROTECTED_ROUTES = ["/dashboard", "/admin"];
+const PROTECTED_ROUTES = ["/dashboard", "/admin", "/settings"];
 
 function isProtectedRoute(pathname: string) {
   return PROTECTED_ROUTES.some(
@@ -114,5 +114,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/createpassword"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/createpassword", "/settings/:path*"],
 };

@@ -284,7 +284,7 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
                                 </ul>
 
                                 <Link
-                                    href="/contact"
+                                    href="/contactus"
                                     onClick={handleClose}
                                     className="block w-full py-3 px-8 rounded-lg bg-background border border-border text-text-main font-semibold hover:border-primary hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform duration-400 text-center"
                                 >

@@ -28,7 +28,8 @@ model User {
   role          Role      @default(USER)
   
   // Relation to tokens
-  tokens        VerificationToken[]
+  tokens         VerificationToken[]
+  socialAccounts SocialAccount[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -64,4 +65,31 @@ model RegistrationAttempt {
   ip        String
   createdAt DateTime @default(now())
   @@index([ip, createdAt])
+}
+
+/// Stores an OAuth-connected social media account for a user.
+/// Access and refresh tokens are AES-256-GCM encrypted at rest.
+model SocialAccount {
+  id               String    @id @default(cuid())
+
+  // Owning user
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Platform identity
+  platform         String    // canonical lowercase id: "youtube", "tiktok", etc.
+  platformUserId   String    // user's ID on that platform
+  platformUsername String    // display name / handle on that platform
+
+  // OAuth tokens — stored AES-256-GCM encrypted via lib/tokenEncryption.ts
+  accessToken      String
+  refreshToken     String?   // null for platforms that don't issue refresh tokens
+  tokenExpiresAt   DateTime?
+  scope            String?   // space-separated scopes granted
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([userId, platform]) // one connection per platform per user
+  @@index([userId])
 }
