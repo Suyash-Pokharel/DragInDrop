@@ -17,7 +17,21 @@ export type ConnectedPlatform = {
   platformUserId: string;
 };
 
+export type PublicUser = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role?: string;
+  profilePic?: string | null;
+  emailVerified?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
 type UserContextType = {
+  /** The authenticated user. Null if not logged in or loading. */
+  user: PublicUser | null;
   /** Full connected platform objects from the database */
   connectedPlatforms: ConnectedPlatform[];
   /** Derived string array of platform ids for backward compat (e.g. connectedPlatformIds.includes("youtube")) */
@@ -40,9 +54,25 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<PublicUser | null>(null);
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [connectedPlatforms, setConnectedPlatforms] = useState<ConnectedPlatform[]>([]);
   const [platformsLoading, setPlatformsLoading] = useState(true);
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        if (data.user?.profilePic) setProfilePic(data.user.profilePic);
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    }
+  }, []);
 
   const fetchConnectedPlatforms = useCallback(async () => {
     try {
@@ -68,8 +98,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Fetch on initial mount
   useEffect(() => {
+    fetchUser();
     fetchConnectedPlatforms();
-  }, [fetchConnectedPlatforms]);
+  }, [fetchUser, fetchConnectedPlatforms]);
 
   // Derived: list of platform ids as strings (e.g. ["youtube", "tiktok"])
   const connectedPlatformIds = connectedPlatforms.map((p) => p.platform);
@@ -77,6 +108,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <UserContext.Provider
       value={{
+        user,
         connectedPlatforms,
         connectedPlatformIds,
         refreshConnectedPlatforms: fetchConnectedPlatforms,

@@ -7,7 +7,7 @@ import { useUser } from "../../components/UserProvider";
 import TwoFactorModal from "./TwoFactorModal";
 
 export default function UserDetailsPage() {
-  const { profilePic, setProfilePic } = useUser();
+  const { profilePic, setProfilePic, user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
@@ -77,15 +77,15 @@ export default function UserDetailsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-text-main">First Name</label>
-              <input type="text" defaultValue="Suyash" disabled className="w-full bg-background/50 border border-border rounded-lg px-4 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed" />
+              <input type="text" key={`fn-${user?.firstName}`} defaultValue={user?.firstName || "Loading..."} disabled className="w-full bg-background/50 border border-border rounded-lg px-4 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-text-main">Last Name</label>
-              <input type="text" defaultValue="Pokharel" disabled className="w-full bg-background/50 border border-border rounded-lg px-4 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed" />
+              <input type="text" key={`ln-${user?.lastName}`} defaultValue={user?.lastName || "Loading..."} disabled className="w-full bg-background/50 border border-border rounded-lg px-4 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed" />
             </div>
             <div className="flex flex-col gap-1.5 md:col-span-2">
               <label className="text-sm font-medium text-text-main">Email Address</label>
-              <input type="email" defaultValue="suyash@example.com" className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors" />
+              <input type="email" key={`em-${user?.email}`} defaultValue={user?.email || "Loading..."} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors cursor-not-allowed" disabled />
             </div>
           </div>
         </div>

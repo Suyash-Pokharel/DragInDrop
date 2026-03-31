@@ -25,3 +25,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
+
+/** DELETE /api/auth/session — Clears the session cookie (logout). */
+export async function DELETE() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("session", "", {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+  });
+  return res;
+}

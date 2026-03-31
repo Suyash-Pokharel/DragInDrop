@@ -7,8 +7,9 @@
  *
  * Required env vars:
  *   B2_ACCOUNT_ID   — Backblaze Account ID (used as AWS access key)
+ *   B2_ACCOUNT_ID   — Backblaze Account ID (used as AWS access key)
  *   B2_APP_KEY      — Backblaze Application Key (used as AWS secret key)
- *   B2_BUCKET_ID    — Backblaze Bucket ID (used as bucket name for S3 API)
+ *   B2_BUCKET_NAME  — Backblaze Bucket Name (used as bucket name for S3 API)
  *   B2_ENDPOINT     — e.g. https://s3.eu-central-003.backblazeb2.com
  *   NEXT_PUBLIC_APP_URL — used to build CORS-compatible public CDN URLs
  *
@@ -49,10 +50,10 @@ function getB2Client(): S3Client {
   });
 }
 
-function getBucketId(): string {
-  const id = process.env.B2_BUCKET_ID;
-  if (!id) throw new Error("Missing B2_BUCKET_ID environment variable.");
-  return id;
+function getBucketName(): string {
+  const name = process.env.B2_BUCKET_NAME;
+  if (!name) throw new Error("Missing B2_BUCKET_NAME environment variable.");
+  return name;
 }
 
 export interface PresignResult {
@@ -76,7 +77,7 @@ export async function generatePresignedUploadUrl(
   expiresInSeconds = 900, // 15 minutes
 ): Promise<PresignResult> {
   const client = getB2Client();
-  const bucket = getBucketId();
+  const bucket = getBucketName();
   const endpoint = process.env.B2_ENDPOINT!;
 
   const command = new PutObjectCommand({
@@ -89,8 +90,8 @@ export async function generatePresignedUploadUrl(
     expiresIn: expiresInSeconds,
   });
 
-  // B2 S3-compatible public URL format
-  const publicUrl = `${endpoint}/file/${bucket}/${key}`;
+  // B2 S3-compatible public URL format (Path-style)
+  const publicUrl = `${endpoint}/${bucket}/${key}`;
 
   return { uploadUrl, publicUrl, key };
 }

@@ -5,7 +5,7 @@ import Upload from "../upload/Upload";
 import EditPost from "../upload/EditPost";
 import NoAccountModal from "../upload/NoAccountModal";
 import SelectPlatform from "../upload/SelectPlatform";
-import { uploadService } from "@/lib/uploadService";
+import { uploadService } from "@/app/upload/uploadService";
 import { useUser } from "./UserProvider";
 
 type ModalContextType = {

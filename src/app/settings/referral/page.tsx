@@ -2,12 +2,18 @@
 
 import React, { useState } from "react";
 import { Gift, Copy, Check, Info } from "lucide-react";
+import { useUser } from "../../components/UserProvider";
 
 export default function ReferralPage() {
+  const { user } = useUser();
   const [copied, setCopied] = useState(false);
-  const referralLink = "https://dragindrop.com/ref/suyash_p12";
+  
+  // Create a base URL depending on window environment, falling back to a dummy one
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://dragindrop.com";
+  const referralLink = user?.id ? `${baseUrl}/ref/${user.firstName?.toLowerCase()}_${user.id.slice(-6)}` : "Loading your link...";
 
   const handleCopy = () => {
+    if (!user?.id) return;
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

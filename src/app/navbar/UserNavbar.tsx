@@ -79,7 +79,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
   const [mounted, setMounted] = useState(false);
   // modal context
   const modal = useModal();
-  const { profilePic } = useUser();
+  const { profilePic, user } = useUser();
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -139,7 +139,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
           className="font-medium border rounded-md border-border transition-all active:scale-95 text-xs md:text-sm xl:text-lg 2xl:text-xl
             px-3 py-1 md:px-4 md:py-1.5 xl:px-6 xl:py-2 bg-background text-text-secondary hover:bg-surface-highlight hover:text-text-main"
         >
-          SUYASH
+          {user?.firstName ? user.firstName.toUpperCase() : "WORKSPACE"}
         </button>
       </div>
 
@@ -359,7 +359,14 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
                 <button
                   className="flex items-center gap-3 px-4 py-2.5 xl:py-3 w-full text-left transition-colors 
                     text-error hover:bg-error/10 hover:text-error"
-                  onClick={() => console.log("Logging out...")}
+                  onClick={async () => {
+                    try {
+                      await fetch("/api/auth/session", { method: "DELETE" });
+                    } catch {
+                      // Cookie may already be gone; proceed to redirect
+                    }
+                    window.location.href = "/login";
+                  }}
                 >
                   <LogOut className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Log out</span>
