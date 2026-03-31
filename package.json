@@ -22,30 +22,32 @@
     ]
   },
   "dependencies": {
-    "@prisma/client": "^7.4.2",
+    "@aws-sdk/client-s3": "^3.1020.0",
+    "@aws-sdk/s3-request-presigner": "^3.1020.0",
+    "@prisma/client": "^7.6.0",
     "bcryptjs": "^3.0.3",
-    "ioredis": "^5.9.3",
+    "ioredis": "^5.10.1",
     "lucide-react": "^0.555.0",
     "next": "16.1.1",
     "next-themes": "^0.4.6",
     "rate-limiter-flexible": "^9.1.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "resend": "^6.9.2"
+    "resend": "^6.10.0"
   },
   "devDependencies": {
-    "@prisma/config": "^7.4.2",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "baseline-browser-mapping": "^2.8.32",
+    "@prisma/config": "^7.6.0",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^20.19.37",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "baseline-browser-mapping": "^2.10.13",
     "dotenv": "^17.3.1",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^9",
+    "eslint": "^9.39.4",
     "eslint-config-next": "16.1.1",
-    "prisma": "^7.4.2",
-    "tailwindcss": "^4",
+    "prisma": "^7.6.0",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"
   }
 }

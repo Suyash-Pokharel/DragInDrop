@@ -3,8 +3,8 @@ import { verifySignedToken } from "./session";
 
 export type PublicUser = {
   id: string;
-  firstName: string | null;
-  lastName: string | null;
+  firstName: string;
+  lastName: string;
   email: string;
   role?: string;
   profilePic?: string | null;

@@ -17,12 +17,16 @@ import {
   MessageSquare,
   AlertCircle,
   CreditCard,
+  BarChart3,
+  Settings,
 } from "lucide-react";
 import PricingPopup from "../pricing/PricingPopup";
+import { useModal } from "../components/ModalProvider";
+import { useUser } from "../components/UserProvider";
 
 interface NavbarProps {
   imageSrc?: string | StaticImageData;
-  isAdmin?: boolean; 
+  isAdmin?: boolean;
 }
 
 const NOTIFICATIONS = [
@@ -73,11 +77,15 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
   >(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  // modal context
+  const modal = useModal();
+  const { profilePic } = useUser();
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
   const displayImage =
+    profilePic ||
     imageSrc ||
     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
 
@@ -109,9 +117,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
     };
   }, []);
 
-  if (pathname === "/login" || pathname === "/register" || pathname === "/pricing" || pathname === "/createpassword" || pathname === "/contactus") {
-    return null;
-  }
+  // Route-hiding is handled by Navbar.tsx — UserNavbar only renders on authenticated pages.
 
   return (
     <nav
@@ -144,9 +150,10 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
           <button
             onClick={() => toggleDropdown("notifications")}
             className={`transition-all duration-200 p-1 relative active:scale-90
-              ${activeDropdown === "notifications"
-                ? "text-primary"
-                : "text-text-secondary hover:text-text-main"
+              ${
+                activeDropdown === "notifications"
+                  ? "text-primary"
+                  : "text-text-secondary hover:text-text-main"
               }
             `}
             aria-label="Notifications"
@@ -183,9 +190,10 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
                   <div
                     key={note.id}
                     className={`px-4 py-3 flex gap-3 transition-colors cursor-pointer border-b border-border last:border-0
-                      ${note.unread
-                        ? "bg-primary/5 hover:bg-primary/10"
-                        : "hover:bg-surface-highlight"
+                      ${
+                        note.unread
+                          ? "bg-primary/5 hover:bg-primary/10"
+                          : "hover:bg-surface-highlight"
                       }`}
                   >
                     <div className="mt-1 text-primary">
@@ -247,9 +255,10 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
             className={`relative rounded-full overflow-hidden border transition-all duration-200 active:scale-95
               w-8 h-8 md:w-9 md:h-9 xl:w-12 xl:h-12 2xl:w-14 2xl:h-14
               bg-background
-              ${activeDropdown === "profile"
-                ? "border-primary ring-2 ring-primary/30"
-                : "border-border hover:border-text-secondary"
+              ${
+                activeDropdown === "profile"
+                  ? "border-primary ring-2 ring-primary/30"
+                  : "border-border hover:border-text-secondary"
               }
             `}
           >
@@ -273,42 +282,46 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
                 bg-surface border-border"
             >
               <div className="flex flex-col text-sm xl:text-lg 2xl:text-xl text-text-secondary">
-                
                 {isAdmin && (
                   <>
                     <Link
-                      href="/admin/dashboard"
+                      href="/admin"
                       className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
                     >
                       <LayoutDashboard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 text-primary" />
-                      <span className="font-semibold text-primary">Admin Panel</span>
+                      <span className="font-semibold text-primary">
+                        Admin Panel
+                      </span>
                     </Link>
                     <Link
-                      href="/admin/statistics"
+                      href="/admin"
                       className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
                     >
-                      {/* You might need to import 'BarChart' or similar from lucide-react */}
-                      <LayoutDashboard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" /> 
+                      <BarChart3 className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                       <span>Statistics</span>
                     </Link>
                     <div className="h-px w-full my-1 bg-border"></div>
                   </>
                 )}
 
-                <a
-                  href="#"
-                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
+                <button
+                  onClick={() => {
+                    if (modal && modal.openUpload) modal.openUpload();
+                    else setShowPricingPopup(true);
+                    setActiveDropdown(null);
+                  }}
+                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 w-full text-left transition-colors hover:bg-surface-highlight hover:text-text-main"
                 >
                   <Upload className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Upload</span>
-                </a>
-                <a
-                  href="#"
+                </button>
+                <Link
+                  href="/dashboard"
                   className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
                 >
                   <LayoutDashboard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Dashboard</span>
-                </a>
+                </Link>
 
                 {/* Linked Calendar */}
                 <Link
@@ -330,6 +343,16 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
                   <CreditCard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Pricing</span>
                 </div>
+
+                {/* Settings Link */}
+                <Link
+                  href="/settings/user-details"
+                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
+                  onClick={() => setActiveDropdown(null)}
+                >
+                  <Settings className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
+                  <span>Settings</span>
+                </Link>
 
                 <div className="h-px w-full my-1 bg-border"></div>
 

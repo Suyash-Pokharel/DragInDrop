@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image, { StaticImageData } from "next/image";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useModal } from "@/app/components/ModalProvider";
 
 // --- IMPORTS --- //
 import facebookLogo from "../assets/logo/Facebook.webp";
@@ -134,6 +135,7 @@ const IconGroup = ({
 
 const MonthCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { openUpload, setSelectedDate } = useModal();
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -149,14 +151,14 @@ const MonthCalendar = () => {
   const prevMonthDays = getDaysInMonth(year, month - 1);
   const prevMonthPadding = Array.from(
     { length: startDayIndex },
-    (_, i) => prevMonthDays - startDayIndex + i + 1
+    (_, i) => prevMonthDays - startDayIndex + i + 1,
   );
   const currentMonthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const totalCells = 42;
   const nextMonthPadding = Array.from(
     { length: totalCells - (startDayIndex + daysInMonth) },
-    (_, i) => i + 1
+    (_, i) => i + 1,
   );
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
@@ -165,7 +167,7 @@ const MonthCalendar = () => {
 
   const getPostsForDay = (d: number, m: number, y: number) => {
     return MOCK_POSTS.filter(
-      (p) => p.day === d && p.month === m && p.year === y
+      (p) => p.day === d && p.month === m && p.year === y,
     );
   };
 
@@ -234,14 +236,15 @@ const MonthCalendar = () => {
 
         {/* Days Grid */}
         <div className="grid grid-cols-7 auto-rows-fr gap-2">
-          
           {/* 1. Previous Month Padding */}
           {prevMonthPadding.map((day) => (
             <div
               key={`prev-${day}`}
               className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
             >
-              <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
+              <span className="text-xs md:text-sm font-medium text-text-secondary">
+                {day}
+              </span>
             </div>
           ))}
 
@@ -287,6 +290,15 @@ const MonthCalendar = () => {
                   {/* Plus Button */}
                   {!past && (
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Get current time
+                        const now = new Date();
+                        // Create date with calendar day but current time
+                        const d = new Date(year, month, day, now.getHours(), now.getMinutes());
+                        setSelectedDate(d);
+                        openUpload();
+                      }}
                       className="
                         opacity-0 group-hover:opacity-100 transition-all duration-200
                         flex items-center justify-center
@@ -309,8 +321,16 @@ const MonthCalendar = () => {
 
                 {/* --- RESPONSIVE ICON GROUPS --- */}
                 <IconGroup posts={posts} limit={0} className="flex sm:hidden" />
-                <IconGroup posts={posts} limit={3} className="hidden sm:flex md:hidden" />
-                <IconGroup posts={posts} limit={4} className="hidden md:flex lg:hidden" />
+                <IconGroup
+                  posts={posts}
+                  limit={3}
+                  className="hidden sm:flex md:hidden"
+                />
+                <IconGroup
+                  posts={posts}
+                  limit={4}
+                  className="hidden md:flex lg:hidden"
+                />
                 <IconGroup posts={posts} limit={6} className="hidden lg:flex" />
               </div>
             );
@@ -322,7 +342,9 @@ const MonthCalendar = () => {
               key={`next-${day}`}
               className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
             >
-              <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
+              <span className="text-xs md:text-sm font-medium text-text-secondary">
+                {day}
+              </span>
             </div>
           ))}
         </div>
