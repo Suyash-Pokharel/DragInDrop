@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image, { StaticImageData } from "next/image";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
+import { ScheduledPostData } from "@/app/actions/scheduledPosts";
 
 // --- IMPORTS --- //
 import facebookLogo from "../assets/logo/Facebook.webp";
@@ -26,12 +27,16 @@ type Platform =
   | "X"
   | "Youtube";
 
-interface ScheduledPost {
-  id: number;
+interface CalendarPost {
+  id: string;
   day: number;
   month: number;
   year: number;
   platform: Platform;
+}
+
+interface MonthCalendarProps {
+  initialPosts: ScheduledPostData[];
 }
 
 // --- ICON MAPPING ---
@@ -46,24 +51,6 @@ const LOGO_MAP: Record<Platform, StaticImageData> = {
   Youtube: youtubeLogo,
 };
 
-// --- MOCK DATA ---
-const MOCK_POSTS: ScheduledPost[] = [
-  { id: 1, day: 8, month: 10, year: 2025, platform: "Instagram" },
-  { id: 2, day: 8, month: 10, year: 2025, platform: "TikTok" },
-  { id: 3, day: 11, month: 10, year: 2025, platform: "Linkedin" },
-  { id: 4, day: 11, month: 10, year: 2025, platform: "X" },
-  { id: 5, day: 18, month: 10, year: 2025, platform: "Facebook" },
-  { id: 6, day: 21, month: 10, year: 2025, platform: "Youtube" },
-  { id: 7, day: 21, month: 10, year: 2025, platform: "Google" },
-  { id: 8, day: 24, month: 10, year: 2025, platform: "Threads" },
-  { id: 9, day: 15, month: 10, year: 2025, platform: "Facebook" },
-  { id: 10, day: 15, month: 10, year: 2025, platform: "Instagram" },
-  { id: 11, day: 15, month: 10, year: 2025, platform: "TikTok" },
-  { id: 12, day: 15, month: 10, year: 2025, platform: "Linkedin" },
-  { id: 13, day: 15, month: 10, year: 2025, platform: "X" },
-  { id: 14, day: 15, month: 10, year: 2025, platform: "Youtube" },
-];
-
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 // --- HELPER: Icon Group with Smart Overflow ---
@@ -72,7 +59,7 @@ const IconGroup = ({
   limit,
   className,
 }: {
-  posts: ScheduledPost[];
+  posts: CalendarPost[];
   limit: number;
   className: string;
 }) => {
@@ -133,9 +120,21 @@ const IconGroup = ({
   );
 };
 
-const MonthCalendar = () => {
+const MonthCalendar = ({ initialPosts }: MonthCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { openUpload, setSelectedDate } = useModal();
+
+  // Convert server posts to calendar format
+  const calendarPosts: CalendarPost[] = initialPosts.map((post) => {
+    const date = new Date(post.scheduledDate);
+    return {
+      id: post.id,
+      day: date.getDate(),
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      platform: post.platform as Platform,
+    };
+  });
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -166,7 +165,7 @@ const MonthCalendar = () => {
   const goToToday = () => setCurrentDate(new Date());
 
   const getPostsForDay = (d: number, m: number, y: number) => {
-    return MOCK_POSTS.filter(
+    return calendarPosts.filter(
       (p) => p.day === d && p.month === m && p.year === y,
     );
   };

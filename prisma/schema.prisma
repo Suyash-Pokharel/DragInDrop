@@ -35,6 +35,9 @@ model User {
   
   // Relation to video uploads
   videoUploads  VideoUpload[]
+  
+  // Relation to scheduled posts
+  scheduledPosts ScheduledPost[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -99,4 +102,31 @@ model VideoUpload {
   
   // Link to User
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Link to ScheduledPost
+  scheduledPost    ScheduledPost?
+}
+
+model ScheduledPost {
+  id            String   @id @default(cuid())
+  userId        String
+  platform      String   // Google, TikTok, Instagram, etc.
+  videoUploadId String   @unique
+  title         String?
+  description   String?
+  tags          String[] // Array of tags
+  scheduledDate DateTime
+  status        String   @default("pending") // pending, published, failed
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Link to User
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Link to VideoUpload
+  videoUpload   VideoUpload  @relation(fields: [videoUploadId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, scheduledDate])
+  @@index([status])
 }

@@ -10,7 +10,20 @@ interface EditPostProps {
 }
 
 export default function EditPost({ onClose }: EditPostProps) {
-  const { progress, previewUrl, uploaded, clearUpload, selectedDate, openSelectPlatform, fileKey, scheduled } = useModal();
+  const { 
+    progress, 
+    previewUrl, 
+    uploaded, 
+    clearUpload, 
+    selectedDate, 
+    openSelectPlatform, 
+    fileKey, 
+    scheduled,
+    postTitle,
+    setPostTitle,
+    postDescription,
+    setPostDescription,
+  } = useModal();
   
   const [mounted, setMounted] = useState(false);
   const[showModal, setShowModal] = useState(false);
@@ -23,15 +36,13 @@ export default function EditPost({ onClose }: EditPostProps) {
   };
 
   // Form states
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [scheduleDate, setScheduleDate] = useState(selectedDate ? formatDateTimeLocal(selectedDate) : "");
   
   // Validation states
   const [titleTouched, setTitleTouched] = useState(false);
   const [dateTouched, setDateTouched] = useState(false);
 
-  const isTitleValid = title.trim() !== "";
+  const isTitleValid = postTitle.trim() !== "";
   const isDateValid = scheduleDate.trim() !== "";
   const isFormValid = isTitleValid && isDateValid;
 
@@ -127,13 +138,13 @@ export default function EditPost({ onClose }: EditPostProps) {
                   <label className="text-sm font-medium text-text-main">
                     Post Title <span className="text-error">*</span>
                   </label>
-                  <span className="text-xs text-text-secondary">{title.length}/100</span>
+                  <span className="text-xs text-text-secondary">{postTitle.length}/100</span>
                 </div>
                 <input 
                   type="text" 
-                  value={title}
+                  value={postTitle}
                   maxLength={100}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => setPostTitle(e.target.value)}
                   onBlur={() => setTitleTouched(true)}
                   placeholder="Catchy title for your post..."
                   className={`w-full bg-surface border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none transition-colors placeholder:text-text-secondary/50 ${
@@ -148,11 +159,11 @@ export default function EditPost({ onClose }: EditPostProps) {
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-text-main">Description & Tags</label>
-                  <span className="text-xs text-text-secondary">{description.length}/250</span>
+                  <span className="text-xs text-text-secondary">{postDescription.length}/250</span>
                 </div>
                 <textarea 
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={postDescription}
+                  onChange={(e) => setPostDescription(e.target.value)}
                   maxLength={250}
                   placeholder="Write a description, add some #hashtags..."
                   className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-h-[140px] resize-none placeholder:text-text-secondary/50 custom-scrollbar" 

@@ -37,6 +37,12 @@ type ModalContextType = {
 
   selectedDate: Date | null;
   setSelectedDate: (date: Date | null) => void;
+
+  // Post details
+  postTitle: string;
+  setPostTitle: (title: string) => void;
+  postDescription: string;
+  setPostDescription: (description: string) => void;
 };
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
@@ -65,6 +71,8 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const [scheduled, setScheduled] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [postTitle, setPostTitle] = useState("");
+  const [postDescription, setPostDescription] = useState("");
 
   const previewUrlRef = useRef<string | null>(null);
 
@@ -164,6 +172,8 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     setSelectedDate(null);
     setFileKey(null);
     setScheduled(false);
+    setPostTitle("");
+    setPostDescription("");
   }, [abortUpload, updateFileState]);
 
   const openUpload = useCallback(
@@ -232,6 +242,10 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
         clearUpload,
         selectedDate,
         setSelectedDate,
+        postTitle,
+        setPostTitle,
+        postDescription,
+        setPostDescription,
       }}
     >
       {children}

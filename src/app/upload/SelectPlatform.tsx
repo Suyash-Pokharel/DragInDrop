@@ -7,18 +7,31 @@ import Image from "next/image";
 import { useModal } from "@/app/components/ModalProvider";
 import { useUser } from "@/app/components/UserProvider";
 import { APP_PLATFORMS } from "@/lib/platforms";
+import { createScheduledPost } from "@/app/actions/scheduledPosts";
+import { useRouter } from "next/navigation";
 
 interface SelectPlatformProps {
   onClose: () => void;
 }
 
 export default function SelectPlatform({ onClose }: SelectPlatformProps) {
-  const { clearUpload, setScheduled, fileKey, uploaded, scheduled } = useModal();
+  const { 
+    clearUpload, 
+    setScheduled, 
+    fileKey, 
+    uploaded, 
+    scheduled,
+    postTitle,
+    postDescription,
+    selectedDate,
+  } = useModal();
   const { connectedPlatforms } = useUser();
+  const router = useRouter();
   
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
   
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   
@@ -76,15 +89,72 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
     }, 250);
   };
 
-  const handleSchedule = () => {
-    // Mark as scheduled so video is not deleted
-    setScheduled(true);
-    alert("Post Scheduled for: " + selectedPlatforms.join(", "));
-    setShowModal(false);
-    setTimeout(() => {
-      clearUpload();
-      onClose();
-    }, 250);
+  const handleSchedule = async () => {
+    if (!fileKey || !selectedDate) {
+      alert("Missing required data");
+      return;
+    }
+
+    setIsScheduling(true);
+
+    try {
+      // Extract hashtags from description
+      const tags = postDescription.match(/#\w+/g)?.map(tag => tag.slice(1)) || [];
+
+      // First, create the VideoUpload record
+      const uploadResponse = await fetch("/api/video-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileKey,
+        }),
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to create video upload record");
+      }
+
+      const { videoUploadId } = await uploadResponse.json();
+
+      // Create a scheduled post for each selected platform
+      const results = await Promise.all(
+        selectedPlatforms.map(platform =>
+          createScheduledPost({
+            platform,
+            videoUploadId,
+            title: postTitle,
+            description: postDescription,
+            tags,
+            scheduledDate: selectedDate,
+          })
+        )
+      );
+
+      // Check if all posts were created successfully
+      const allSuccess = results.every(r => r.success);
+      
+      if (allSuccess) {
+        // Mark as scheduled so video is not deleted
+        setScheduled(true);
+        
+        // Close modal
+        setShowModal(false);
+        setTimeout(() => {
+          clearUpload();
+          onClose();
+          // Refresh the page to update the calendar
+          router.refresh();
+        }, 250);
+      } else {
+        const errors = results.filter(r => !r.success).map(r => r.error).join(", ");
+        alert(`Failed to schedule some posts: ${errors}`);
+      }
+    } catch (error) {
+      console.error("Error scheduling posts:", error);
+      alert("Failed to schedule posts. Please try again.");
+    } finally {
+      setIsScheduling(false);
+    }
   };
 
   const togglePlatform = (name: string) => {
@@ -167,14 +237,14 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
           
           <button
             onClick={handleSchedule}
-            disabled={selectedPlatforms.length === 0}
+            disabled={selectedPlatforms.length === 0 || isScheduling}
             className={`px-6 py-2 rounded-md text-sm font-medium text-white transition-colors ${
-              selectedPlatforms.length === 0
+              selectedPlatforms.length === 0 || isScheduling
                 ? "bg-primary/60 cursor-not-allowed"
                 : "bg-primary hover:bg-secondary shadow-md"
             }`}
           >
-            Schedule Post
+            {isScheduling ? "Scheduling..." : "Schedule Post"}
           </button>
         </div>
 

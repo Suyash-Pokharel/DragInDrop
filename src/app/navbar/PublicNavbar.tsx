@@ -70,8 +70,12 @@ export default function PublicNavbar() {
         {/* Action Buttons */}
         <div className="flex items-center gap-3 md:gap-4">
 
-          {/* Google Button */}
-          <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-text-main text-sm font-medium hover:bg-surface-highlight hover:border-text-secondary/30 transition-all active:scale-95">
+          {/* Google Sign-In Button */}
+          <button 
+            type="button"
+            onClick={() => window.location.href = "/api/auth/google-signin"}
+            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-text-main text-sm font-medium hover:bg-surface-highlight hover:border-text-secondary/30 transition-all active:scale-95"
+          >
             <Image
               src={GoogleLogo}
               alt="Google"
