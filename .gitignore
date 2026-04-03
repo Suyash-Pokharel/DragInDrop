@@ -79,6 +79,7 @@ debug.log
 *.pem
 *.key
 *.crt
+*.md
 
 # Serverless and Docker
 .serverless/
