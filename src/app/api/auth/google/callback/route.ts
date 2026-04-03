@@ -61,7 +61,13 @@ export async function GET(req: Request) {
     // Exchange authorization code for tokens
     const clientId = process.env.Google_CLIENT_ID;
     const clientSecret = process.env.Google_CLIENT_SECRET;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    
+    // Remove trailing slash to ensure exact redirect_uri match
+    if (appUrl?.endsWith('/')) {
+      appUrl = appUrl.slice(0, -1);
+    }
+    
     const redirectUri = `${appUrl}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {

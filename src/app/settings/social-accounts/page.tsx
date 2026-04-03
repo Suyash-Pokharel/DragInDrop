@@ -4,6 +4,9 @@ import { APP_PLATFORMS } from "@/lib/platforms";
 import { getConnectedPlatforms } from "@/app/actions/socialAccounts";
 import SocialAccountsClient from "./SocialAccountsClient";
 
+// Force dynamic rendering since we use cookies() in server actions
+export const dynamic = 'force-dynamic';
+
 export default async function SocialAccountsPage({
   searchParams,
 }: {

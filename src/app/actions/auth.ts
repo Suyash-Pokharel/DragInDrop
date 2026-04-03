@@ -192,7 +192,7 @@ export async function registerUser(
         await prisma.emailQueue.create({
           data: {
             to: normalizedEmail,
-            from: "onboarding@dragindrop.dev",
+            from: "DragInDrop <onboarding@resend.dev>",
             subject: "Verify your DragInDrop Account",
             html: emailHtml,
           },
@@ -203,25 +203,31 @@ export async function registerUser(
     } else {
       try {
         await resend.emails.send({
-          from: "onboarding@resend.dev",
+          from: "DragInDrop <onboarding@resend.dev>",
           to: normalizedEmail,
           subject: "Verify your DragInDrop Account",
           html: emailHtml,
         });
       } catch (sendErr) {
         console.error("Email send failed, enqueuing:", sendErr);
+        // Log the actual error for debugging
+        if (sendErr instanceof Error) {
+          console.error("Error details:", sendErr.message);
+        }
         // Fallback: enqueue for retry
         try {
           await prisma.emailQueue.create({
             data: {
               to: normalizedEmail,
-              from: "onboarding@dragindrop.dev",
+              from: "DragInDrop <onboarding@resend.dev>",
               subject: "Verify your DragInDrop Account",
               html: emailHtml,
             },
           });
         } catch (qErr) {
           console.error("Failed to enqueue email:", qErr);
+          // Re-throw the original error so user knows email failed
+          throw new Error("Failed to send verification email. Please try again later.");
         }
       }
     }
@@ -504,7 +510,7 @@ export async function requestPasswordReset(
         await prisma.emailQueue.create({
           data: {
             to: normalizedEmail,
-            from: "onboarding@dragindrop.dev",
+            from: "DragInDrop <onboarding@resend.dev>",
             subject: "Reset Your DragInDrop Password",
             html: emailHtml,
           },
@@ -515,19 +521,23 @@ export async function requestPasswordReset(
     } else {
       try {
         await resend.emails.send({
-          from: "onboarding@resend.dev",
+          from: "DragInDrop <onboarding@resend.dev>",
           to: normalizedEmail,
           subject: "Reset Your DragInDrop Password",
           html: emailHtml,
         });
       } catch (sendErr) {
         console.error("Email send failed, enqueuing:", sendErr);
+        // Log the actual error for debugging
+        if (sendErr instanceof Error) {
+          console.error("Error details:", sendErr.message);
+        }
         // Fallback: enqueue for retry
         try {
           await prisma.emailQueue.create({
             data: {
               to: normalizedEmail,
-              from: "onboarding@dragindrop.dev",
+              from: "DragInDrop <onboarding@resend.dev>",
               subject: "Reset Your DragInDrop Password",
               html: emailHtml,
             },

@@ -9,13 +9,18 @@ import crypto from "crypto";
 export async function GET() {
   try {
     const clientId = process.env.Google_CLIENT_ID;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!clientId) {
       return NextResponse.json(
         { success: false, error: "Google OAuth not configured" },
         { status: 500 }
       );
+    }
+
+    // Remove trailing slash to ensure exact redirect_uri match
+    if (appUrl?.endsWith('/')) {
+      appUrl = appUrl.slice(0, -1);
     }
 
     // Generate CSRF state parameter

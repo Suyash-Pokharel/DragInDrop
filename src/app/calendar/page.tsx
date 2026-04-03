@@ -1,6 +1,9 @@
 import MonthCalendar from "./MonthCalendar";
 import { getScheduledPosts } from "@/app/actions/scheduledPosts";
 
+// Force dynamic rendering since we use cookies() in server actions
+export const dynamic = 'force-dynamic';
+
 export default async function CalendarPage() {
   // Fetch scheduled posts on the server
   const result = await getScheduledPosts();
