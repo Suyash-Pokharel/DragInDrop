@@ -41,6 +41,7 @@ lerna-debug.log*
 # Editor and IDE
 .vscode/
 .idea/
+.kiro/
 *.suo
 *.ntvs*
 *.njsproj
@@ -66,6 +67,7 @@ next-env.d.ts
 .cache-loader/
 .parcel-cache/
 .tmp/
+tests/
 temp/
 
 # Logs and debug

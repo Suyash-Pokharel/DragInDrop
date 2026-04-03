@@ -28,6 +28,9 @@ type ModalContextType = {
   progress: number;
   uploaded: boolean;
   previewUrl: string | null;
+  fileKey: string | null;
+  scheduled: boolean;
+  setScheduled: (scheduled: boolean) => void;
   handleUpload: (file: File) => void;
   abortUpload: () => void;
   clearUpload: () => void;
@@ -58,6 +61,8 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const [progress, setProgress] = useState(0);
   const [uploaded, setUploaded] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileKey, setFileKey] = useState<string | null>(null);
+  const [scheduled, setScheduled] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -91,11 +96,20 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubStart = uploadService.onStart(() => setUploading(true));
     const unsubProg = uploadService.onProgress((pct: number) => setProgress(pct));
-    const unsubDone = uploadService.onDone(({ status }: { status: number; responseText: string }) => {
+    const unsubDone = uploadService.onDone(({ status, responseText }: { status: number; responseText: string }) => {
       setUploading(false);
       if (status >= 200 && status < 300) {
         setProgress(100);
         setUploaded(true);
+        // Parse response to extract fileKey
+        try {
+          const response = JSON.parse(responseText);
+          if (response.fileKey) {
+            setFileKey(response.fileKey);
+          }
+        } catch (error) {
+          console.error("Failed to parse upload response:", error);
+        }
       } else {
         setUploaded(false);
         console.error("Upload failed with status:", status);
@@ -148,6 +162,8 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     abortUpload();
     updateFileState(null);
     setSelectedDate(null);
+    setFileKey(null);
+    setScheduled(false);
   }, [abortUpload, updateFileState]);
 
   const openUpload = useCallback(
@@ -208,6 +224,9 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
         progress,
         uploaded,
         previewUrl,
+        fileKey,
+        scheduled,
+        setScheduled,
         handleUpload,
         abortUpload,
         clearUpload,

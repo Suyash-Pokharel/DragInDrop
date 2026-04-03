@@ -10,7 +10,7 @@ interface EditPostProps {
 }
 
 export default function EditPost({ onClose }: EditPostProps) {
-  const { progress, previewUrl, uploaded, clearUpload, selectedDate, openSelectPlatform } = useModal();
+  const { progress, previewUrl, uploaded, clearUpload, selectedDate, openSelectPlatform, fileKey, scheduled } = useModal();
   
   const [mounted, setMounted] = useState(false);
   const[showModal, setShowModal] = useState(false);
@@ -51,7 +51,30 @@ export default function EditPost({ onClose }: EditPostProps) {
     setShowDiscardConfirm(true);
   };
 
-  const doClose = () => {
+  const deleteVideo = async (key: string) => {
+    try {
+      const response = await fetch("/api/upload/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fileKey: key }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to delete video:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error deleting video:", error);
+    }
+  };
+
+  const doClose = async () => {
+    // Cleanup video if it was uploaded but not scheduled
+    if (fileKey && uploaded && !scheduled) {
+      await deleteVideo(fileKey);
+    }
+    
     setShowModal(false);
     setTimeout(() => {
       clearUpload();

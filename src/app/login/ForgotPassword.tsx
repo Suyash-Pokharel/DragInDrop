@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Mail, Loader2, MailCheck } from "lucide-react";
 import { Reveal } from "../components/Reveal";
+import { requestPasswordReset } from "@/app/actions/auth";
 
 interface ForgetPasswordProps {
     onClose: () => void;
@@ -13,6 +14,7 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
     const [view, setView] = useState<"input" | "success">("input");
     const [email, setEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
     // Validation State
     const [touched, setTouched] = useState(false);
@@ -46,7 +48,7 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
         setTimeout(onClose, 300);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!email.trim()) {
@@ -55,14 +57,22 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
         }
 
         setIsLoading(true);
+        setError("");
 
-        // TODO: Replace with real password reset API call once the RESET_PASSWORD
-        // server action is implemented (the TokenType.RESET_PASSWORD enum already exists in the Prisma schema).
-        // Example: const res = await fetch('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-        setTimeout(() => {
+        try {
+            const result = await requestPasswordReset(email);
+            
+            if (result.success) {
+                setView("success");
+            } else {
+                setError(result.error || "Failed to send reset email. Please try again.");
+            }
+        } catch (err) {
+            console.error("Password reset error:", err);
+            setError("An unexpected error occurred. Please try again.");
+        } finally {
             setIsLoading(false);
-            setView("success");
-        }, 1500);
+        }
     };
 
     if (!mounted) return null;
@@ -104,6 +114,12 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
 
                         <Reveal width="100%" delay={0.1}>
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                {error && (
+                                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                                        {error}
+                                    </div>
+                                )}
+                                
                                 <div className="space-y-1.5 text-left">
                                     <label
                                         htmlFor="recoveryEmail"

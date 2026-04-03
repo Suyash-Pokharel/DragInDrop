@@ -126,7 +126,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
     >
       {/* --- LEFT SIDE --- */}
       <div className="flex items-center gap-1 md:gap-7 2xl:gap-11">
-        <Link href="/" className="cursor-pointer">
+        <Link href="/dashboard" className="cursor-pointer">
           <div
             className="font-bold tracking-relaxed whitespace-nowrap text-primary
               text-xl md:text-2xl xl:text-3xl 2xl:text-4xl hover:text-secondary transition-colors"

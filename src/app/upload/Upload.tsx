@@ -17,6 +17,8 @@ export default function Upload({ onClose }: UploadProps) {
     progress,
     uploaded,
     previewUrl,
+    fileKey: uploadedFileKey,
+    scheduled,
     handleUpload,
     openEditPost,
     clearUpload,
@@ -28,6 +30,61 @@ export default function Upload({ onClose }: UploadProps) {
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
+  const [fileKey, setFileKey] = useState<string | null>(null);
+
+  // Track fileKey from upload response
+  useEffect(() => {
+    if (uploadedFileKey) {
+      setFileKey(uploadedFileKey);
+    }
+  }, [uploadedFileKey]);
+
+  // Cleanup function to delete video from B2
+  const deleteVideo = async (key: string) => {
+    try {
+      const response = await fetch("/api/upload/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fileKey: key }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to delete video:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error deleting video:", error);
+    }
+  };
+
+  // Cleanup on unmount if video uploaded but not scheduled
+  useEffect(() => {
+    return () => {
+      // Only cleanup if we have a fileKey, upload is complete, and NOT scheduled
+      if (fileKey && uploaded && !scheduled) {
+        deleteVideo(fileKey);
+      }
+    };
+  }, [fileKey, uploaded, scheduled]);
+
+  // Cleanup on beforeunload (user navigates away or closes tab)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only cleanup if we have a fileKey, upload is complete, and NOT scheduled
+      if (fileKey && uploaded && !scheduled) {
+        // Use sendBeacon for reliable cleanup on page unload
+        const blob = new Blob(
+          [JSON.stringify({ fileKey })],
+          { type: "application/json" }
+        );
+        navigator.sendBeacon("/api/upload/delete", blob);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [fileKey, uploaded, scheduled]);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 0);
@@ -51,7 +108,13 @@ export default function Upload({ onClose }: UploadProps) {
     doClose();
   };
 
-  const doClose = () => {
+  const doClose = async () => {
+    // Cleanup video if it was uploaded but not scheduled
+    if (fileKey && uploaded && !scheduled) {
+      await deleteVideo(fileKey);
+      setFileKey(null);
+    }
+    
     setShowModal(false);
     setTimeout(() => {
       clearUpload();

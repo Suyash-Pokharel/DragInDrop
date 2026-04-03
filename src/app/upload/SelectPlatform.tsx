@@ -13,7 +13,7 @@ interface SelectPlatformProps {
 }
 
 export default function SelectPlatform({ onClose }: SelectPlatformProps) {
-  const { clearUpload } = useModal();
+  const { clearUpload, setScheduled, fileKey, uploaded, scheduled } = useModal();
   const { connectedPlatforms } = useUser();
   
   const [mounted, setMounted] = useState(false);
@@ -45,7 +45,30 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
     setShowDiscardConfirm(true);
   };
 
-  const doClose = () => {
+  const deleteVideo = async (key: string) => {
+    try {
+      const response = await fetch("/api/upload/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fileKey: key }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to delete video:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error deleting video:", error);
+    }
+  };
+
+  const doClose = async () => {
+    // Cleanup video if it was uploaded but not scheduled
+    if (fileKey && uploaded && !scheduled) {
+      await deleteVideo(fileKey);
+    }
+    
     setShowModal(false);
     setTimeout(() => {
       clearUpload();
@@ -54,6 +77,8 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   };
 
   const handleSchedule = () => {
+    // Mark as scheduled so video is not deleted
+    setScheduled(true);
     alert("Post Scheduled for: " + selectedPlatforms.join(", "));
     setShowModal(false);
     setTimeout(() => {

@@ -1,28 +1,86 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link2, LayoutGrid, Unlink } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 import { APP_PLATFORMS } from "@/lib/platforms";
-import { useUser } from "@/app/components/UserProvider";
+import {
+  getConnectedPlatforms,
+  disconnectPlatform,
+} from "@/app/actions/socialAccounts";
 
 export default function SocialAccountsPage() {
-  const { connectedPlatforms, togglePlatformConnection } = useUser();
+  const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
   const [platformToDisconnect, setPlatformToDisconnect] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const searchParams = useSearchParams();
+
+  // Load connected platforms from database
+  useEffect(() => {
+    async function loadPlatforms() {
+      const result = await getConnectedPlatforms();
+      if (result.success && result.platforms) {
+        setConnectedPlatforms(result.platforms.map((p) => p.platform));
+      }
+      setLoading(false);
+    }
+    loadPlatforms();
+  }, []);
+
+  // Handle OAuth callback messages
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const error = searchParams.get("error");
+
+    if (success === "google_connected") {
+      setMessage({ type: "success", text: "Google account connected successfully!" });
+      // Reload platforms
+      getConnectedPlatforms().then((result) => {
+        if (result.success && result.platforms) {
+          setConnectedPlatforms(result.platforms.map((p) => p.platform));
+        }
+      });
+    } else if (error === "oauth_denied") {
+      setMessage({ type: "error", text: "OAuth authorization was denied." });
+    } else if (error === "oauth_failed") {
+      setMessage({ type: "error", text: "Failed to connect account. Please try again." });
+    } else if (error === "not_authenticated") {
+      setMessage({ type: "error", text: "Please log in to connect social accounts." });
+    }
+
+    // Clear message after 5 seconds
+    if (success || error) {
+      const timer = setTimeout(() => setMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   const handleConnect = (name: string) => {
-    togglePlatformConnection(name);
+    // Redirect to OAuth initiation route
+    if (name === "Google") {
+      window.location.href = "/api/auth/google";
+    } else {
+      setMessage({ type: "error", text: `${name} integration coming soon!` });
+    }
   };
 
   const handleForgetClick = (name: string) => {
     setPlatformToDisconnect(name);
   };
 
-  const confirmDisconnect = () => {
+  const confirmDisconnect = async () => {
     if (platformToDisconnect) {
-      if (connectedPlatforms.includes(platformToDisconnect)) {
-        togglePlatformConnection(platformToDisconnect);
+      const result = await disconnectPlatform(platformToDisconnect);
+      if (result.success) {
+        setConnectedPlatforms((prev) =>
+          prev.filter((p) => p !== platformToDisconnect)
+        );
+        setMessage({ type: "success", text: `${platformToDisconnect} disconnected successfully!` });
+      } else {
+        setMessage({ type: "error", text: "Failed to disconnect account." });
       }
       setPlatformToDisconnect(null);
     }
@@ -32,12 +90,36 @@ export default function SocialAccountsPage() {
     setPlatformToDisconnect(null);
   };
 
+  if (loading) {
+    return (
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out flex flex-col gap-6 w-full max-w-3xl">
+        <div className="mb-2">
+          <h2 className="text-2xl font-semibold text-text-main mb-1">Social Accounts</h2>
+          <p className="text-text-secondary text-sm md:text-base">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out flex flex-col gap-6 w-full max-w-3xl">
       <div className="mb-2">
         <h2 className="text-2xl font-semibold text-text-main mb-1">Social Accounts</h2>
         <p className="text-text-secondary text-sm md:text-base">Connect your social media platforms to seamlessly schedule and upload videos.</p>
       </div>
+
+      {/* Success/Error Message */}
+      {message && (
+        <div
+          className={`p-4 rounded-lg border ${
+            message.type === "success"
+              ? "bg-green-50 border-green-200 text-green-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
 
       <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-sm">
         <div className="flex items-center gap-3 border-b border-border pb-4">

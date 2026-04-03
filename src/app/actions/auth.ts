@@ -402,3 +402,218 @@ export async function loginUser(
     return { success: false, error: "An unexpected error occurred." };
   }
 }
+
+/**
+ * Request a password reset by generating a RESET_PASSWORD token and sending an email.
+ */
+export async function requestPasswordReset(
+  email: string,
+): Promise<Result> {
+  if (!email) {
+    return { success: false, error: "Email is required." };
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(normalizedEmail)) {
+    return { success: false, error: "Invalid email address." };
+  }
+
+  if (!RESEND_API_KEY || !resend) {
+    console.error("Missing RESEND_API_KEY");
+    return { success: false, error: "Email service not configured." };
+  }
+
+  try {
+    const prisma = getPrisma();
+
+    // Look up user by email
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      // Don't reveal whether the email exists for security
+      return { success: true };
+    }
+
+    // Check if user has verified their email
+    if (!user.emailVerified) {
+      return { success: false, error: "Please verify your email first." };
+    }
+
+    // Generate raw token and SHA-256 hash
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Clean up any existing password reset tokens for this user
+    try {
+      await prisma.verificationToken.deleteMany({
+        where: { userId: user.id, type: TokenType.RESET_PASSWORD },
+      });
+    } catch (e) {
+      console.warn("Failed to delete old password reset tokens", e);
+    }
+
+    // Create new password reset token
+    await prisma.verificationToken.create({
+      data: {
+        tokenHash,
+        expiresAt,
+        type: TokenType.RESET_PASSWORD,
+        user: { connect: { id: user.id } },
+      },
+    });
+
+    // Build password reset link
+    const resetLink = `${APP_URL}/reset-password?token=${encodeURIComponent(rawToken)}`;
+
+    // Escape firstName for safe HTML
+    const safeFirst = (s: string) =>
+      s
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    const safeFirstName = safeFirst(user.firstName);
+
+    const emailHtml = `
+      <div style="font-family: sans-serif; padding: 20px;">
+        <h2>Password Reset Request</h2>
+        <p>Hi ${safeFirstName},</p>
+        <p>We received a request to reset your password for your DragInDrop account.</p>
+        <p style="margin: 24px 0;">
+          <a href="${resetLink}" style="background-color: #6666ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Reset Password
+          </a>
+        </p>
+        <p style="font-size: 14px; color: #666;">This link expires in 1 hour.</p>
+        <p style="font-size: 14px; color: #666;">If you didn't request this, you can safely ignore this email.</p>
+      </div>
+    `;
+
+    // Send email with fallback to queue
+    if (!resend) {
+      console.error("Resend client missing at send time");
+      try {
+        await prisma.emailQueue.create({
+          data: {
+            to: normalizedEmail,
+            from: "onboarding@dragindrop.dev",
+            subject: "Reset Your DragInDrop Password",
+            html: emailHtml,
+          },
+        });
+      } catch (qErr) {
+        console.error("Failed to enqueue email when Resend missing:", qErr);
+      }
+    } else {
+      try {
+        await resend.emails.send({
+          from: "onboarding@resend.dev",
+          to: normalizedEmail,
+          subject: "Reset Your DragInDrop Password",
+          html: emailHtml,
+        });
+      } catch (sendErr) {
+        console.error("Email send failed, enqueuing:", sendErr);
+        // Fallback: enqueue for retry
+        try {
+          await prisma.emailQueue.create({
+            data: {
+              to: normalizedEmail,
+              from: "onboarding@dragindrop.dev",
+              subject: "Reset Your DragInDrop Password",
+              html: emailHtml,
+            },
+          });
+        } catch (qErr) {
+          console.error("Failed to enqueue email:", qErr);
+        }
+      }
+    }
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Request Password Reset Error:", error);
+    return { success: false, error: "Failed to process password reset request." };
+  }
+}
+
+/**
+ * Reset password using a RESET_PASSWORD token.
+ */
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<Result> {
+  if (!token || !newPassword) {
+    return { success: false, error: "Token and new password are required." };
+  }
+
+  // Validate new password BEFORE accessing database
+  const { valid } = validatePassword(newPassword);
+  if (!valid) {
+    return {
+      success: false,
+      error: "Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.",
+    };
+  }
+
+  try {
+    const prisma = getPrisma();
+
+    // Hash incoming token and look up by tokenHash
+    const incomingHash = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+    
+    const storedToken = await prisma.verificationToken.findFirst({
+      where: {
+        tokenHash: incomingHash,
+        type: TokenType.RESET_PASSWORD,
+      },
+      include: { user: true },
+    });
+
+    if (!storedToken) {
+      return { success: false, error: "Invalid or expired reset token." };
+    }
+
+    // Check if token has expired
+    if (storedToken.expiresAt < new Date()) {
+      // Clean up expired token
+      await prisma.verificationToken.delete({
+        where: { id: storedToken.id },
+      });
+      return { success: false, error: "Reset token has expired. Please request a new one." };
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update password and delete token in transaction
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: storedToken.userId },
+        data: {
+          password: hashedPassword,
+        },
+      }),
+      prisma.verificationToken.delete({
+        where: { id: storedToken.id },
+      }),
+    ]);
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Reset Password Error:", error);
+    return { success: false, error: "Failed to reset password." };
+  }
+}
