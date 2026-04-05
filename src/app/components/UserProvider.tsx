@@ -54,8 +54,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await fetch('/api/user/me');
       if (!response.ok) {
         if (response.status === 401) {
-          // Session expired, redirect to login
-          window.location.href = '/login';
+          // Session expired or not logged in - let middleware or components handle redirect
+          setUserDataState(null);
           return;
         }
         throw new Error('Failed to fetch user data');
