@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import crypto from "crypto";
 
 /**
@@ -13,6 +12,7 @@ export async function GET() {
     let appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!clientId) {
+      console.error("Google OAuth not configured: Google_CLIENT_ID is missing");
       return NextResponse.json(
         { success: false, error: "Google OAuth not configured" },
         { status: 500 }
@@ -26,16 +26,6 @@ export async function GET() {
 
     // Generate CSRF state parameter
     const state = crypto.randomBytes(32).toString("hex");
-    
-    // Store state in cookie for verification in callback
-    const cookieStore = await cookies();
-    cookieStore.set("oauth_signin_state", state, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 600, // 10 minutes
-      path: "/",
-    });
 
     // Build Google OAuth authorization URL for Sign In
     const redirectUri = `${appUrl}/api/auth/google-signin/callback`;
@@ -50,10 +40,22 @@ export async function GET() {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("scope", scope);
     authUrl.searchParams.set("state", state);
-    authUrl.searchParams.set("access_type", "online"); // Don't need refresh token for sign-in
-    authUrl.searchParams.set("prompt", "select_account"); // Allow user to select account
+    authUrl.searchParams.set("access_type", "online");
+    authUrl.searchParams.set("prompt", "select_account");
 
-    return NextResponse.redirect(authUrl.toString());
+    // Create redirect response and set the state cookie ON the response object
+    // This ensures the cookie is included in the 302 redirect response
+    const response = NextResponse.redirect(authUrl.toString());
+    response.cookies.set("oauth_signin_state", state, {
+      httpOnly: true,
+      secure: true, // Always secure — Vercel always serves over HTTPS
+      sameSite: "lax",
+      maxAge: 600, // 10 minutes
+      path: "/",
+    });
+
+    console.log("Google Sign-In initiated, redirecting to Google with redirect_uri:", redirectUri);
+    return response;
   } catch (err) {
     console.error("Google Sign-In initiation error:", err);
     return NextResponse.json(

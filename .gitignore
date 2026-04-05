@@ -46,6 +46,8 @@ lerna-debug.log*
 *.ntvs*
 *.njsproj
 *.sln
+*.test.ts
+*.test.tsx
 
 # Mac / Windows files
 .DS_Store

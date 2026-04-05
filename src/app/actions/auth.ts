@@ -16,7 +16,7 @@ import { validatePassword } from "@/lib/password";
 import { createSignedToken } from "@/lib/session";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
@@ -242,7 +242,7 @@ export async function registerUser(
       return { success: false, error: "User already exists with this email." };
     }
 
-    console.error("Registration Error:", error);
+    console.error("Registration Error:", error instanceof Error ? { message: error.message, stack: error.stack } : error);
     return { success: false, error: "Internal Server Error" };
   }
 }
