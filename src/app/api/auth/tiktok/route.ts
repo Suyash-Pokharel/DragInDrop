@@ -9,7 +9,7 @@ import crypto from "crypto";
 export async function GET() {
   try {
     const clientKey = process.env.TikTok_CLIENT_KEY;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000")).replace(/\/+$/, "");
 
     if (!clientKey) {
       return NextResponse.json(

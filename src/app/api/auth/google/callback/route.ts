@@ -6,6 +6,8 @@ import {
   extractSessionFromCookieHeader,
 } from "@/lib/getCurrentUser";
 
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000")).replace(/\/+$/, "");
+
 /**
  * GET /api/auth/google/callback
  * Handles Google OAuth callback, exchanges code for tokens, and stores in database
@@ -21,7 +23,7 @@ export async function GET(req: Request) {
     if (error) {
       const redirectUrl = new URL(
         "/settings/social-accounts",
-        process.env.NEXT_PUBLIC_APP_URL
+        APP_URL
       );
       redirectUrl.searchParams.set("error", "oauth_denied");
       return NextResponse.redirect(redirectUrl.toString());
@@ -53,7 +55,7 @@ export async function GET(req: Request) {
     const user = await getCurrentUserFromToken(sessionToken);
 
     if (!user) {
-      const redirectUrl = new URL("/login", process.env.NEXT_PUBLIC_APP_URL);
+      const redirectUrl = new URL("/login", APP_URL);
       redirectUrl.searchParams.set("error", "not_authenticated");
       return NextResponse.redirect(redirectUrl.toString());
     }
@@ -61,7 +63,7 @@ export async function GET(req: Request) {
     // Exchange authorization code for tokens
     const clientId = process.env.Google_CLIENT_ID;
     const clientSecret = process.env.Google_CLIENT_SECRET;
-    let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    let appUrl = APP_URL;
     
     // Remove trailing slash to ensure exact redirect_uri match
     if (appUrl?.endsWith('/')) {
@@ -142,7 +144,7 @@ export async function GET(req: Request) {
     // Redirect back to social accounts page with success message
     const redirectUrl = new URL(
       "/settings/social-accounts",
-      process.env.NEXT_PUBLIC_APP_URL
+      APP_URL
     );
     redirectUrl.searchParams.set("success", "google_connected");
     return NextResponse.redirect(redirectUrl.toString());
@@ -150,7 +152,7 @@ export async function GET(req: Request) {
     console.error("Google OAuth callback error:", err);
     const redirectUrl = new URL(
       "/settings/social-accounts",
-      process.env.NEXT_PUBLIC_APP_URL
+      APP_URL
     );
     redirectUrl.searchParams.set("error", "oauth_failed");
     return NextResponse.redirect(redirectUrl.toString());

@@ -9,7 +9,7 @@ import crypto from "crypto";
 export async function GET() {
   try {
     const clientId = process.env.Google_CLIENT_ID;
-    let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    let appUrl = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000"));
 
     if (!clientId) {
       console.error("Google OAuth not configured: Google_CLIENT_ID is missing");
@@ -48,7 +48,7 @@ export async function GET() {
     const response = NextResponse.redirect(authUrl.toString());
     response.cookies.set("oauth_signin_state", state, {
       httpOnly: true,
-      secure: true, // Always secure — Vercel always serves over HTTPS
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 600, // 10 minutes
       path: "/",

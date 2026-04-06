@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { getPrisma } from "@/lib/prisma";
 import { getCurrentUserFromToken } from "@/lib/getCurrentUser";
 
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000")).replace(/\/+$/, "");
+
 /**
  * GET /api/auth/tiktok/callback
  * Handles TikTok OAuth callback, exchanges code for tokens, and stores in database
@@ -18,7 +20,7 @@ export async function GET(req: Request) {
     if (error) {
       const redirectUrl = new URL(
         "/settings/social-accounts",
-        process.env.NEXT_PUBLIC_APP_URL
+        APP_URL
       );
       redirectUrl.searchParams.set("error", "oauth_denied");
       return NextResponse.redirect(redirectUrl.toString());
@@ -50,7 +52,7 @@ export async function GET(req: Request) {
     const user = await getCurrentUserFromToken(sessionToken);
 
     if (!user) {
-      const redirectUrl = new URL("/login", process.env.NEXT_PUBLIC_APP_URL);
+      const redirectUrl = new URL("/login", APP_URL);
       redirectUrl.searchParams.set("error", "not_authenticated");
       return NextResponse.redirect(redirectUrl.toString());
     }
@@ -58,7 +60,7 @@ export async function GET(req: Request) {
     // Exchange authorization code for tokens
     const clientKey = process.env.TikTok_CLIENT_KEY;
     const clientSecret = process.env.TikTok_CLIENT_SECRET;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const appUrl = APP_URL;
     const redirectUri = `${appUrl}/api/auth/tiktok/callback`;
 
     if (!clientKey || !clientSecret) {
@@ -136,7 +138,7 @@ export async function GET(req: Request) {
     // Redirect back to social accounts page with success message
     const redirectUrl = new URL(
       "/settings/social-accounts",
-      process.env.NEXT_PUBLIC_APP_URL
+      APP_URL
     );
     redirectUrl.searchParams.set("success", "tiktok_connected");
     return NextResponse.redirect(redirectUrl.toString());
@@ -144,7 +146,7 @@ export async function GET(req: Request) {
     console.error("TikTok OAuth callback error:", err);
     const redirectUrl = new URL(
       "/settings/social-accounts",
-      process.env.NEXT_PUBLIC_APP_URL
+      APP_URL
     );
     redirectUrl.searchParams.set("error", "oauth_failed");
     return NextResponse.redirect(redirectUrl.toString());

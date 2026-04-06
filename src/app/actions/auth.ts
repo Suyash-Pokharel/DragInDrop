@@ -16,7 +16,7 @@ import { validatePassword } from "@/lib/password";
 import { createSignedToken } from "@/lib/session";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000")).replace(/\/+$/, "");
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
@@ -192,7 +192,7 @@ export async function registerUser(
         await prisma.emailQueue.create({
           data: {
             to: normalizedEmail,
-            from: "DragInDrop <onboarding@resend.dev>",
+            from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
             subject: "Verify your DragInDrop Account",
             html: emailHtml,
           },
@@ -203,7 +203,7 @@ export async function registerUser(
     } else {
       try {
         await resend.emails.send({
-          from: "DragInDrop <onboarding@resend.dev>",
+          from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
           to: normalizedEmail,
           subject: "Verify your DragInDrop Account",
           html: emailHtml,
@@ -219,7 +219,7 @@ export async function registerUser(
           await prisma.emailQueue.create({
             data: {
               to: normalizedEmail,
-              from: "DragInDrop <onboarding@resend.dev>",
+              from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
               subject: "Verify your DragInDrop Account",
               html: emailHtml,
             },
@@ -510,7 +510,7 @@ export async function requestPasswordReset(
         await prisma.emailQueue.create({
           data: {
             to: normalizedEmail,
-            from: "DragInDrop <onboarding@resend.dev>",
+            from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
             subject: "Reset Your DragInDrop Password",
             html: emailHtml,
           },
@@ -521,7 +521,7 @@ export async function requestPasswordReset(
     } else {
       try {
         await resend.emails.send({
-          from: "DragInDrop <onboarding@resend.dev>",
+          from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
           to: normalizedEmail,
           subject: "Reset Your DragInDrop Password",
           html: emailHtml,
@@ -537,7 +537,7 @@ export async function requestPasswordReset(
           await prisma.emailQueue.create({
             data: {
               to: normalizedEmail,
-              from: "DragInDrop <onboarding@resend.dev>",
+              from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
               subject: "Reset Your DragInDrop Password",
               html: emailHtml,
             },
