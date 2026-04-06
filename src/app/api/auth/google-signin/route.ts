@@ -8,11 +8,11 @@ import crypto from "crypto";
  */
 export async function GET() {
   try {
-    const clientId = process.env.Google_CLIENT_ID;
+    const clientId = process.env.GOOGLE_CLIENT_ID;
     let appUrl = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000"));
 
     if (!clientId) {
-      console.error("Google OAuth not configured: Google_CLIENT_ID is missing");
+      console.error("Google OAuth not configured: GOOGLE_CLIENT_ID is missing");
       return NextResponse.json(
         { success: false, error: "Google OAuth not configured" },
         { status: 500 }

@@ -61,8 +61,8 @@ export async function GET(req: Request) {
     }
 
     // Exchange authorization code for tokens
-    const clientId = process.env.Google_CLIENT_ID;
-    const clientSecret = process.env.Google_CLIENT_SECRET;
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     let appUrl = APP_URL;
     
     // Remove trailing slash to ensure exact redirect_uri match

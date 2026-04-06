@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 import { createSignedToken, verifySignedToken } from "@/lib/session";
 
-const GOOGLE_CLIENT_ID = process.env.Google_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.Google_CLIENT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000")).replace(/\/+$/, "");
 
 export async function GET(req: NextRequest) {
