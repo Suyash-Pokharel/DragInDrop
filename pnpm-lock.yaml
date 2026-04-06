@@ -35,6 +35,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      pg:
+        specifier: npm:@neondatabase/serverless@^1.0.0
+        version: '@neondatabase/serverless@1.0.2'
       rate-limiter-flexible:
         specifier: ^9.1.1
         version: 9.1.1
