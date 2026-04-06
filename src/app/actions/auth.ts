@@ -243,7 +243,7 @@ export async function registerUser(
     }
 
     console.error("Registration Error:", error instanceof Error ? { message: error.message, stack: error.stack } : error);
-    return { success: false, error: "Internal Server Error" };
+    return { success: false, error: error instanceof Error ? error.message : "Internal Server Error" };
   }
 }
 
