@@ -19,13 +19,23 @@ export async function GET() {
       );
     }
 
+    // Log clientId verification (first 10 chars only for security)
+    console.log("[OAuth Init] Client ID (first 10 chars):", clientId.substring(0, 10));
+
+    // Log APP_URL before trailing slash removal
+    console.log("[OAuth Init] APP_URL before processing:", appUrl);
+
     // Remove trailing slash to ensure exact redirect_uri match
     if (appUrl?.endsWith('/')) {
       appUrl = appUrl.slice(0, -1);
+      console.log("[OAuth Init] Removed trailing slash from APP_URL:", appUrl);
     }
 
     // Generate CSRF state parameter
     const state = crypto.randomBytes(32).toString("hex");
+
+    // Log oauth_signin_state cookie value (first 10 chars only)
+    console.log("[OAuth Init] Generated state (first 10 chars):", state.substring(0, 10));
 
     // Build Google OAuth authorization URL for Sign In
     const redirectUri = `${appUrl}/api/auth/google-signin/callback`;
@@ -33,6 +43,9 @@ export async function GET() {
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile",
     ].join(" ");
+
+    // Log constructed redirectUri before building auth URL
+    console.log("[OAuth Init] Constructed redirect_uri:", redirectUri);
 
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     authUrl.searchParams.set("client_id", clientId);
