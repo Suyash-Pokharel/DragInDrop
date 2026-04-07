@@ -26,13 +26,12 @@
 
     /* Shadows */
     --shadow-color: hsla(220, 30%, 85%, 0.5);
-
-    }
+  }
 
   /* OVERRIDE BROWSER AUTOFILL STYLES */
   input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     /* Mask the background color with an inner shadow matching your theme */
     -webkit-box-shadow: 0 0 0 30px var(--background) inset !important;
@@ -187,7 +186,7 @@
     animation: smoothFadeIn 0.5s ease-out 0.4s forwards; /* 0.4s delay */
   }
 
-    /* --- SCROLL REVEAL ANIMATION --- */
+  /* --- SCROLL REVEAL ANIMATION --- */
   .reveal-hidden {
     opacity: 0;
     transform: translateY(30px); /* Start 30px down */

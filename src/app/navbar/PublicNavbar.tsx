@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { signIn } from "next-auth/react";
 import { Moon, Sun } from "lucide-react";
-import GoogleLogo from "../assets/logo/Google.webp"; // Ensure path is correct
+// TODO: Wire up Google OAuth flow — this logo is used in the Google sign-in button below.
+import GoogleLogo from "../assets/logo/Google.webp";
 
 export default function PublicNavbar() {
   const pathname = usePathname();
@@ -70,7 +72,11 @@ export default function PublicNavbar() {
         <div className="flex items-center gap-3 md:gap-4">
 
           {/* Google Button */}
-          <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-text-main text-sm font-medium hover:bg-surface-highlight hover:border-text-secondary/30 transition-all active:scale-95">
+          <button 
+            type="button"
+            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-text-main text-sm font-medium hover:bg-surface-highlight hover:border-text-secondary/30 transition-all active:scale-95"
+          >
             <Image
               src={GoogleLogo}
               alt="Google"

@@ -10,8 +10,9 @@ interface NavbarProps {
   imageSrc?: string | StaticImageData;
 }
 
-// Placeholder for future auth logic
-const userRole = "admin";
+// TODO: Replace with real auth session hook (e.g., useSession()) once available.
+// Defaulting to null so admin features are hidden until auth is integrated.
+const userRole: string | null = null;
 const isAdminUser = userRole === "admin";
 
 const NavbarWrapper = ({ imageSrc }: NavbarProps) => {

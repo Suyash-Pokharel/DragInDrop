@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
 import ForgetPassword from "./ForgotPassword";
 import GoogleLogo from "../assets/logo/Google.webp";
@@ -52,24 +53,17 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-        credentials: "include",
+      const res = await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
       });
 
-      const result = await res.json();
-
-      if (result.success) {
-        // Session cookie is set by the API response — redirect to dashboard
-        router.push("/dashboard");
-      } else {
-        setServerError(result.error || "Login failed. Please try again.");
+      if (res?.error) {
+        setServerError(res.error === "CredentialsSignin" ? "Invalid email or password." : res.error);
         setIsLoading(false);
+      } else if (res?.ok) {
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -227,7 +221,11 @@ export default function Login() {
               </div>
 
               {/* Google Login */}
-              <button className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group">
+              <button 
+                type="button" 
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group"
+              >
                 <Image
                   src={GoogleLogo}
                   alt="Google Logo"

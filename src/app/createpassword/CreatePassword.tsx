@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { Eye, EyeOff, Lock, Check, Circle } from "lucide-react";
+import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation"; // 1. Added useSearchParams
 import { Reveal } from "../components/Reveal";
 import { setPassword } from "../actions/auth"; // 2. Added Server Action Import
@@ -105,21 +106,17 @@ function CreatePasswordContent() {
       const result = await setPassword(token, formData.password);
 
       if (result.success) {
-        // If the server returned a session token, request the server to set an HttpOnly cookie.
-        const { sessionToken } = result as { sessionToken?: string };
-        if (sessionToken) {
+        // If the server returned an email, log them in directly
+        const { email } = result as { email?: string };
+        if (email) {
           try {
-            const r = await fetch("/api/auth/session", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ token: sessionToken }),
-              credentials: "include",
+            await signIn("credentials", {
+              redirect: false,
+              email: email,
+              password: formData.password,
             });
-            if (!r.ok) {
-              console.warn("Failed to set session cookie");
-            }
           } catch (err) {
-            console.error("Failed to call session API", err);
+            console.error("Failed to auto-login", err);
           }
         }
 

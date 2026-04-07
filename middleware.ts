@@ -1,68 +1,8 @@
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-// Middleware verifies the HMAC-signed session cookie and injects headers
-// containing `x-session-sub` and `x-session-email` for downstream handlers.
-// This runs in the Edge runtime, so we use Web Crypto APIs.
-
-async function toBase64Url(buffer: ArrayBuffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  const b64 = btoa(binary);
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function base64UrlDecodeToString(b64url: string) {
-  let s = b64url.replace(/-/g, "+").replace(/_/g, "/");
-  while (s.length % 4) s += "=";
-  // atob decodes to a binary string
-  const binary = atob(s);
-  // Convert binary string to normal utf-8 string
-  try {
-    // TextDecoder might not be necessary for simple JSON payloads, but is safe
-    const bytes = new Uint8Array(binary.split("").map((c) => c.charCodeAt(0)));
-    return new TextDecoder().decode(bytes);
-  } catch {
-    return binary;
-  }
-}
-
-async function verifyTokenEdge(token: string, secret: string) {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const [headerB64, bodyB64, sig] = parts;
-    const unsigned = `${headerB64}.${bodyB64}`;
-
-    const enc = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-
-    const signature = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      enc.encode(unsigned),
-    );
-    const expected = await toBase64Url(signature);
-    if (expected !== sig) return null;
-
-    const payloadJson = base64UrlDecodeToString(bodyB64);
-    const payload = JSON.parse(payloadJson);
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < now) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
+const { auth } = NextAuth(authConfig);
 
 // Routes that require a valid session to access
 const PROTECTED_ROUTES = ["/dashboard", "/admin"];
@@ -73,11 +13,23 @@ function isProtectedRoute(pathname: string) {
   );
 }
 
-export async function middleware(req: NextRequest) {
+const AUTH_ROUTES = ["/login", "/register"];
+
+export default auth((req) => {
   const { pathname } = req.nextUrl;
+  const isLoggedIn = !!req.auth;
+
+  // --- Redirect logged in users away from auth pages ---
+  if (isLoggedIn && AUTH_ROUTES.includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
 
   // --- Guard: /createpassword requires a ?token= query param ---
   if (pathname === "/createpassword") {
+    // We let logged in users access this? No, usually they shouldn't need it.
+    if (isLoggedIn) {
+       return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
     const tokenParam = req.nextUrl.searchParams.get("token");
     if (!tokenParam || tokenParam.trim() === "") {
       return NextResponse.redirect(new URL("/register", req.url));
@@ -86,33 +38,14 @@ export async function middleware(req: NextRequest) {
   }
 
   // --- Guard: Protected routes require a valid session ---
-  if (!isProtectedRoute(pathname)) return NextResponse.next();
-
-  const token = req.cookies.get("session")?.value;
-  if (!token) {
+  if (isProtectedRoute(pathname) && !isLoggedIn) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  const payload = await verifyTokenEdge(token, secret);
-  if (!payload) {
-    // Clear the invalid/expired session cookie and redirect
-    const response = NextResponse.redirect(new URL("/login", req.url));
-    response.cookies.set("session", "", { path: "/", maxAge: 0 });
-    return response;
-  }
-
-  const newHeaders = new Headers(req.headers);
-  if (payload.sub) newHeaders.set("x-session-sub", String(payload.sub));
-  if (payload.email) newHeaders.set("x-session-email", String(payload.email));
-
-  return NextResponse.next({ request: { headers: newHeaders } });
-}
+  return NextResponse.next();
+});
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/createpassword"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
+

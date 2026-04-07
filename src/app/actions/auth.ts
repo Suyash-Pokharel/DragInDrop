@@ -247,7 +247,7 @@ export async function registerUser(
 export async function setPassword(
   token: string,
   password: string,
-): Promise<Result & { sessionToken?: string }> {
+): Promise<Result & { email?: string }> {
   if (!token || !password) {
     return { success: false, error: "Missing token or password." };
   }
@@ -304,19 +304,7 @@ export async function setPassword(
       }),
     ]);
 
-    // Create a simple signed session token (JWT-like) so the client can set a secure HttpOnly cookie.
-    const secret = process.env.SESSION_SECRET;
-    if (!secret) {
-      console.warn("Missing SESSION_SECRET; skipping session creation.");
-      return { success: true };
-    }
-
-    const sessionToken = createSignedToken(
-      { sub: storedToken.userId, email: storedToken.user.email },
-      secret,
-    );
-
-    return { success: true, sessionToken };
+    return { success: true, email: storedToken.user.email };
   } catch (error: unknown) {
     // ✅ Uses strict 'unknown' from Code 3
     console.error("Set Password Error:", error);
@@ -324,81 +312,3 @@ export async function setPassword(
   }
 }
 
-/**
- * Authenticate a user with email + password and return a signed session token.
- */
-export async function loginUser(
-  email: string,
-  password: string,
-  ip?: string,
-): Promise<Result & { sessionToken?: string }> {
-  if (!email || !password) {
-    return { success: false, error: "Email and password are required." };
-  }
-
-  const normalizedEmail = email.trim().toLowerCase();
-
-  try {
-    // Rate-limit by IP
-    try {
-      if (ip) await perIpLoginLimiter.consume(ip);
-    } catch {
-      return {
-        success: false,
-        error: "Too many login attempts. Please try again later.",
-      };
-    }
-
-    // Rate-limit by email
-    try {
-      await perEmailLoginLimiter.consume(normalizedEmail);
-    } catch {
-      return {
-        success: false,
-        error:
-          "Too many login attempts for this account. Please try again later.",
-      };
-    }
-
-    // Look up user
-    const prisma = getPrisma();
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
-
-    if (!user) {
-      return { success: false, error: "Invalid email or password." };
-    }
-
-    // Check if user has verified their email and set a password
-    if (!user.emailVerified || !user.password) {
-      return {
-        success: false,
-        error: "Please verify your email and set a password before logging in.",
-      };
-    }
-
-    // Verify password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return { success: false, error: "Invalid email or password." };
-    }
-
-    // Create session token
-    const secret = process.env.SESSION_SECRET;
-    if (!secret) {
-      console.warn("Missing SESSION_SECRET; cannot create session.");
-      return { success: false, error: "Server configuration error." };
-    }
-
-    const sessionToken = createSignedToken(
-      { sub: user.id, email: user.email },
-      secret,
-    );
-
-    return { success: true, sessionToken };
-  } catch (error: unknown) {
-    console.error("Login Error:", error);
-    return { success: false, error: "An unexpected error occurred." };
-  }
-}

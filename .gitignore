@@ -67,6 +67,10 @@ next-env.d.ts
 .parcel-cache/
 .tmp/
 temp/
+*.md
+*.txt
+*.test.ts
+*.test.tsx
 
 # Logs and debug
 *.log
@@ -91,7 +95,5 @@ docker-compose.override.yml
 *.zip
 *.tar
 
-.vercel
-.env*.local
 
 /src/generated/prisma
