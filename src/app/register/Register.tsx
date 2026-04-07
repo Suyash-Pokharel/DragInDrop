@@ -288,8 +288,12 @@ const handleSubmit = async (e: React.FormEvent) => {
               </span>
             </div>
 
-            {/* Google Login */}
-            <button className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group">
+            {/* Google Sign-In */}
+            <button 
+              type="button"
+              onClick={() => window.location.href = "/api/auth/google-signin"}
+              className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group"
+            >
               <Image
                 src={GoogleLogo}
                 alt="Google Logo"

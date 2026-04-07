@@ -16,7 +16,7 @@ import { validatePassword } from "@/lib/password";
 import { createSignedToken } from "@/lib/session";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? "https://suyash-pokharel.com.np" : "http://localhost:3000")).replace(/\/+$/, "");
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
@@ -192,7 +192,7 @@ export async function registerUser(
         await prisma.emailQueue.create({
           data: {
             to: normalizedEmail,
-            from: "onboarding@dragindrop.dev",
+            from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
             subject: "Verify your DragInDrop Account",
             html: emailHtml,
           },
@@ -203,25 +203,31 @@ export async function registerUser(
     } else {
       try {
         await resend.emails.send({
-          from: "onboarding@resend.dev",
+          from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
           to: normalizedEmail,
           subject: "Verify your DragInDrop Account",
           html: emailHtml,
         });
       } catch (sendErr) {
         console.error("Email send failed, enqueuing:", sendErr);
+        // Log the actual error for debugging
+        if (sendErr instanceof Error) {
+          console.error("Error details:", sendErr.message);
+        }
         // Fallback: enqueue for retry
         try {
           await prisma.emailQueue.create({
             data: {
               to: normalizedEmail,
-              from: "onboarding@dragindrop.dev",
+              from: "DragInDrop <no-reply@contact.suyash-pokharel.com.np>",
               subject: "Verify your DragInDrop Account",
               html: emailHtml,
             },
           });
         } catch (qErr) {
           console.error("Failed to enqueue email:", qErr);
+          // Re-throw the original error so user knows email failed
+          throw new Error("Failed to send verification email. Please try again later.");
         }
       }
     }
@@ -236,8 +242,8 @@ export async function registerUser(
       return { success: false, error: "User already exists with this email." };
     }
 
-    console.error("Registration Error:", error);
-    return { success: false, error: "Internal Server Error" };
+    console.error("Registration Error:", error instanceof Error ? { message: error.message, stack: error.stack } : error);
+    return { success: false, error: error instanceof Error ? error.message : "Internal Server Error" };
   }
 }
 

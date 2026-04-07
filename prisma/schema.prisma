@@ -3,8 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  // Remember: these are handled by config, not here
+  provider  = "postgresql"
 }
 
 enum TokenType {
@@ -32,6 +31,15 @@ model User {
   accounts      Account[]
   sessions      Session[]
   tokens        VerificationToken[]
+  
+  // Relation to social accounts
+  socialAccounts SocialAccount[]
+  
+  // Relation to video uploads
+  videoUploads  VideoUpload[]
+  
+  // Relation to scheduled posts
+  scheduledPosts ScheduledPost[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -94,4 +102,65 @@ model RegistrationAttempt {
   ip        String
   createdAt DateTime @default(now())
   @@index([ip, createdAt])
+}
+
+model SocialAccount {
+  id           String    @id @default(cuid())
+  userId       String
+  platform     String    // "google", "tiktok"
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  username     String?
+  avatarUrl    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  // Link to User
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, platform])
+}
+
+model VideoUpload {
+  id               String   @id @default(cuid())
+  userId           String
+  fileName         String?
+  fileKey          String   @unique
+  fileUrl          String
+  fileSize         Int?
+  status           String   @default("uploaded") // "uploaded", "published", "failed"
+  associatedPostId String?
+  uploadedAt       DateTime @default(now())
+  createdAt        DateTime @default(now())
+  
+  // Link to User
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Link to ScheduledPost
+  scheduledPost    ScheduledPost?
+}
+
+model ScheduledPost {
+  id            String   @id @default(cuid())
+  userId        String
+  platform      String   // Google, TikTok, Instagram, etc.
+  videoUploadId String   @unique
+  title         String?
+  description   String?
+  tags          String[] // Array of tags
+  scheduledDate DateTime
+  status        String   @default("pending") // pending, published, failed
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Link to User
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Link to VideoUpload
+  videoUpload   VideoUpload  @relation(fields: [videoUploadId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, scheduledDate])
+  @@index([status])
 }

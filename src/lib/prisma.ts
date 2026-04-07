@@ -8,7 +8,10 @@ export function getPrisma(): PrismaClient {
   // Use a global variable to preserve the client across hot reloads in dev
   if (global.__prismaClient) return global.__prismaClient;
 
-  const client = new PrismaClient();
+  const client = new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
+  
   if (process.env.NODE_ENV !== "production") {
     global.__prismaClient = client;
   }

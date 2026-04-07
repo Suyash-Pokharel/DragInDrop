@@ -1,10 +1,11 @@
 import { defineConfig } from "@prisma/config";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    // process.env is used instead of env() so prisma generate works
-    // even when the env var isn't set (e.g. during CI install phase)
-    url: process.env.DATABASE_URL_UNPOOLED ?? "",
+    url: process.env.POSTGRES_PRISMA_URL,
+    directUrl: process.env.POSTGRES_URL_NON_POOLING,
   },
 });

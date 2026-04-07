@@ -1,0 +1,750 @@
+
+> dragindrop@0.1.0 dev D:\INTERNSHIP\dragindrop
+> next dev
+
+Γû▓ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://169.254.83.107:3000
+- Environments: .env.local
+
+Γ£ô Starting...
+Γ£ô Ready in 18.5s
+Γùï Compiling / ...
+Γ¿» ./src/app/globals.css
+Error evaluating Node.js code
+Error: Cannot find module 'picocolors'
+    [at <anonymous> (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.commonJsRequire (turbopack:///[turbopack]/shared/runtime-utils.ts:389:10)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.esmImport (turbopack:///[turbopack]/shared/runtime-utils.ts:347:18)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs:1:1)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:6:18
+Module not found: Can't resolve 'nanoid/non-secure'
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+> 6 | let { nanoid } = require('nanoid/non-secure')
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7 |
+  8 | let terminalHighlight = require('./terminal-highlight')
+  9 | let CssSyntaxError = require('./css-syntax-error')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let terminalHighlight = require('./terminal-highlight')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let tokenizer = require('./tokenize')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+  6 | let { nanoid } = require('nanoid/non-secure')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { dirname, relative, resolve, sep } = require('path')
+  5 | let { pathToFileURL } = require('url')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/lazy-result.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { existsSync, readFileSync } = require('fs')
+  5 | let { dirname, join } = require('path')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γùï Compiling /_error ...
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET / 500 in 10.5s (compile: 10.0s, render: 487ms)
+Γ¿» ./src/app/globals.css
+Error evaluating Node.js code
+Error: Cannot find module 'picocolors'
+    [at <anonymous> (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.commonJsRequire (turbopack:///[turbopack]/shared/runtime-utils.ts:389:10)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.esmImport (turbopack:///[turbopack]/shared/runtime-utils.ts:347:18)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs:1:1)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:6:18
+Module not found: Can't resolve 'nanoid/non-secure'
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+> 6 | let { nanoid } = require('nanoid/non-secure')
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7 |
+  8 | let terminalHighlight = require('./terminal-highlight')
+  9 | let CssSyntaxError = require('./css-syntax-error')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let terminalHighlight = require('./terminal-highlight')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let tokenizer = require('./tokenize')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+  6 | let { nanoid } = require('nanoid/non-secure')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { dirname, relative, resolve, sep } = require('path')
+  5 | let { pathToFileURL } = require('url')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/lazy-result.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { existsSync, readFileSync } = require('fs')
+  5 | let { dirname, join } = require('path')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET / 500 in 62ms (compile: 46ms, render: 17ms)
+Γ¿» ./src/app/globals.css
+Error evaluating Node.js code
+Error: Cannot find module 'picocolors'
+    [at <anonymous> (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.commonJsRequire (turbopack:///[turbopack]/shared/runtime-utils.ts:389:10)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.esmImport (turbopack:///[turbopack]/shared/runtime-utils.ts:347:18)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs:1:1)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:6:18
+Module not found: Can't resolve 'nanoid/non-secure'
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+> 6 | let { nanoid } = require('nanoid/non-secure')
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7 |
+  8 | let terminalHighlight = require('./terminal-highlight')
+  9 | let CssSyntaxError = require('./css-syntax-error')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let terminalHighlight = require('./terminal-highlight')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let tokenizer = require('./tokenize')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+  6 | let { nanoid } = require('nanoid/non-secure')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { dirname, relative, resolve, sep } = require('path')
+  5 | let { pathToFileURL } = require('url')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/lazy-result.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { existsSync, readFileSync } = require('fs')
+  5 | let { dirname, join } = require('path')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET / 500 in 54ms (compile: 40ms, render: 14ms)
+Γ¿» ./src/app/globals.css
+Error evaluating Node.js code
+Error: Cannot find module 'picocolors'
+    [at <anonymous> (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.commonJsRequire (turbopack:///[turbopack]/shared/runtime-utils.ts:389:10)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js:3:5)]
+    [at instantiateModule (turbopack:///[turbopack]/nodejs/runtime.ts:226:5)]
+    [at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/nodejs/runtime.ts:259:10)]
+    [at Context.esmImport (turbopack:///[turbopack]/shared/runtime-utils.ts:347:18)]
+    [at module evaluation (turbopack:///[project]/node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs:1:1)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:6:18
+Module not found: Can't resolve 'nanoid/non-secure'
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+> 6 | let { nanoid } = require('nanoid/non-secure')
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  7 |
+  8 | let terminalHighlight = require('./terminal-highlight')
+  9 | let CssSyntaxError = require('./css-syntax-error')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let terminalHighlight = require('./terminal-highlight')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/css-syntax-error.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js:3:12
+Module not found: Can't resolve 'picocolors'
+  1 | 'use strict'
+  2 |
+> 3 | let pico = require('picocolors')
+    |            ^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | let tokenizer = require('./tokenize')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/terminal-highlight.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { fileURLToPath, pathToFileURL } = require('url')
+  5 | let { isAbsolute, resolve } = require('path')
+  6 | let { nanoid } = require('nanoid/non-secure')
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { dirname, relative, resolve, sep } = require('path')
+  5 | let { pathToFileURL } = require('url')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/map-generator.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/lazy-result.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js:3:49
+Module not found: Can't resolve 'source-map-js'
+  1 | 'use strict'
+  2 |
+> 3 | let { SourceMapConsumer, SourceMapGenerator } = require('source-map-js')
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | let { existsSync, readFileSync } = require('fs')
+  5 | let { dirname, join } = require('path')
+  6 |
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/previous-map.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/input.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.js
+    ./node_modules/.pnpm/postcss@8.4.31/node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ¿» ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js:24190:21
+Module not found: Can't resolve 'scheduler'
+
+
+Import trace:
+  Browser:
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/cjs/react-dom-client.development.js
+    ./node_modules/.pnpm/react-dom@19.2.0_react@19.2.0/node_modules/react-dom/client.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/index.js
+    ./node_modules/.pnpm/next@16.1.1_@babel+core@7.2_27d3faa9b1a9d8cd0e1872aee1c051b9/node_modules/next/dist/client/next-dev-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET / 500 in 66ms (compile: 47ms, render: 18ms)
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 3221225786.
