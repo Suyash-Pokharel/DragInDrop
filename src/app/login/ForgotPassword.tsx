@@ -64,7 +64,7 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
         // Example: const res = await fetch('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
         setTimeout(() => {
             setIsLoading(false);
-        }
+        }, 1000);
     };
 
     if (!mounted) return null;
