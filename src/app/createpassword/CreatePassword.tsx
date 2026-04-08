@@ -105,7 +105,7 @@ function CreatePasswordContent() {
       // Call the Backend Server Action to set password
       const result = await setPassword(token, formData.password);
 
-      if (result.success && result.email) {
+      if (result.success) {
         // Auto-login using NextAuth signIn with credentials
         const signInResult = await signIn("credentials", {
           email: result.email,
