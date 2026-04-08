@@ -136,11 +136,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Return user object with required fields
+        // Note: NextAuth's User type uses `string | undefined`, not `string | null`,
+        // so we must convert null values to undefined.
         return {
           id: user.id,
           email: user.email,
           firstName: user.firstName,
-          lastName: user.lastName,
+          lastName: user.lastName ?? undefined,
           role: user.role,
           emailVerified: user.emailVerified,
         };
