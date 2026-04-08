@@ -23,10 +23,30 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          email: profile.email,
+          firstName: profile.name || profile.email?.split('@')[0] || "User",
+          lastName: "",
+          emailVerified: new Date(),
+          image: profile.picture,
+        };
+      },
     }),
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.id,
+          email: profile.email,
+          firstName: profile.name || profile.email?.split('@')[0] || "User",
+          lastName: "",
+          emailVerified: new Date(),
+          image: profile.picture?.data?.url,
+        };
+      },
     }),
     {
       id: "tiktok",
@@ -47,8 +67,10 @@ export const authOptions: NextAuthOptions = {
       profile(profile: any) {
         return {
           id: profile.data.user.open_id,
-          name: profile.data.user.display_name,
           email: profile.data.user.email,
+          firstName: profile.data.user.display_name || profile.data.user.email?.split('@')[0] || "User",
+          lastName: "",
+          emailVerified: new Date(),
           image: profile.data.user.avatar_url,
         };
       },
@@ -57,6 +79,16 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.X_CLIENT_ID!,
       clientSecret: process.env.X_CLIENT_SECRET!,
       version: "2.0",
+      profile(profile) {
+        return {
+          id: profile.data.id,
+          email: profile.data.email,
+          firstName: profile.data.name || profile.data.username || "User",
+          lastName: "",
+          emailVerified: new Date(),
+          image: profile.data.profile_image_url,
+        };
+      },
     }),
     {
       id: "linkedin",
@@ -74,10 +106,15 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.LINKEDIN_CLIENT_ID!,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
       profile(profile: any) {
+        const firstName = profile.localizedFirstName || "";
+        const lastName = profile.localizedLastName || "";
+        
         return {
           id: profile.id,
-          name: `${profile.localizedFirstName} ${profile.localizedLastName}`,
           email: profile.email,
+          firstName: firstName || profile.email?.split('@')[0] || "User",
+          lastName: lastName,
+          emailVerified: new Date(),
           image: profile.profilePicture?.displayImage,
         };
       },
@@ -156,16 +193,9 @@ export const authOptions: NextAuthOptions = {
   },
   
   callbacks: {
-    async signIn({ user, account }) {
-      // For OAuth providers, update emailVerified to current timestamp
-      if (account && account.provider !== "credentials") {
-        const prisma = getPrisma();
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { emailVerified: new Date() },
-        });
-      }
-      
+    async signIn() {
+      // Simply allow sign-in
+      // emailVerified is set in profile callbacks during user creation
       return true;
     },
     
