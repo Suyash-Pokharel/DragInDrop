@@ -3,7 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 import { ensureAdmin } from "@/lib/ensureAdmin";
 
 export async function GET(req: Request) {
-  const adminCheck = await ensureAdmin(req);
+  const adminCheck = await ensureAdmin();
   if (adminCheck instanceof NextResponse) return adminCheck;
 
   // At this point, adminCheck is the user

@@ -13,7 +13,6 @@ import {
   perEmailLoginLimiter,
 } from "@/lib/limiter";
 import { validatePassword } from "@/lib/password";
-import { createSignedToken } from "@/lib/session";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -243,11 +242,12 @@ export async function registerUser(
 
 /**
  * Redeem a verification token and set the user's password.
+ * After successful password set, the client should call NextAuth signIn.
  */
 export async function setPassword(
   token: string,
   password: string,
-): Promise<Result & { sessionToken?: string }> {
+): Promise<Result & { email?: string }> {
   if (!token || !password) {
     return { success: false, error: "Missing token or password." };
   }
@@ -304,28 +304,21 @@ export async function setPassword(
       }),
     ]);
 
-    // Create a simple signed session token (JWT-like) so the client can set a secure HttpOnly cookie.
-    const secret = process.env.SESSION_SECRET;
-    if (!secret) {
-      console.warn("Missing SESSION_SECRET; skipping session creation.");
-      return { success: true };
-    }
-
-    const sessionToken = createSignedToken(
-      { sub: storedToken.userId, email: storedToken.user.email },
-      secret,
-    );
-
-    return { success: true, sessionToken };
+    // Return user email so client can call NextAuth signIn
+    return { success: true, email: storedToken.user.email };
   } catch (error: unknown) {
-    // ✅ Uses strict 'unknown' from Code 3
     console.error("Set Password Error:", error);
     return { success: false, error: "Failed to set password." };
   }
 }
 
 /**
- * Authenticate a user with email + password and return a signed session token.
+ * @deprecated This function is deprecated and will be removed in favor of NextAuth.
+ * Use NextAuth's Credentials Provider instead.
+ * See: src/app/api/auth/[...nextauth]/route.ts
+ * 
+ * Authenticate a user with email + password.
+ * This function is no longer used after NextAuth migration.
  */
 export async function loginUser(
   email: string,
@@ -384,19 +377,12 @@ export async function loginUser(
       return { success: false, error: "Invalid email or password." };
     }
 
-    // Create session token
-    const secret = process.env.SESSION_SECRET;
-    if (!secret) {
-      console.warn("Missing SESSION_SECRET; cannot create session.");
-      return { success: false, error: "Server configuration error." };
-    }
-
-    const sessionToken = createSignedToken(
-      { sub: user.id, email: user.email },
-      secret,
-    );
-
-    return { success: true, sessionToken };
+    // Session management is now handled by NextAuth
+    // This function should not be used - use NextAuth signIn instead
+    return { 
+      success: false, 
+      error: "This login method is deprecated. Please use NextAuth signIn." 
+    };
   } catch (error: unknown) {
     console.error("Login Error:", error);
     return { success: false, error: "An unexpected error occurred." };

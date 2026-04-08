@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
 import ForgetPassword from "./ForgotPassword";
 import GoogleLogo from "../assets/logo/Google.webp";
@@ -11,6 +12,7 @@ import { Reveal } from "../components/Reveal";
 
 export default function Login() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Login State
   const [showPassword, setShowPassword] = useState(false);
@@ -29,6 +31,16 @@ export default function Login() {
   const isFormValid =
     formData.email.trim() !== "" && formData.password.trim() !== "";
   const [showForgetPassword, setShowForgetPassword] = useState(false);
+
+  // Get error from URL query parameter
+  const urlError = searchParams.get("error");
+  const errorMessage = urlError === "CredentialsSignin"
+    ? "Invalid email or password"
+    : urlError === "OAuthAccountNotLinked"
+    ? "Email already exists with different provider"
+    : urlError
+    ? "Authentication failed. Please try again."
+    : null;
 
   // Reusable Handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,30 +64,27 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-        credentials: "include",
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
       });
 
-      const result = await res.json();
-
-      if (result.success) {
-        // Session cookie is set by the API response — redirect to dashboard
-        router.push("/dashboard");
-      } else {
-        setServerError(result.error || "Login failed. Please try again.");
+      if (result?.error) {
+        setServerError(result.error);
         setIsLoading(false);
+      } else if (result?.ok) {
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Login error:", error);
       setServerError("Something went wrong. Please try again.");
       setIsLoading(false);
     }
+  };
+
+  const handleOAuthSignIn = (provider: string) => {
+    signIn(provider, { callbackUrl: "/dashboard" });
   };
 
   return (
@@ -181,9 +190,9 @@ export default function Login() {
               </div>
 
               {/* Server Error Message */}
-              {serverError && (
+              {(serverError || errorMessage) && (
                 <div className="text-sm text-red-500 text-center bg-red-500/10 border border-red-500/20 rounded-lg py-2.5 px-3">
-                  {serverError}
+                  {serverError || errorMessage}
                 </div>
               )}
 
@@ -227,7 +236,11 @@ export default function Login() {
               </div>
 
               {/* Google Login */}
-              <button className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group">
+              <button
+                type="button"
+                onClick={() => handleOAuthSignIn("google")}
+                className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group"
+              >
                 <Image
                   src={GoogleLogo}
                   alt="Google Logo"

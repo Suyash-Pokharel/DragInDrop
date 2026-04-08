@@ -2,9 +2,10 @@
 
 import React, { useState, Suspense } from "react";
 import { Eye, EyeOff, Lock, Check, Circle } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation"; // 1. Added useSearchParams
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Reveal } from "../components/Reveal";
-import { setPassword } from "../actions/auth"; // 2. Added Server Action Import
+import { setPassword } from "../actions/auth";
 import { passwordCriteria } from "@/lib/password";
 
 const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
@@ -22,11 +23,11 @@ const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
   </li>
 );
 
-// 3. We rename your main component to 'CreatePasswordContent' so we can wrap it later
+// Rename main component to 'CreatePasswordContent' so we can wrap it in Suspense
 function CreatePasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token"); // 4. Grab the token from URL
+  const token = searchParams.get("token");
 
   const [formData, setFormData] = useState({
     password: "",
@@ -81,7 +82,7 @@ function CreatePasswordContent() {
     setIsPasswordFocused(true);
   };
 
-  // 5. UPDATED SUBMIT HANDLER
+  // UPDATED SUBMIT HANDLER - Uses NextAuth signIn after password set
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -101,30 +102,25 @@ function CreatePasswordContent() {
     setIsLoading(true);
 
     try {
-      // Call the actual Backend Server Action
+      // Call the Backend Server Action to set password
       const result = await setPassword(token, formData.password);
 
-      if (result.success) {
-        // If the server returned a session token, request the server to set an HttpOnly cookie.
-        const { sessionToken } = result as { sessionToken?: string };
-        if (sessionToken) {
-          try {
-            const r = await fetch("/api/auth/session", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ token: sessionToken }),
-              credentials: "include",
-            });
-            if (!r.ok) {
-              console.warn("Failed to set session cookie");
-            }
-          } catch (err) {
-            console.error("Failed to call session API", err);
-          }
-        }
+      if (result.success && result.email) {
+        // Auto-login using NextAuth signIn with credentials
+        const signInResult = await signIn("credentials", {
+          email: result.email,
+          password: formData.password,
+          redirect: false,
+        });
 
-        // Success: Redirect to dashboard
-        router.push("/dashboard");
+        if (signInResult?.ok) {
+          // Success: Redirect to dashboard
+          router.push("/dashboard");
+        } else {
+          // Sign-in failed after password set
+          alert("Password set successfully, but auto-login failed. Please log in manually.");
+          router.push("/login");
+        }
       } else {
         // Error: Show message from server (e.g. "Token expired")
         alert(result.error);
@@ -296,7 +292,7 @@ function CreatePasswordContent() {
   );
 }
 
-// 6. REQUIRED: Wrap in Suspense to allow useSearchParams to work without de-opting build
+// Wrap in Suspense to allow useSearchParams to work without de-opting build
 export default function CreatePassword() {
   return (
     <Suspense

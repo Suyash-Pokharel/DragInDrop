@@ -6,7 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
-import GoogleLogo from "../assets/logo/Google.webp"; // Ensure path is correct
+// TODO: Wire up Google OAuth flow — this logo is used in the Google sign-in button below.
+import GoogleLogo from "../assets/logo/Google.webp";
 
 export default function PublicNavbar() {
   const pathname = usePathname();

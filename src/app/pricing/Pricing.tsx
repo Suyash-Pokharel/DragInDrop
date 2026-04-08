@@ -5,7 +5,7 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { Reveal } from "../components/Reveal";
 
-  /* --- FAQ Section --- */
+/* --- FAQ Section --- */
 const FAQS = [
   {
     question: "Can I change my plan later?",
@@ -45,7 +45,6 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-background text-text-main pt-10 pb-5 px-3 transition-colors duration-300 font-sans">
       <div className="max-w-[90%] mx-auto">
-        
         {/* --- HEADER --- */}
         <div className="text-center max-w-3xl mx-auto mb-10 px-3">
           <Reveal width="100%" delay={0.05}>
@@ -55,9 +54,9 @@ export default function PricingPage() {
           </Reveal>
           <Reveal width="100%" delay={0.1}>
             <p className="text-lg md:text-xl text-text-secondary leading-relaxed">
-              Join thousands of creators who trust DragInDrop to streamline their
-              workflow. Start for free, then upgrade as you grow with a plan that
-              fits your needs.
+              Join thousands of creators who trust DragInDrop to streamline
+              their workflow. Start for free, then upgrade as you grow with a
+              plan that fits your needs.
             </p>
           </Reveal>
         </div>
@@ -65,7 +64,7 @@ export default function PricingPage() {
         {/* --- FREE PLAN BANNER --- */}
         <div className="flex justify-center mb-14">
           <Reveal width="100%" delay={0.15}>
-            <div className="w-[296px] mx-auto bg-surface text-text-main border border-primary/50 rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border hover:border-primary transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden flex flex-col h-full items-center">
+            <div className="w-74 mx-auto bg-surface text-text-main border border-primary/50 rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border hover:border-primary transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden flex flex-col h-full items-center">
               <div className="text-center mb-6">
                 <h2 className="text-3xl font-bold mb-2">Free</h2>
                 <p className="text-sm text-text-secondary">
@@ -99,7 +98,7 @@ export default function PricingPage() {
               </ul>
 
               <Link
-                href=""
+                href="/register"
                 className="block w-full py-3 px-8 rounded-lg bg-background border border-border text-text-main font-semibold duration-400 hover:border-primary hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform text-center"
               >
                 Get Started
@@ -131,8 +130,8 @@ export default function PricingPage() {
                 onClick={() => setIsAnnual(!isAnnual)}
               >
                 <div
-                  className={`absolute top-[3px] w-5 h-5 bg-primary rounded-full shadow-md transition-all duration-300 ${
-                    isAnnual ? "left-[30px]" : "left-1"
+                  className={`absolute top-0.75 w-5 h-5 bg-primary rounded-full shadow-md transition-all duration-300 ${
+                    isAnnual ? "left-7.5" : "left-1"
                   }`}
                 ></div>
               </div>
@@ -161,10 +160,9 @@ export default function PricingPage() {
 
         {/* --- PRICING GRID --- */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 w-full gap-y-12 max-w-6xl mx-auto mb-18 justify-items-center items-start">
-          
           {/* 1. STARTER PLAN (Delay 0.1s) */}
           <Reveal width="100%" delay={0.1}>
-            <div className="w-[321px] mx-auto bg-surface text-text-main border border-surface rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border-2 hover:border-primary transform hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden flex flex-col h-full items-center">
+            <div className="w-80.25 mx-auto bg-surface text-text-main border border-surface rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border-2 hover:border-primary transform hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden flex flex-col h-full items-center">
               <div className="text-center mb-6">
                 <h2 className="text-3xl font-bold mb-2">Starter</h2>
                 <p className="text-sm text-text-secondary h-8 ">
@@ -209,7 +207,7 @@ export default function PricingPage() {
               </ul>
 
               <Link
-                href=""
+                href="/register"
                 className="block w-full py-3 px-8 rounded-lg bg-background border border-border text-text-main font-semibold hover:border-primary hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform duration-400 text-center"
               >
                 Get Started
@@ -219,7 +217,7 @@ export default function PricingPage() {
 
           {/* 2. PRO PLAN (Delay 0.2s - Cascading Effect) */}
           <Reveal width="100%" delay={0.15}>
-            <div className="w-[321px] mx-auto order-first lg:-order-1 xl:order-0 relative bg-surface text-text-main border-3 border-primary rounded-2xl p-8 shadow-glow transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300 overflow-hidden flex flex-col h-full items-center z-10">
+            <div className="w-80.25 mx-auto order-first lg:-order-1 xl:order-0 relative bg-surface text-text-main border-3 border-primary rounded-2xl p-8 shadow-glow transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300 overflow-hidden flex flex-col h-full items-center z-10">
               <div className="absolute top-0 right-0">
                 <div className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm tracking-wide">
                   MOST POPULAR
@@ -281,7 +279,7 @@ export default function PricingPage() {
 
           {/* 3. BUSINESS PLAN (Delay 0.3s - Cascading Effect) */}
           <Reveal width="100%" delay={0.2}>
-            <div className="w-[321px] mx-auto bg-surface text-text-main border border-surface rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border-2 hover:border-primary transform hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden flex flex-col h-full items-center">
+            <div className="w-80.25 mx-auto bg-surface text-text-main border border-surface rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border-2 hover:border-primary transform hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden flex flex-col h-full items-center">
               <div className="text-center mb-6">
                 <h2 className="text-3xl font-bold mb-2">Business</h2>
                 <p className="text-sm text-text-secondary h-8">
@@ -316,7 +314,7 @@ export default function PricingPage() {
               </ul>
 
               <Link
-                href="/contact"
+                href="/contactus"
                 className="block w-full py-3 px-8 rounded-lg bg-background border border-border text-text-main font-semibold hover:border-primary hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform duration-400 text-center"
               >
                 Contact Sales

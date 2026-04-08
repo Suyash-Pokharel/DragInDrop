@@ -1,10 +1,11 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getPrisma } from "@/lib/prisma";
-import { verifySignedToken } from "./session";
 
 export type PublicUser = {
   id: string;
-  firstName: string | null;
-  lastName: string | null;
+  firstName: string;
+  lastName: string;
   email: string;
   role?: string;
   profilePic?: string | null;
@@ -14,19 +15,19 @@ export type PublicUser = {
 };
 
 /**
- * Given a signed session token, return the user from the database (without password).
+ * Get the current user from NextAuth session.
+ * Returns user data from database or null if no session exists.
  */
-export async function getCurrentUserFromToken(
-  token?: string,
-): Promise<PublicUser | null> {
-  if (!token) return null;
-
-  const payload = verifySignedToken(token);
-  if (!payload || !payload.sub) return null;
+export async function getCurrentUser(): Promise<PublicUser | null> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return null;
+  }
 
   const prisma = getPrisma();
   const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
+    where: { id: session.user.id },
     select: {
       id: true,
       firstName: true,
@@ -41,18 +42,4 @@ export async function getCurrentUserFromToken(
   });
 
   return user;
-}
-
-/**
- * Convenience wrapper: extract token from a cookie header string like 'session=...'
- */
-export function extractSessionFromCookieHeader(
-  cookieHeader?: string,
-): string | undefined {
-  if (!cookieHeader) return undefined;
-  const parts = cookieHeader.split(/;\s*/);
-  for (const p of parts) {
-    if (p.startsWith("session=")) return p.substring("session=".length);
-  }
-  return undefined;
 }

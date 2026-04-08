@@ -56,7 +56,9 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
 
         setIsLoading(true);
 
-        // Simulate API call
+        // TODO: Replace with real password reset API call once the RESET_PASSWORD
+        // server action is implemented (the TokenType.RESET_PASSWORD enum already exists in the Prisma schema).
+        // Example: const res = await fetch('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
         setTimeout(() => {
             setIsLoading(false);
             setView("success");

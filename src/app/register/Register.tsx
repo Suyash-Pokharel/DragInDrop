@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import GoogleLogo from "../assets/logo/Google.webp";
 import VerificationSent from "./VerificationSent";
 import { Reveal } from "../components/Reveal";
@@ -129,6 +130,10 @@ const handleSubmit = async (e: React.FormEvent) => {
         alert(result.error); 
     }
 };
+
+  const handleOAuthSignIn = (provider: string) => {
+    signIn(provider, { callbackUrl: "/dashboard" });
+  };
 
   return (
     <Reveal width="100%" delay={0.05}>
@@ -289,7 +294,11 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
 
             {/* Google Login */}
-            <button className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group">
+            <button
+              type="button"
+              onClick={() => handleOAuthSignIn("google")}
+              className="w-full py-3 px-4 rounded-lg bg-background/50 border border-border text-text-main font-medium hover:bg-surface-highlight hover:border-text-secondary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 group"
+            >
               <Image
                 src={GoogleLogo}
                 alt="Google Logo"
