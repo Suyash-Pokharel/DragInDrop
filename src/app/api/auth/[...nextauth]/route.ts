@@ -18,35 +18,15 @@ import bcrypt from "bcryptjs";
  */
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(getPrisma()),
-  
+
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      profile(profile) {
-        return {
-          id: profile.sub,
-          email: profile.email,
-          firstName: profile.name || profile.email?.split('@')[0] || "User",
-          lastName: "",
-          emailVerified: new Date(),
-          image: profile.picture,
-        };
-      },
     }),
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-      profile(profile) {
-        return {
-          id: profile.id,
-          email: profile.email,
-          firstName: profile.name || profile.email?.split('@')[0] || "User",
-          lastName: "",
-          emailVerified: new Date(),
-          image: profile.picture?.data?.url,
-        };
-      },
     }),
     {
       id: "tiktok",
@@ -68,8 +48,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: profile.data.user.open_id,
           email: profile.data.user.email,
-          firstName: profile.data.user.display_name || profile.data.user.email?.split('@')[0] || "User",
-          lastName: "",
+          name: profile.data.user.display_name || profile.data.user.email?.split("@")[0] || "User",
           emailVerified: new Date(),
           image: profile.data.user.avatar_url,
         };
@@ -79,16 +58,6 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.X_CLIENT_ID!,
       clientSecret: process.env.X_CLIENT_SECRET!,
       version: "2.0",
-      profile(profile) {
-        return {
-          id: profile.data.id,
-          email: profile.data.email,
-          firstName: profile.data.name || profile.data.username || "User",
-          lastName: "",
-          emailVerified: new Date(),
-          image: profile.data.profile_image_url,
-        };
-      },
     }),
     {
       id: "linkedin",
@@ -108,12 +77,12 @@ export const authOptions: NextAuthOptions = {
       profile(profile: any) {
         const firstName = profile.localizedFirstName || "";
         const lastName = profile.localizedLastName || "";
-        
+        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
         return {
           id: profile.id,
           email: profile.email,
-          firstName: firstName || profile.email?.split('@')[0] || "User",
-          lastName: lastName,
+          name: fullName || profile.email?.split("@")[0] || "User",
           emailVerified: new Date(),
           image: profile.profilePicture?.displayImage,
         };
@@ -131,12 +100,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         const normalizedEmail = credentials.email.trim().toLowerCase();
-        
+
         // Extract IP address from request headers
         const forwarded = req.headers?.["x-forwarded-for"];
-        const ip = typeof forwarded === "string" 
-          ? forwarded.split(",")[0].trim() 
-          : req.headers?.["x-real-ip"] || "unknown";
+        const ip =
+          typeof forwarded === "string"
+            ? forwarded.split(",")[0].trim()
+            : req.headers?.["x-real-ip"] || "unknown";
 
         // Apply rate limiting
         try {
@@ -178,27 +148,27 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName ?? undefined,
+          name: user.name ?? undefined,
           role: user.role,
           emailVerified: user.emailVerified,
+          image: user.image ?? undefined,
         };
       },
     }),
   ],
-  
+
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
   },
-  
+
   callbacks: {
     async signIn() {
       // Simply allow sign-in
       // emailVerified is set in profile callbacks during user creation
       return true;
     },
-    
+
     async jwt({ token, user, account }) {
       // On initial sign-in, add user data to token
       if (user) {
@@ -206,15 +176,15 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.role = user.role;
       }
-      
+
       // For OAuth sign-in, set emailVerified
       if (account?.provider !== "credentials") {
         token.emailVerified = new Date().toISOString();
       }
-      
+
       return token;
     },
-    
+
     async session({ session, token }) {
       // Add user data from token to session
       if (token && session.user) {
@@ -226,7 +196,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  
+
   cookies: {
     sessionToken: {
       name: "next-auth.session-token",
@@ -238,7 +208,7 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-  
+
   pages: {
     signIn: "/login",
     error: "/login",

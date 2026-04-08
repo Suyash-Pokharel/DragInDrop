@@ -1,11 +1,7 @@
 import React from "react";
 import Link from "next/link";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-text-main">
       <header className="bg-surface border-b border-border">

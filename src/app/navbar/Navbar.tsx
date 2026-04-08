@@ -1,13 +1,14 @@
 "use client";
 
-import React from "react";
 import { usePathname } from "next/navigation";
 import { StaticImageData } from "next/image";
+import { PublicUser } from "@/lib/getCurrentUser";
 import UserNavbar from "./UserNavbar";
 import PublicNavbar from "./PublicNavbar";
 
 interface NavbarProps {
   imageSrc?: string | StaticImageData;
+  user?: PublicUser | null;
 }
 
 // TODO: Replace with real auth session hook (e.g., useSession()) once available.
@@ -15,7 +16,7 @@ interface NavbarProps {
 const userRole: string | null = null;
 const isAdminUser = userRole === "admin";
 
-const NavbarWrapper = ({ imageSrc }: NavbarProps) => {
+const NavbarWrapper = ({ imageSrc, user }: NavbarProps) => {
   const pathname = usePathname();
 
   // 1. Pages with NO Navbar (Login, Register, etc.)
@@ -48,7 +49,7 @@ const NavbarWrapper = ({ imageSrc }: NavbarProps) => {
   // This executes if none of the IF statements above matched
   return (
     <div className="load-step-1 relative z-50">
-      <UserNavbar imageSrc={imageSrc} isAdmin={isAdminUser} />
+      <UserNavbar imageSrc={imageSrc} isAdmin={isAdminUser} user={user} />
     </div>
   );
 };

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { signIn } from "next-auth/react";
+// TODO: Wire up Google OAuth flow — this logo is used in the Google sign-in button below.
 import GoogleLogo from "../assets/logo/Google.webp";
 
 export default function PublicNavbar() {
@@ -41,27 +42,29 @@ export default function PublicNavbar() {
 
       {/* --- RIGHT: LINKS & ACTIONS --- */}
       <div className="flex items-center gap-4 md:gap-8">
-
         {/* Navigation Links (Hidden on small mobile if needed, or keep valid) */}
         <div className="hidden md:flex items-center gap-6 xl:gap-8 text-sm xl:text-lg font-medium">
           <Link
             href="/"
-            className={`transition-colors hover:text-primary ${isActive("/") ? "text-primary font-bold" : "text-text-secondary"
-              }`}
+            className={`transition-colors hover:text-primary ${
+              isActive("/") ? "text-primary font-bold" : "text-text-secondary"
+            }`}
           >
             Home
           </Link>
           <Link
             href="/pricing"
-            className={`transition-colors hover:text-primary ${isActive("/pricing") ? "text-primary font-bold" : "text-text-secondary"
-              }`}
+            className={`transition-colors hover:text-primary ${
+              isActive("/pricing") ? "text-primary font-bold" : "text-text-secondary"
+            }`}
           >
             Pricing
           </Link>
           <Link
             href="/contactus"
-            className={`transition-colors hover:text-primary ${isActive("/contactus") ? "text-primary font-bold" : "text-text-secondary"
-              }`}
+            className={`transition-colors hover:text-primary ${
+              isActive("/contactus") ? "text-primary font-bold" : "text-text-secondary"
+            }`}
           >
             Contact Us
           </Link>
@@ -69,9 +72,8 @@ export default function PublicNavbar() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3 md:gap-4">
-
           {/* Google Button */}
-          <button 
+          <button
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
             className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-text-main text-sm font-medium hover:bg-surface-highlight hover:border-text-secondary/30 transition-all active:scale-95"
           >

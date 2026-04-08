@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import Image from "next/image";
@@ -15,15 +15,15 @@ interface SelectPlatformProps {
 export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   const { clearUpload } = useModal();
   const { connectedPlatforms } = useUser();
-  
+
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
-  
+
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  
+
   // Only show platforms that the user has verified/connected in settings
-  const availablePlatforms = APP_PLATFORMS.filter(p => connectedPlatforms.includes(p.name));
+  const availablePlatforms = APP_PLATFORMS.filter((p) => connectedPlatforms.includes(p.name));
 
   useEffect(() => {
     setSelectedPlatforms(connectedPlatforms);
@@ -38,7 +38,9 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
     if (!mounted) return;
     requestAnimationFrame(() => setShowModal(true));
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [mounted]);
 
   const handleCloseRequest = () => {
@@ -63,8 +65,8 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   };
 
   const togglePlatform = (name: string) => {
-    setSelectedPlatforms(prev => 
-      prev.includes(name) ? prev.filter(p => p !== name) : [...prev, name]
+    setSelectedPlatforms((prev) =>
+      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name],
     );
   };
 
@@ -110,19 +112,26 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
               availablePlatforms.map((platform) => {
                 const isSelected = selectedPlatforms.includes(platform.name);
                 return (
-                  <div 
+                  <div
                     key={platform.name}
                     onClick={() => togglePlatform(platform.name)}
                     className={`flex flex-col items-center justify-center gap-4 p-5 rounded-2xl border-[2px] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.85rem)] aspect-[6/5] sm:aspect-square ${
-                      isSelected 
-                        ? "border-[#10b981] bg-background shadow-sm" 
+                      isSelected
+                        ? "border-[#10b981] bg-background shadow-sm"
                         : "border-border/60 bg-surface hover:border-border"
                     }`}
                   >
                     <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden flex shrink-0 items-center justify-center drop-shadow-sm">
-                      <Image src={platform.icon} alt={platform.name} fill className="object-contain" />
+                      <Image
+                        src={platform.icon}
+                        alt={platform.name}
+                        fill
+                        className="object-contain"
+                      />
                     </div>
-                    <span className={`text-sm md:text-base font-semibold ${isSelected ? "text-[#10b981]" : "text-text-secondary"}`}>
+                    <span
+                      className={`text-sm md:text-base font-semibold ${isSelected ? "text-[#10b981]" : "text-text-secondary"}`}
+                    >
                       {platform.name}
                     </span>
                   </div>
@@ -139,7 +148,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
           >
             Cancel Post
           </button>
-          
+
           <button
             onClick={handleSchedule}
             disabled={selectedPlatforms.length === 0}
@@ -180,6 +189,6 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         )}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

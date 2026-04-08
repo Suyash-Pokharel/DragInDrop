@@ -4,8 +4,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const token = body?.token;
-    if (!token)
-      return NextResponse.json({ error: "Missing token" }, { status: 400 });
+    if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });
 
     const secure = process.env.NODE_ENV === "production";
     const maxAge = 7 * 24 * 60 * 60; // 7 days

@@ -88,7 +88,8 @@ export default function TwoFactorModal({ onClose, onSuccess }: TwoFactorModalPro
               </div>
               <h2 className="text-2xl font-bold text-text-main mb-2">Setup Authenticator</h2>
               <p className="text-sm text-text-secondary mb-6">
-                Scan the QR code with your authenticator app (like Google Authenticator or Authy) to link your account.
+                Scan the QR code with your authenticator app (like Google Authenticator or Authy) to
+                link your account.
               </p>
 
               <div className="bg-white p-4 rounded-xl shadow-inner border border-border mb-8">
@@ -150,6 +151,6 @@ export default function TwoFactorModal({ onClose, onSuccess }: TwoFactorModalPro
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

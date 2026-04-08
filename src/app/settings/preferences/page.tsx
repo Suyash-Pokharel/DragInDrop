@@ -1,4 +1,3 @@
-import React from "react";
 import { SlidersHorizontal, Globe2, Clock, CalendarDays } from "lucide-react";
 
 export default function PreferencesPage() {
@@ -6,11 +5,12 @@ export default function PreferencesPage() {
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out flex flex-col gap-6 w-full max-w-3xl">
       <div className="mb-2">
         <h2 className="text-2xl font-semibold text-text-main mb-1">Preferences</h2>
-        <p className="text-text-secondary text-sm md:text-base">Customize formatting and regional settings to your liking.</p>
+        <p className="text-text-secondary text-sm md:text-base">
+          Customize formatting and regional settings to your liking.
+        </p>
       </div>
 
       <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-8 shadow-sm">
-        
         {/* Date & Time */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2 border-b border-border pb-2">
@@ -59,7 +59,10 @@ export default function PreferencesPage() {
             <Globe2 className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-medium text-text-main">Region</h3>
           </div>
-          <p className="text-sm text-text-secondary">Your country/region dictates the timezone in which your scheduled videos will be published.</p>
+          <p className="text-sm text-text-secondary">
+            Your country/region dictates the timezone in which your scheduled videos will be
+            published.
+          </p>
           <div className="flex flex-col gap-2 mt-2">
             <label className="text-sm font-medium text-text-main">Country / Region</label>
             <select className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer">
@@ -77,7 +80,6 @@ export default function PreferencesPage() {
             Save Preferences
           </button>
         </div>
-
       </div>
     </div>
   );

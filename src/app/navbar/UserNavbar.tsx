@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image, { StaticImageData } from "next/image";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -23,10 +23,12 @@ import {
 import PricingPopup from "../pricing/PricingPopup";
 import { useModal } from "../components/ModalProvider";
 import { useUser } from "../components/UserProvider";
+import { PublicUser } from "@/lib/getCurrentUser";
 
 interface NavbarProps {
   imageSrc?: string | StaticImageData;
   isAdmin?: boolean;
+  user?: PublicUser | null;
 }
 
 const NOTIFICATIONS = [
@@ -67,24 +69,23 @@ const NOTIFICATIONS = [
   },
 ];
 
-const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
+const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
   // Change: Add state to control modal visibility
   const [showPricingPopup, setShowPricingPopup] = useState(false);
 
-  const [activeDropdown, setActiveDropdown] = useState<
-    "notifications" | "profile" | null
-  >(null);
+  const [activeDropdown, setActiveDropdown] = useState<"notifications" | "profile" | null>(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   // modal context
   const modal = useModal();
-  const { profilePic } = useUser();
+  const { tempImage } = useUser();
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
   const displayImage =
-    profilePic ||
+    tempImage ||
+    user?.image ||
     imageSrc ||
     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
 
@@ -138,7 +139,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
           className="font-medium border rounded-md border-border transition-all active:scale-95 text-xs md:text-sm xl:text-lg 2xl:text-xl
             px-3 py-1 md:px-4 md:py-1.5 xl:px-6 xl:py-2 bg-background text-text-secondary hover:bg-surface-highlight hover:text-text-main"
         >
-          SUYASH
+          {user?.name?.split(" ")[0]?.toUpperCase() || "USER"}
         </button>
       </div>
 
@@ -157,10 +158,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
             `}
             aria-label="Notifications"
           >
-            <Bell
-              strokeWidth={2}
-              className="w-5 h-5 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9"
-            />
+            <Bell strokeWidth={2} className="w-5 h-5 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9" />
             {/* Unread Badge (Using 'error' color from globals) */}
             <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-error border border-surface"></span>
           </button>
@@ -208,16 +206,12 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
                       <p className="text-sm xl:text-base font-medium text-text-main">
                         {note.title}
                       </p>
-                      <p className="text-xs xl:text-sm text-text-secondary mt-0.5">
-                        {note.desc}
-                      </p>
+                      <p className="text-xs xl:text-sm text-text-secondary mt-0.5">{note.desc}</p>
                       <p className="text-[10px] xl:text-xs text-text-secondary/70 mt-1">
                         {note.time}
                       </p>
                     </div>
-                    {note.unread && (
-                      <div className="w-2 h-2 mt-2 rounded-full bg-primary"></div>
-                    )}
+                    {note.unread && <div className="w-2 h-2 mt-2 rounded-full bg-primary"></div>}
                   </div>
                 ))}
               </div>
@@ -232,15 +226,9 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
           aria-label="Toggle Theme"
         >
           {mounted && theme === "dark" ? (
-            <Moon
-              strokeWidth={2}
-              className="w-5 h-5 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9"
-            />
+            <Moon strokeWidth={2} className="w-5 h-5 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9" />
           ) : (
-            <Sun
-              strokeWidth={2}
-              className="w-5 h-5 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9"
-            />
+            <Sun strokeWidth={2} className="w-5 h-5 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9" />
           )}
         </button>
 
@@ -288,9 +276,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
                       className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
                     >
                       <LayoutDashboard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 text-primary" />
-                      <span className="font-semibold text-primary">
-                        Admin Panel
-                      </span>
+                      <span className="font-semibold text-primary">Admin Panel</span>
                     </Link>
                     <Link
                       href="/admin"
@@ -368,9 +354,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false }: NavbarProps) => {
           )}
         </div>
       </div>
-      {showPricingPopup && (
-        <PricingPopup onClose={() => setShowPricingPopup(false)} />
-      )}
+      {showPricingPopup && <PricingPopup onClose={() => setShowPricingPopup(false)} />}
     </nav>
   );
 };

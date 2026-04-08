@@ -20,8 +20,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 interface RegisterData {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
 }
 
@@ -35,9 +34,9 @@ export async function registerUser(
   ip?: string,
   fingerprint?: string,
 ): Promise<Result> {
-  const { firstName, lastName, email } = formData;
+  const { name, email } = formData;
 
-  if (!firstName || !lastName || !email) {
+  if (!name || !email) {
     return { success: false, error: "Missing required fields." };
   }
 
@@ -109,10 +108,7 @@ export async function registerUser(
 
     // Generate a raw token and a SHA-256 hash; store only the hash server-side.
     const rawToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
     // record registration attempt by IP if provided
@@ -127,8 +123,7 @@ export async function registerUser(
     if (!user) {
       user = await prisma.user.create({
         data: {
-          firstName,
-          lastName,
+          name,
           email: normalizedEmail,
           tokens: {
             create: {
@@ -160,7 +155,7 @@ export async function registerUser(
       });
     }
 
-    // escape firstName for safe HTML and url-encode the token
+    // escape name for safe HTML and url-encode the token
     const safeFirst = (s: string) =>
       s
         .replaceAll("&", "&amp;")
@@ -168,6 +163,8 @@ export async function registerUser(
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
+    // Extract first name from full name for greeting
+    const firstName = name.split(" ")[0];
     const safeFirstName = safeFirst(firstName);
     const verificationLink = `${APP_URL}/createpassword?token=${encodeURIComponent(rawToken)}`;
 
@@ -228,10 +225,7 @@ export async function registerUser(
     return { success: true };
   } catch (error: unknown) {
     // ✅ Uses strict 'unknown' from Code 3
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return { success: false, error: "User already exists with this email." };
     }
 
@@ -256,10 +250,7 @@ export async function setPassword(
     // Hash incoming token and look up by `tokenHash`.
     const prisma = getPrisma();
 
-    const incomingHash = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
+    const incomingHash = crypto.createHash("sha256").update(token).digest("hex");
     const storedToken = await prisma.verificationToken.findFirst({
       where: {
         tokenHash: incomingHash,
@@ -316,7 +307,7 @@ export async function setPassword(
  * @deprecated This function is deprecated and will be removed in favor of NextAuth.
  * Use NextAuth's Credentials Provider instead.
  * See: src/app/api/auth/[...nextauth]/route.ts
- * 
+ *
  * Authenticate a user with email + password.
  * This function is no longer used after NextAuth migration.
  */
@@ -348,8 +339,7 @@ export async function loginUser(
     } catch {
       return {
         success: false,
-        error:
-          "Too many login attempts for this account. Please try again later.",
+        error: "Too many login attempts for this account. Please try again later.",
       };
     }
 
@@ -379,9 +369,9 @@ export async function loginUser(
 
     // Session management is now handled by NextAuth
     // This function should not be used - use NextAuth signIn instead
-    return { 
-      success: false, 
-      error: "This login method is deprecated. Please use NextAuth signIn." 
+    return {
+      success: false,
+      error: "This login method is deprecated. Please use NextAuth signIn.",
     };
   } catch (error: unknown) {
     console.error("Login Error:", error);

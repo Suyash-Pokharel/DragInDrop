@@ -4,11 +4,10 @@ import { getPrisma } from "@/lib/prisma";
 
 export type PublicUser = {
   id: string;
-  firstName: string;
-  lastName: string | null;
+  name: string | null;
   email: string;
   role?: string;
-  profilePic?: string | null;
+  image?: string | null;
   emailVerified?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -20,7 +19,7 @@ export type PublicUser = {
  */
 export async function getCurrentUser(): Promise<PublicUser | null> {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.id) {
     return null;
   }
@@ -30,11 +29,10 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
     where: { id: session.user.id },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      name: true,
       email: true,
       role: true,
-      profilePic: true,
+      image: true,
       emailVerified: true,
       createdAt: true,
       updatedAt: true,

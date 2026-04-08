@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, X } from "lucide-react";
@@ -23,7 +23,9 @@ export default function NoAccountModal({ onClose }: NoAccountModalProps) {
     if (!mounted) return;
     requestAnimationFrame(() => setShowModal(true));
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [mounted]);
 
   const doClose = () => {
@@ -68,13 +70,12 @@ export default function NoAccountModal({ onClose }: NoAccountModalProps) {
           <div className="w-12 h-12 bg-warning/10 text-warning rounded-full flex items-center justify-center mb-4">
             <AlertTriangle className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-text-main mb-2">
-            No Accounts Connected
-          </h2>
+          <h2 className="text-xl font-bold text-text-main mb-2">No Accounts Connected</h2>
           <p className="text-sm text-text-secondary mb-6">
-            You don&apos;t have any social media accounts connected. Connect at least one platform to start uploading videos.
+            You don&apos;t have any social media accounts connected. Connect at least one platform
+            to start uploading videos.
           </p>
-          
+
           <div className="flex w-full gap-3">
             <button
               onClick={doClose}
@@ -92,6 +93,6 @@ export default function NoAccountModal({ onClose }: NoAccountModalProps) {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

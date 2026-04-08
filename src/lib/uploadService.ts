@@ -4,13 +4,11 @@ type DoneDetail = { status: number; responseText: string };
 
 class UploadService extends EventTarget {
   private xhr: XMLHttpRequest | null = null;
-  private currentFile: File | null = null;
 
   start(file: File) {
     // abort any existing upload
     if (this.xhr) this.abort();
 
-    this.currentFile = file;
     const fd = new FormData();
     fd.append("file", file);
 
@@ -22,13 +20,17 @@ class UploadService extends EventTarget {
     xhr.upload.onprogress = (e) => {
       if (!e.lengthComputable) return;
       const pct = Math.round((e.loaded / e.total) * 100);
-      this.dispatchEvent(new CustomEvent<ProgressDetail>("progress", { detail: { progress: pct } }));
+      this.dispatchEvent(
+        new CustomEvent<ProgressDetail>("progress", { detail: { progress: pct } }),
+      );
     };
 
     xhr.onload = () => {
       const status = xhr.status;
       const resp = xhr.responseText;
-      this.dispatchEvent(new CustomEvent<DoneDetail>("done", { detail: { status, responseText: resp } }));
+      this.dispatchEvent(
+        new CustomEvent<DoneDetail>("done", { detail: { status, responseText: resp } }),
+      );
       this.cleanup();
     };
 
@@ -61,7 +63,6 @@ class UploadService extends EventTarget {
 
   private cleanup() {
     this.xhr = null;
-    this.currentFile = null;
   }
 
   // convenience subscriptions

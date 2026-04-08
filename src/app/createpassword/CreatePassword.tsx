@@ -48,11 +48,11 @@ function CreatePasswordContent() {
 
   // --- PASSWORD STRENGTH LOGIC (shared) ---
   const passwordLen = formData.password.length;
-  const { hasMinLength, hasLower, hasUpper, hasNumber, hasSymbol } =
-    passwordCriteria(formData.password);
+  const { hasMinLength, hasLower, hasUpper, hasNumber, hasSymbol } = passwordCriteria(
+    formData.password,
+  );
 
-  const isPasswordValid =
-    hasMinLength && hasLower && hasUpper && hasNumber && hasSymbol;
+  const isPasswordValid = hasMinLength && hasLower && hasUpper && hasNumber && hasSymbol;
 
   // --- CONFIRM PASSWORD LOGIC ---
   const confirmLen = formData.confirmPassword.length;
@@ -61,8 +61,7 @@ function CreatePasswordContent() {
   // Error States
   const isPasswordInvalid = touched.password && !isPasswordValid;
   const isConfirmEmpty = touched.confirmPassword && confirmLen === 0;
-  const isMatchError =
-    touched.confirmPassword && confirmLen > 0 && !passwordsMatch;
+  const isMatchError = touched.confirmPassword && confirmLen > 0 && !passwordsMatch;
   const isConfirmInvalid = isConfirmEmpty || isMatchError;
 
   // --- BUTTON ENABLE LOGIC ---
@@ -93,9 +92,7 @@ function CreatePasswordContent() {
 
     // Check if token exists before trying to send
     if (!token) {
-      alert(
-        "Invalid or missing verification link. Please check your email again.",
-      );
+      alert("Invalid or missing verification link. Please check your email again.");
       return;
     }
 
@@ -144,9 +141,7 @@ function CreatePasswordContent() {
               </div>
             </Reveal>
             <Reveal width="100%" delay={0.15}>
-              <h1 className="text-3xl font-bold text-text-main mb-2">
-                Set Password
-              </h1>
+              <h1 className="text-3xl font-bold text-text-main mb-2">Set Password</h1>
               <p className="text-text-secondary text-sm">
                 Create a secure password to finish setting up your account.
               </p>
@@ -156,16 +151,11 @@ function CreatePasswordContent() {
             <form onSubmit={handleSubmit} className="space-y-2">
               {/* New Password */}
               <div className="space-y-1.5">
-                <label
-                  htmlFor="newPassword"
-                  className="block text-sm font-medium text-text-main"
-                >
+                <label htmlFor="newPassword" className="block text-sm font-medium text-text-main">
                   Password
                   {touched.password && !isPasswordFocused && (
                     <>
-                      {passwordLen === 0 && (
-                        <span className="inline-error">REQUIRED</span>
-                      )}
+                      {passwordLen === 0 && <span className="inline-error">REQUIRED</span>}
                       {passwordLen > 0 && !hasMinLength && (
                         <span className="inline-error">MIN 8 CHARS</span>
                       )}
@@ -189,9 +179,7 @@ function CreatePasswordContent() {
                     onBlur={() => handleBlur("password")}
                     onFocus={handleFocus}
                     className={`input-base ${
-                      isPasswordInvalid && !isPasswordFocused
-                        ? "input-error"
-                        : "input-default"
+                      isPasswordInvalid && !isPasswordFocused ? "input-error" : "input-default"
                     }`}
                   />
                   <button
@@ -199,9 +187,7 @@ function CreatePasswordContent() {
                     disabled={isLoading}
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -210,9 +196,7 @@ function CreatePasswordContent() {
                 {/* SLIDING REQUIREMENTS CHECKLIST */}
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    isPasswordFocused
-                      ? "max-h-40 opacity-100 mt-3"
-                      : "max-h-0 opacity-0 mt-0"
+                    isPasswordFocused ? "max-h-40 opacity-100 mt-3" : "max-h-0 opacity-0 mt-0"
                   }`}
                 >
                   <ul className="grid grid-cols-2 gap-y-1 gap-x-10 bg-background/50 p-3 rounded-lg border border-border/50">
@@ -232,12 +216,8 @@ function CreatePasswordContent() {
                   className="block text-sm font-medium text-text-main"
                 >
                   Confirm Password
-                  {isConfirmEmpty && (
-                    <span className="inline-error">REQUIRED</span>
-                  )}
-                  {isMatchError && (
-                    <span className="inline-error">DOESN&apos;T MATCH</span>
-                  )}
+                  {isConfirmEmpty && <span className="inline-error">REQUIRED</span>}
+                  {isMatchError && <span className="inline-error">DOESN&apos;T MATCH</span>}
                 </label>
                 <div className="relative">
                   <input
@@ -251,24 +231,16 @@ function CreatePasswordContent() {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     onBlur={() => handleBlur("confirmPassword")}
-                    className={`input-base ${
-                      isConfirmInvalid ? "input-error" : "input-default"
-                    }`}
+                    className={`input-base ${isConfirmInvalid ? "input-error" : "input-default"}`}
                   />
                   <button
                     type="button"
                     disabled={isLoading}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label={
-                      showConfirmPassword ? "Hide password" : "Show password"
-                    }
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff size={20} />
-                    ) : (
-                      <Eye size={20} />
-                    )}
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               </div>

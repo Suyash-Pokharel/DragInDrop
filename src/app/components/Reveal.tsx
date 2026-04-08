@@ -3,16 +3,16 @@
 import React, { useEffect, useRef, useState } from "react";
 
 interface RevealProps {
-    children: React.ReactNode;
-    width?: "fit-content" | "100%";
-    delay?: number; // Optional delay in seconds
+  children: React.ReactNode;
+  width?: "fit-content" | "100%";
+  delay?: number; // Optional delay in seconds
 }
 
 export const Reveal = ({ children, width = "fit-content", delay = 0 }: RevealProps) => {
-    const ref = useRef(null);
-    const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
     // 1. Capture the ref value in a local variable
     const currentRef = ref.current;
 
@@ -28,7 +28,7 @@ useEffect(() => {
         root: null,
         rootMargin: "0px",
         threshold: 0.1,
-      }
+      },
     );
 
     // 2. Use the variable to observe
@@ -42,16 +42,16 @@ useEffect(() => {
     };
   }, []);
 
-    return (
-        <div
-            ref={ref}
-            style={{
-                width,
-                transitionDelay: `${delay}s` // Applies the delay via inline style
-            }}
-            className={`reveal-hidden ${isVisible ? "reveal-visible" : ""}`}
-        >
-            {children}
-        </div>
-    );
+  return (
+    <div
+      ref={ref}
+      style={{
+        width,
+        transitionDelay: `${delay}s`, // Applies the delay via inline style
+      }}
+      className={`reveal-hidden ${isVisible ? "reveal-visible" : ""}`}
+    >
+      {children}
+    </div>
+  );
 };

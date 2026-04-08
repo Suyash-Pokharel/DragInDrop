@@ -11,7 +11,7 @@ export function getPrisma(): PrismaClient {
 
   // Use the unpooled connection for better serverless compatibility
   const connectionString = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
-  
+
   if (!connectionString) {
     throw new Error("DATABASE_URL_UNPOOLED or DATABASE_URL must be set");
   }
@@ -20,12 +20,12 @@ export function getPrisma(): PrismaClient {
   const adapter = new PrismaNeon({
     connectionString: connectionString,
   });
-  
+
   const client = new PrismaClient({ adapter });
-  
+
   if (process.env.NODE_ENV !== "production") {
     global.__prismaClient = client;
   }
-  
+
   return client;
 }

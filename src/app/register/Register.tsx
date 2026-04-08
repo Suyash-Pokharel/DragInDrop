@@ -9,7 +9,7 @@ import VerificationSent from "./VerificationSent";
 import { Reveal } from "../components/Reveal";
 
 // Client-side wrapper: call the API route which extracts IP and accepts a fingerprint.
-async function callRegisterApi(data: { firstName: string; lastName: string; email: string; fingerprint?: string }) {
+async function callRegisterApi(data: { name: string; email: string; fingerprint?: string }) {
   const res = await fetch("/api/auth/register", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -30,45 +30,35 @@ const ALLOWED_DOMAINS = [
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
   });
   const [touched, setTouched] = useState({
-    firstName: false,
-    lastName: false,
+    name: false,
     email: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // --- VALIDATION HELPERS ---
-  const isFirstNameError =
-    touched.firstName && formData.firstName.trim() === "";
-  const isLastNameError = touched.lastName && formData.lastName.trim() === "";
+  const isNameError = touched.name && formData.name.trim() === "";
 
   // Email Validation Logic
   const emailTrimmed = formData.email.trim().toLowerCase();
   const isEmailEmpty = emailTrimmed === "";
   // Check if email ends with any allowed domain
-  const isEmailSupported = ALLOWED_DOMAINS.some((domain) =>
-    emailTrimmed.endsWith(domain)
-  );
+  const isEmailSupported = ALLOWED_DOMAINS.some((domain) => emailTrimmed.endsWith(domain));
 
   // Determine specific Email Error type
   const isEmailRequiredError = touched.email && isEmailEmpty;
-  const isEmailDomainError =
-    touched.email && !isEmailEmpty && !isEmailSupported;
+  const isEmailDomainError = touched.email && !isEmailEmpty && !isEmailSupported;
 
   // General error flag for styling the input
   const isEmailError = isEmailRequiredError || isEmailDomainError;
 
   // --- FORM VALIDITY CHECK ---
-  // Button enabled only if: First Name filled, Last Name filled, AND Email Domain is allowed
-  const isFormValid =
-    formData.firstName.trim() !== "" &&
-    formData.lastName.trim() !== "" &&
-    isEmailSupported;
+  // Button enabled only if: Name filled AND Email Domain is allowed
+  const isFormValid = formData.name.trim() !== "" && isEmailSupported;
 
   // --- HANDLERS ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,16 +69,12 @@ export default function Register() {
     setTouched({ ...touched, [field]: true });
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // 1. Validation Check
-    if (
-      !formData.firstName.trim() ||
-      !formData.lastName.trim() ||
-      !isEmailSupported
-    ) {
-      setTouched({ firstName: true, lastName: true, email: true });
+    if (!formData.name.trim() || !isEmailSupported) {
+      setTouched({ name: true, email: true });
       return;
     }
 
@@ -100,7 +86,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       const key = "dragindrop_fp";
       fp = localStorage.getItem(key) || undefined;
       if (!fp && typeof navigator !== "undefined") {
-        const raw = [navigator.userAgent, navigator.platform, screen.width, screen.height, navigator.language].join("|");
+        const raw = [
+          navigator.userAgent,
+          navigator.platform,
+          screen.width,
+          screen.height,
+          navigator.language,
+        ].join("|");
         try {
           fp = btoa(raw);
         } catch {
@@ -114,8 +106,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     // 2. Call API wrapper which will extract IP server-side and pass fingerprint
     const result = await callRegisterApi({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
+      name: formData.name,
       email: formData.email,
       fingerprint: fp,
     });
@@ -124,12 +115,12 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     // 3. Handle Success/Error
     if (result.success) {
-        setShowSuccessModal(true);
+      setShowSuccessModal(true);
     } else {
-        // In a real app, you might want to show this error in the UI
-        alert(result.error); 
+      // In a real app, you might want to show this error in the UI
+      alert(result.error);
     }
-};
+  };
 
   const handleOAuthSignIn = (provider: string) => {
     signIn(provider, { callbackUrl: "/dashboard" });
@@ -143,9 +134,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           <Reveal width="100%" delay={0.1}>
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-primary mb-2">DragInDrop</h1>
-              <h2 className="text-text-secondary text-sm font-medium">
-                Create Your New Account
-              </h2>
+              <h2 className="text-text-secondary text-sm font-medium">Create Your New Account</h2>
             </div>
           </Reveal>
 
@@ -153,73 +142,31 @@ const handleSubmit = async (e: React.FormEvent) => {
           <Reveal width="100%" delay={0.15}>
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name Row */}
-              <div className="flex gap-4">
-                {/* First Name */}
-                <div className="space-y-1.5 w-1/2">
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-text-main"
-                  >
-                    First Name
-                    {isFirstNameError && (
-                      <span className="inline-error">REQUIRED</span>
-                    )}
-                  </label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    required
-                    disabled={isLoading}
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    onBlur={() => handleBlur("firstName")}
-                    className={`input-base ${isFirstNameError ? "input-error" : "input-default"
-                      }`}
-                  />
-                </div>
-
-                {/* Last Name */}
-                <div className="space-y-1.5 w-1/2">
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-text-main"
-                  >
-                    Last Name
-                    {isLastNameError && (
-                      <span className="inline-error">REQUIRED</span>
-                    )}
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    required
-                    disabled={isLoading}
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    onBlur={() => handleBlur("lastName")}
-                    className={`input-base ${isLastNameError ? "input-error" : "input-default"
-                      }`}
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <label htmlFor="name" className="block text-sm font-medium text-text-main">
+                  Full Name
+                  {isNameError && <span className="inline-error">REQUIRED</span>}
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  disabled={isLoading}
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur("name")}
+                  className={`input-base ${isNameError ? "input-error" : "input-default"}`}
+                />
               </div>
 
               {/* Email */}
               <div className="space-y-1.5">
-                <label
-                  htmlFor="registerEmail"
-                  className="block text-sm font-medium text-text-main"
-                >
+                <label htmlFor="registerEmail" className="block text-sm font-medium text-text-main">
                   Email
-                  {isEmailRequiredError && (
-                    <span className="inline-error">REQUIRED</span>
-                  )}
-                  {isEmailDomainError && (
-                    <span className="inline-error">EMAIL NOT SUPPORTED</span>
-                  )}
+                  {isEmailRequiredError && <span className="inline-error">REQUIRED</span>}
+                  {isEmailDomainError && <span className="inline-error">EMAIL NOT SUPPORTED</span>}
                 </label>
                 <input
                   id="registerEmail"
@@ -232,8 +179,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   value={formData.email}
                   onChange={handleChange}
                   onBlur={() => handleBlur("email")}
-                  className={`input-base ${isEmailError ? "input-error" : "input-default"
-                    }`}
+                  className={`input-base ${isEmailError ? "input-error" : "input-default"}`}
                 />
               </div>
 
@@ -313,10 +259,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         {/* --- SUCCESS MODAL COMPONENT --- */}
         {showSuccessModal && (
-          <VerificationSent
-            email={formData.email}
-            onClose={() => setShowSuccessModal(false)}
-          />
+          <VerificationSent email={formData.email} onClose={() => setShowSuccessModal(false)} />
         )}
       </div>
     </Reveal>

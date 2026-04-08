@@ -5,11 +5,7 @@ import { getRedis } from "./redis";
  * Create a rate limiter that uses Redis when available, falling back to
  * an in-memory limiter when Redis is down or unavailable.
  */
-function createResilientLimiter(opts: {
-  keyPrefix: string;
-  points: number;
-  duration: number;
-}) {
+function createResilientLimiter(opts: { keyPrefix: string; points: number; duration: number }) {
   const memoryLimiter = new RateLimiterMemory({
     keyPrefix: `${opts.keyPrefix}_mem`,
     points: opts.points,

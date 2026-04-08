@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useState } from "react";
 
 type UserContextType = {
-  profilePic: string | null;
-  setProfilePic: (url: string | null) => void;
+  tempImage: string | null;
+  setTempImage: (url: string | null) => void;
   connectedPlatforms: string[];
   togglePlatformConnection: (name: string) => void;
 };
@@ -17,18 +17,21 @@ export const useUser = () => {
   return ctx;
 };
 
+/** Manages temporary UI state only (uploaded images, platform connections). Does not fetch or store database data. */
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [tempImage, setTempImage] = useState<string | null>(null);
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
 
   const togglePlatformConnection = (name: string) => {
-    setConnectedPlatforms((prev) => 
-      prev.includes(name) ? prev.filter(p => p !== name) : [...prev, name]
+    setConnectedPlatforms((prev) =>
+      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name],
     );
   };
 
   return (
-    <UserContext.Provider value={{ profilePic, setProfilePic, connectedPlatforms, togglePlatformConnection }}>
+    <UserContext.Provider
+      value={{ tempImage, setTempImage, connectedPlatforms, togglePlatformConnection }}
+    >
       {children}
     </UserContext.Provider>
   );

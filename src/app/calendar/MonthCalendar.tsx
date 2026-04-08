@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Image, { StaticImageData } from "next/image";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
@@ -140,10 +140,8 @@ const MonthCalendar = () => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const getDaysInMonth = (y: number, m: number) =>
-    new Date(y, m + 1, 0).getDate();
-  const getFirstDayOfMonth = (y: number, m: number) =>
-    new Date(y, m, 1).getDay();
+  const getDaysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+  const getFirstDayOfMonth = (y: number, m: number) => new Date(y, m, 1).getDay();
 
   const daysInMonth = getDaysInMonth(year, month);
   const startDayIndex = getFirstDayOfMonth(year, month);
@@ -166,9 +164,7 @@ const MonthCalendar = () => {
   const goToToday = () => setCurrentDate(new Date());
 
   const getPostsForDay = (d: number, m: number, y: number) => {
-    return MOCK_POSTS.filter(
-      (p) => p.day === d && p.month === m && p.year === y,
-    );
+    return MOCK_POSTS.filter((p) => p.day === d && p.month === m && p.year === y);
   };
 
   const todayObj = new Date();
@@ -176,9 +172,7 @@ const MonthCalendar = () => {
 
   const isToday = (d: number) => {
     return (
-      d === todayObj.getDate() &&
-      month === todayObj.getMonth() &&
-      year === todayObj.getFullYear()
+      d === todayObj.getDate() && month === todayObj.getMonth() && year === todayObj.getFullYear()
     );
   };
 
@@ -242,9 +236,7 @@ const MonthCalendar = () => {
               key={`prev-${day}`}
               className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
             >
-              <span className="text-xs md:text-sm font-medium text-text-secondary">
-                {day}
-              </span>
+              <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
             </div>
           ))}
 
@@ -311,26 +303,15 @@ const MonthCalendar = () => {
                       "
                       title="Schedule Post"
                     >
-                      <Plus
-                        className="w-2.5 h-2.5 md:w-3.5 md:h-3.5"
-                        strokeWidth={3}
-                      />
+                      <Plus className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" strokeWidth={3} />
                     </button>
                   )}
                 </div>
 
                 {/* --- RESPONSIVE ICON GROUPS --- */}
                 <IconGroup posts={posts} limit={0} className="flex sm:hidden" />
-                <IconGroup
-                  posts={posts}
-                  limit={3}
-                  className="hidden sm:flex md:hidden"
-                />
-                <IconGroup
-                  posts={posts}
-                  limit={4}
-                  className="hidden md:flex lg:hidden"
-                />
+                <IconGroup posts={posts} limit={3} className="hidden sm:flex md:hidden" />
+                <IconGroup posts={posts} limit={4} className="hidden md:flex lg:hidden" />
                 <IconGroup posts={posts} limit={6} className="hidden lg:flex" />
               </div>
             );
@@ -342,9 +323,7 @@ const MonthCalendar = () => {
               key={`next-${day}`}
               className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
             >
-              <span className="text-xs md:text-sm font-medium text-text-secondary">
-                {day}
-              </span>
+              <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
             </div>
           ))}
         </div>

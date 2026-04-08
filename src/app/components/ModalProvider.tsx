@@ -91,16 +91,18 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubStart = uploadService.onStart(() => setUploading(true));
     const unsubProg = uploadService.onProgress((pct: number) => setProgress(pct));
-    const unsubDone = uploadService.onDone(({ status }: { status: number; responseText: string }) => {
-      setUploading(false);
-      if (status >= 200 && status < 300) {
-        setProgress(100);
-        setUploaded(true);
-      } else {
-        setUploaded(false);
-        console.error("Upload failed with status:", status);
-      }
-    });
+    const unsubDone = uploadService.onDone(
+      ({ status }: { status: number; responseText: string }) => {
+        setUploading(false);
+        if (status >= 200 && status < 300) {
+          setProgress(100);
+          setUploaded(true);
+        } else {
+          setUploaded(false);
+          console.error("Upload failed with status:", status);
+        }
+      },
+    );
 
     const unsubError = uploadService.onError(() => {
       setUploading(false);
@@ -130,7 +132,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       setProgress(0);
       uploadService.start(fileToUpload);
     },
-    [updateFileState]
+    [updateFileState],
   );
 
   const abortUpload = useCallback(() => {
@@ -161,7 +163,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setIsUploadOpen(true);
     },
-    [handleUpload, connectedPlatforms]
+    [handleUpload, connectedPlatforms],
   );
 
   const closeUpload = useCallback(() => {

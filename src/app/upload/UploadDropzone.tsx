@@ -8,11 +8,7 @@ interface DropzoneProps {
   files?: File[];
 }
 
-export default function UploadDropzone({
-  accept = "*",
-  onFiles,
-  files = [],
-}: DropzoneProps) {
+export default function UploadDropzone({ accept = "*", onFiles, files = [] }: DropzoneProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDrag, setIsDrag] = useState(false);
 
@@ -47,9 +43,7 @@ export default function UploadDropzone({
         onDragLeave={() => setIsDrag(false)}
         onDrop={onDrop}
         className={`w-full min-h-85 border-2 rounded-xl flex flex-col items-center justify-center p-6 transition-colors cursor-pointer ${
-          isDrag
-            ? "border-primary bg-primary/5"
-            : "border-dashed border-border bg-background"
+          isDrag ? "border-primary bg-primary/5" : "border-dashed border-border bg-background"
         }`}
       >
         <input
@@ -63,12 +57,8 @@ export default function UploadDropzone({
 
         <div className="text-center">
           <div className="text-2xl text-text-secondary mb-2">📤</div>
-          <div className="text-lg font-semibold text-text-main">
-            Drag & Drop Video File Here
-          </div>
-          <div className="text-sm text-text-secondary mt-2">
-            Max resolution: 1080×1920 (200MB)
-          </div>
+          <div className="text-lg font-semibold text-text-main">Drag & Drop Video File Here</div>
+          <div className="text-sm text-text-secondary mt-2">Max resolution: 1080×1920 (200MB)</div>
           <button className="mt-6 px-4 py-2 rounded-md bg-primary text-white hover:bg-secondary transition-colors">
             Browse Files
           </button>
@@ -92,21 +82,15 @@ export default function UploadDropzone({
             </div>
 
             <div className="text-xs text-text-secondary mt-0.5">
-              {files && files.length > 0
-                ? `${(files[0].size / 1024 / 1024).toFixed(2)} MB`
-                : "—"}
+              {files && files.length > 0 ? `${(files[0].size / 1024 / 1024).toFixed(2)} MB` : "—"}
             </div>
           </div>
         </div>
 
         {files && files.length > 0 ? (
-          <div className="text-xs text-text-secondary ml-2 shrink-0">
-            Selected
-          </div>
+          <div className="text-xs text-text-secondary ml-2 shrink-0">Selected</div>
         ) : (
-          <div className="text-xs text-text-secondary ml-2 shrink-0">
-            No file
-          </div>
+          <div className="text-xs text-text-secondary ml-2 shrink-0">No file</div>
         )}
       </div>
     </div>

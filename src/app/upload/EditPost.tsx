@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Calendar } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
@@ -10,23 +10,26 @@ interface EditPostProps {
 }
 
 export default function EditPost({ onClose }: EditPostProps) {
-  const { progress, previewUrl, uploaded, clearUpload, selectedDate, openSelectPlatform } = useModal();
-  
+  const { progress, previewUrl, uploaded, clearUpload, selectedDate, openSelectPlatform } =
+    useModal();
+
   const [mounted, setMounted] = useState(false);
-  const[showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   // Helper to format Date for datetime-local (YYYY-MM-DDTHH:mm)
   const formatDateTimeLocal = (d: Date) => {
-    const pad = (n: number) => n.toString().padStart(2, '0');
+    const pad = (n: number) => n.toString().padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
   // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [scheduleDate, setScheduleDate] = useState(selectedDate ? formatDateTimeLocal(selectedDate) : "");
-  
+  const [scheduleDate, setScheduleDate] = useState(
+    selectedDate ? formatDateTimeLocal(selectedDate) : "",
+  );
+
   // Validation states
   const [titleTouched, setTitleTouched] = useState(false);
   const [dateTouched, setDateTouched] = useState(false);
@@ -38,13 +41,15 @@ export default function EditPost({ onClose }: EditPostProps) {
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(t);
-  },[]);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
     requestAnimationFrame(() => setShowModal(true));
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [mounted]);
 
   const handleCloseRequest = () => {
@@ -95,86 +100,85 @@ export default function EditPost({ onClose }: EditPostProps) {
           </h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            
             {/* Left Side: Details Form */}
             <div className="min-w-0 w-full ml-8 xl:ml-12 flex justify-center lg:justify-end order-last lg:order-first">
               <div className="flex flex-col gap-6 w-full max-w-xs xl:max-w-sm">
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-text-main">
-                    Post Title <span className="text-error">*</span>
-                  </label>
-                  <span className="text-xs text-text-secondary">{title.length}/100</span>
-                </div>
-                <input 
-                  type="text" 
-                  value={title}
-                  maxLength={100}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={() => setTitleTouched(true)}
-                  placeholder="Catchy title for your post..."
-                  className={`w-full bg-surface border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none transition-colors placeholder:text-text-secondary/50 ${
-                    titleTouched && !isTitleValid 
-                      ? "border-error focus:border-error ring-1 ring-error/20" 
-                      : "border-border focus:border-primary"
-                  }`} 
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-text-main">Description & Tags</label>
-                  <span className="text-xs text-text-secondary">{description.length}/250</span>
-                </div>
-                <textarea 
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  maxLength={250}
-                  placeholder="Write a description, add some #hashtags..."
-                  className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-h-[140px] resize-none placeholder:text-text-secondary/50 custom-scrollbar" 
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-text-main">
-                  Schedule Date & Time <span className="text-error">*</span>
-                </label>
-                <div className="relative">
-                  <input 
-                    type="datetime-local" 
-                    value={scheduleDate}
-                    onChange={(e) => {
-                      setScheduleDate(e.target.value);
-                      setDateTouched(true);
-                    }}
-                    className={`w-full bg-surface border rounded-lg pl-4 pr-12 py-3 text-sm text-text-main focus:outline-none transition-colors dark:[color-scheme:dark] appearance-none [&::-webkit-calendar-picker-indicator]:hidden ${
-                      dateTouched && !isDateValid 
-                        ? "border-error focus:border-error ring-1 ring-error/20" 
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-text-main">
+                      Post Title <span className="text-error">*</span>
+                    </label>
+                    <span className="text-xs text-text-secondary">{title.length}/100</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={title}
+                    maxLength={100}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onBlur={() => setTitleTouched(true)}
+                    placeholder="Catchy title for your post..."
+                    className={`w-full bg-surface border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none transition-colors placeholder:text-text-secondary/50 ${
+                      titleTouched && !isTitleValid
+                        ? "border-error focus:border-error ring-1 ring-error/20"
                         : "border-border focus:border-primary"
-                    }`} 
+                    }`}
                     required
                   />
-                  {/* Opaque cover block functions as the clickable custom Calendar button, masking native icons */}
-                  <div 
-                    className="group absolute right-[1px] top-[1px] bottom-[1px] w-12 bg-surface flex items-center justify-center rounded-r-[7px] cursor-pointer hover:bg-primary/5 active:bg-primary/10 transition-colors"
-                    onClick={(e) => {
-                      try {
-                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                        if (typeof input.showPicker === 'function') {
-                          input.showPicker();
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-text-main">Description & Tags</label>
+                    <span className="text-xs text-text-secondary">{description.length}/250</span>
+                  </div>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    maxLength={250}
+                    placeholder="Write a description, add some #hashtags..."
+                    className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-h-[140px] resize-none placeholder:text-text-secondary/50 custom-scrollbar"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-text-main">
+                    Schedule Date & Time <span className="text-error">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={scheduleDate}
+                      onChange={(e) => {
+                        setScheduleDate(e.target.value);
+                        setDateTouched(true);
+                      }}
+                      className={`w-full bg-surface border rounded-lg pl-4 pr-12 py-3 text-sm text-text-main focus:outline-none transition-colors dark:[color-scheme:dark] appearance-none [&::-webkit-calendar-picker-indicator]:hidden ${
+                        dateTouched && !isDateValid
+                          ? "border-error focus:border-error ring-1 ring-error/20"
+                          : "border-border focus:border-primary"
+                      }`}
+                      required
+                    />
+                    {/* Opaque cover block functions as the clickable custom Calendar button, masking native icons */}
+                    <div
+                      className="group absolute right-[1px] top-[1px] bottom-[1px] w-12 bg-surface flex items-center justify-center rounded-r-[7px] cursor-pointer hover:bg-primary/5 active:bg-primary/10 transition-colors"
+                      onClick={(e) => {
+                        try {
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          if (typeof input.showPicker === "function") {
+                            input.showPicker();
+                          }
+                        } catch {
+                          // ignore fallback
                         }
-                      } catch {
-                        // ignore fallback
-                      }
-                    }}
-                    title="Open Calendar"
-                  >
-                    <Calendar className="w-[18px] h-[18px] text-text-secondary group-hover:text-primary group-hover:drop-shadow-[0_0_8px_currentColor] group-active:scale-90 group-active:text-primary transition-all duration-300" />
+                      }}
+                      title="Open Calendar"
+                    >
+                      <Calendar className="w-[18px] h-[18px] text-text-secondary group-hover:text-primary group-hover:drop-shadow-[0_0_8px_currentColor] group-active:scale-90 group-active:text-primary transition-all duration-300" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
             </div>
 
             {/* Right Side: Video Preview & Progress */}
@@ -183,9 +187,15 @@ export default function EditPost({ onClose }: EditPostProps) {
                 <div className="flex items-center justify-center">
                   <div className="rounded-md overflow-hidden border border-border bg-black flex items-center justify-center w-[198px] aspect-9/16">
                     {previewUrl ? (
-                      <video src={previewUrl} controls className="w-full h-full object-contain bg-black" />
+                      <video
+                        src={previewUrl}
+                        controls
+                        className="w-full h-full object-contain bg-black"
+                      />
                     ) : (
-                      <div className="text-text-secondary p-6 text-center">No preview available</div>
+                      <div className="text-text-secondary p-6 text-center">
+                        No preview available
+                      </div>
                     )}
                   </div>
                 </div>
@@ -217,7 +227,7 @@ export default function EditPost({ onClose }: EditPostProps) {
           >
             Cancel Post
           </button>
-          
+
           <button
             onClick={handleSchedule}
             disabled={!isFormValid}
@@ -258,6 +268,6 @@ export default function EditPost({ onClose }: EditPostProps) {
         )}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

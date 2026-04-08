@@ -28,19 +28,19 @@ export default function Login() {
   // Helper checks
   const isEmailError = touched.email && formData.email.trim() === "";
   const isPasswordError = touched.password && formData.password.trim() === "";
-  const isFormValid =
-    formData.email.trim() !== "" && formData.password.trim() !== "";
+  const isFormValid = formData.email.trim() !== "" && formData.password.trim() !== "";
   const [showForgetPassword, setShowForgetPassword] = useState(false);
 
   // Get error from URL query parameter
   const urlError = searchParams.get("error");
-  const errorMessage = urlError === "CredentialsSignin"
-    ? "Invalid email or password"
-    : urlError === "OAuthAccountNotLinked"
-    ? "Email already exists with different provider"
-    : urlError
-    ? "Authentication failed. Please try again."
-    : null;
+  const errorMessage =
+    urlError === "CredentialsSignin"
+      ? "Invalid email or password"
+      : urlError === "OAuthAccountNotLinked"
+        ? "Email already exists with different provider"
+        : urlError
+          ? "Authentication failed. Please try again."
+          : null;
 
   // Reusable Handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,12 +96,8 @@ export default function Login() {
           {/* 2. Reveal Header */}
           <Reveal width="100%" delay={0.1}>
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-primary mb-2">
-                DragInDrop
-              </h1>
-              <h2 className="text-text-secondary text-sm font-medium">
-                Login to your account
-              </h2>
+              <h1 className="text-4xl font-bold text-primary mb-2">DragInDrop</h1>
+              <h2 className="text-text-secondary text-sm font-medium">Login to your account</h2>
             </div>
           </Reveal>
 
@@ -110,15 +106,10 @@ export default function Login() {
             <form onSubmit={handleLogin} className="space-y-5">
               {/* Email Input */}
               <div className="space-y-1.5">
-                <label
-                  htmlFor="loginEmail"
-                  className="block text-sm font-medium text-text-main"
-                >
+                <label htmlFor="loginEmail" className="block text-sm font-medium text-text-main">
                   Email
                   {/* Added: Error Text */}
-                  {isEmailError && (
-                    <span className="inline-error">REQUIRED</span>
-                  )}
+                  {isEmailError && <span className="inline-error">REQUIRED</span>}
                 </label>
                 <input
                   id="loginEmail"
@@ -131,23 +122,16 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   onBlur={() => handleBlur("email")}
-                  className={`input-base ${
-                    isEmailError ? "input-error" : "input-default"
-                  }`}
+                  className={`input-base ${isEmailError ? "input-error" : "input-default"}`}
                 />
               </div>
 
               {/* Password Input */}
               <div className="space-y-1.5">
-                <label
-                  htmlFor="loginPassword"
-                  className="block text-sm font-medium text-text-main"
-                >
+                <label htmlFor="loginPassword" className="block text-sm font-medium text-text-main">
                   Password
                   {/* Added: Error Text */}
-                  {isPasswordError && (
-                    <span className="inline-error">REQUIRED</span>
-                  )}
+                  {isPasswordError && <span className="inline-error">REQUIRED</span>}
                 </label>
                 <div className="relative">
                   <input
@@ -161,17 +145,13 @@ export default function Login() {
                     value={formData.password}
                     onChange={handleChange}
                     onBlur={() => handleBlur("password")}
-                    className={`input-base ${
-                      isPasswordError ? "input-error" : "input-default"
-                    }`}
+                    className={`input-base ${isPasswordError ? "input-error" : "input-default"}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors p-1"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -255,9 +235,7 @@ export default function Login() {
         </div>
 
         {/* --- FORGOT PASSWORD MODAL COMPONENT --- */}
-        {showForgetPassword && (
-          <ForgetPassword onClose={() => setShowForgetPassword(false)} />
-        )}
+        {showForgetPassword && <ForgetPassword onClose={() => setShowForgetPassword(false)} />}
       </div>
     </Reveal>
   );

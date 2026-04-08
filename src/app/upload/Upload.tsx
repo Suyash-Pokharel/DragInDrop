@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import UploadDropzone from "@/app/upload/UploadDropzone";
@@ -11,15 +11,8 @@ interface UploadProps {
 }
 
 export default function Upload({ onClose }: UploadProps) {
-  const {
-    file,
-    uploading,
-    progress,
-    previewUrl,
-    handleUpload,
-    openEditPost,
-    clearUpload,
-  } = useModal();
+  const { file, uploading, progress, previewUrl, handleUpload, openEditPost, clearUpload } =
+    useModal();
 
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -128,12 +121,8 @@ export default function Upload({ onClose }: UploadProps) {
 
                 <div className="w-full mt-2">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-medium text-text-main">
-                      Uploading
-                    </div>
-                    <div className="text-xs text-text-secondary">
-                      {progress}%
-                    </div>
+                    <div className="text-sm font-medium text-text-main">Uploading</div>
+                    <div className="text-xs text-text-secondary">{progress}%</div>
                   </div>
                   <div className="w-full bg-surface rounded-full h-1.5 mb-3 overflow-hidden">
                     <div
@@ -162,9 +151,7 @@ export default function Upload({ onClose }: UploadProps) {
             }}
             disabled={!file}
             className={`px-6 py-2 rounded-md text-sm font-medium text-white ${
-              !file
-                ? "bg-primary/60 cursor-not-allowed"
-                : "bg-primary hover:bg-secondary shadow-md"
+              !file ? "bg-primary/60 cursor-not-allowed" : "bg-primary hover:bg-secondary shadow-md"
             } transition-colors`}
           >
             Continue to Details

@@ -54,9 +54,8 @@ export default function PricingPage() {
           </Reveal>
           <Reveal width="100%" delay={0.1}>
             <p className="text-lg md:text-xl text-text-secondary leading-relaxed">
-              Join thousands of creators who trust DragInDrop to streamline
-              their workflow. Start for free, then upgrade as you grow with a
-              plan that fits your needs.
+              Join thousands of creators who trust DragInDrop to streamline their workflow. Start
+              for free, then upgrade as you grow with a plan that fits your needs.
             </p>
           </Reveal>
         </div>
@@ -74,9 +73,7 @@ export default function PricingPage() {
 
               <div className="text-center mb-8 flex items-baseline justify-center">
                 <span className="text-4xl font-bold text-text-main">$0</span>
-                <span className="text-text-secondary ms-2 font-medium">
-                  / Forever
-                </span>
+                <span className="text-text-secondary ms-2 font-medium">/ Forever</span>
               </div>
 
               <ul className="w-full space-y-4 flex-1 text-sm text-text-main mb-8">
@@ -87,11 +84,7 @@ export default function PricingPage() {
                   "9 Total Scheduled Posts / Month",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <Check
-                      size={18}
-                      className="text-success shrink-0 mt-0.5"
-                      strokeWidth={3}
-                    />
+                    <Check size={18} className="text-success shrink-0 mt-0.5" strokeWidth={3} />
                     {feature}
                   </li>
                 ))}
@@ -111,8 +104,8 @@ export default function PricingPage() {
         <Reveal width="100%" delay={0.1}>
           <div className="text-center mb-16">
             <p className="text-sm text-text-secondary mb-6 max-w-xl mx-auto">
-              All our Paid Plans are backed by a 7-Day Money-Back Guarantee.
-              Simple, transparent pricing with no hidden fees.
+              All our Paid Plans are backed by a 7-Day Money-Back Guarantee. Simple, transparent
+              pricing with no hidden fees.
             </p>
 
             <div className="relative inline-flex items-center justify-center gap-3 select-none">
@@ -147,9 +140,7 @@ export default function PricingPage() {
 
               <span
                 className={`absolute left-full top-1/2 -translate-y-1/2 whitespace-nowrap text-xs font-bold text-success bg-success/10 px-2.5 py-0.5 rounded-full transition-all duration-300 ease-out ${
-                  isAnnual
-                    ? "opacity-100 translate-x-3"
-                    : "opacity-0 -translate-x-2"
+                  isAnnual ? "opacity-100 translate-x-3" : "opacity-0 -translate-x-2"
                 }`}
               >
                 Save ~25%
@@ -179,9 +170,7 @@ export default function PricingPage() {
                     ${isAnnual ? "9" : "12"}
                   </span>
                   <span className="text-2xl font-bold">.99</span>
-                  <span className="text-text-secondary ms-1 text-sm font-medium">
-                    / month
-                  </span>
+                  <span className="text-text-secondary ms-1 text-sm font-medium">/ month</span>
                 </div>
               </div>
 
@@ -196,11 +185,7 @@ export default function PricingPage() {
                   "Basic Upload Analytics",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <Check
-                      size={18}
-                      className="text-success shrink-0 mt-0.5"
-                      strokeWidth={3}
-                    />
+                    <Check size={18} className="text-success shrink-0 mt-0.5" strokeWidth={3} />
                     {feature}
                   </li>
                 ))}
@@ -240,9 +225,7 @@ export default function PricingPage() {
                     ${isAnnual ? "23" : "28"}
                   </span>
                   <span className="text-3xl font-bold text-primary">.99</span>
-                  <span className="text-text-secondary ms-1 text-md font-medium">
-                    / month
-                  </span>
+                  <span className="text-text-secondary ms-1 text-md font-medium">/ month</span>
                 </div>
               </div>
 
@@ -258,11 +241,7 @@ export default function PricingPage() {
                   "Priority Email & Chat Support",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <Check
-                      size={18}
-                      className="text-success shrink-0 mt-0.5"
-                      strokeWidth={3}
-                    />
+                    <Check size={18} className="text-success shrink-0 mt-0.5" strokeWidth={3} />
                     {feature}
                   </li>
                 ))}
@@ -303,11 +282,7 @@ export default function PricingPage() {
                   "Dedicated Account Manager",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <Check
-                      size={18}
-                      className="text-success shrink-0 mt-0.5"
-                      strokeWidth={3}
-                    />
+                    <Check size={18} className="text-success shrink-0 mt-0.5" strokeWidth={3} />
                     {feature}
                   </li>
                 ))}
