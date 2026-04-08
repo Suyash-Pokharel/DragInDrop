@@ -5,7 +5,7 @@ import { getPrisma } from "@/lib/prisma";
 export type PublicUser = {
   id: string;
   firstName: string;
-  lastName: string;
+  lastName: string | null;
   email: string;
   role?: string;
   profilePic?: string | null;
