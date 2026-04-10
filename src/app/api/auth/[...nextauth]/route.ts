@@ -163,9 +163,59 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async signIn() {
-      // Simply allow sign-in
-      // emailVerified is set in profile callbacks during user creation
+    async signIn({ user, account, profile }) {
+      // For OAuth providers, handle account creation/linking properly
+      if (account?.provider !== "credentials") {
+        const prisma = getPrisma();
+        
+        // Get the email from the OAuth profile
+        const email = (profile?.email || user.email)?.toLowerCase().trim();
+        
+        if (!email) {
+          console.error("No email provided by OAuth provider");
+          return false;
+        }
+        
+        // Check if a user with this email already exists
+        const existingUser = await prisma.user.findUnique({
+          where: { email },
+          include: { accounts: true },
+        });
+        
+        // If user exists, check if they have an account with this provider
+        if (existingUser && account) {
+          const hasThisProvider = existingUser.accounts.some(
+            (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
+          );
+          
+          // If they don't have this specific provider account linked, block sign-in
+          // This prevents automatic account linking and forces explicit user action
+          if (!hasThisProvider) {
+            console.error(`User ${email} exists but doesn't have ${account.provider} account linked`);
+            return false; // This will trigger OAuthAccountNotLinked error
+          }
+          
+          // User exists and has this provider - update emailVerified if needed
+          if (!existingUser.emailVerified) {
+            const now = new Date();
+            const timeSinceCreation = now.getTime() - existingUser.createdAt.getTime();
+            
+            if (timeSinceCreation < 5000) {
+              await prisma.user.update({
+                where: { id: existingUser.id },
+                data: { emailVerified: existingUser.createdAt },
+              });
+            } else {
+              await prisma.user.update({
+                where: { id: existingUser.id },
+                data: { emailVerified: now },
+              });
+            }
+          }
+        }
+        // If user doesn't exist, PrismaAdapter will create them automatically
+      }
+      
       return true;
     },
 
@@ -174,7 +224,19 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.sub = user.id;
         token.email = user.email;
-        token.role = user.role;
+        
+        // For OAuth providers, fetch role from database since it's not in the user object
+        if (account?.provider !== "credentials") {
+          const prisma = getPrisma();
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { role: true },
+          });
+          token.role = dbUser?.role || "USER";
+        } else {
+          // For credentials provider, role is already in user object
+          token.role = user.role;
+        }
       }
 
       // For OAuth sign-in, set emailVerified
@@ -212,6 +274,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
     error: "/login",
+    signOut: "/login",
   },
 };
 

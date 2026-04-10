@@ -7,7 +7,7 @@ import { getToken } from "next-auth/jwt";
 // This runs in the Edge runtime.
 
 // Routes that require a valid session to access
-const PROTECTED_ROUTES = ["/dashboard", "/admin"];
+const PROTECTED_ROUTES = ["/dashboard", "/admin", "/calendar", "/settings"];
 
 function isProtectedRoute(pathname: string) {
   return PROTECTED_ROUTES.some(
@@ -49,9 +49,15 @@ export async function middleware(req: NextRequest) {
   if (token.sub) newHeaders.set("x-user-id", String(token.sub));
   if (token.email) newHeaders.set("x-user-email", String(token.email));
 
-  return NextResponse.next({ request: { headers: newHeaders } });
+  // Add cache control headers to prevent browser caching of authenticated pages
+  const response = NextResponse.next({ request: { headers: newHeaders } });
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+  
+  return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/createpassword"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/calendar/:path*", "/settings/:path*", "/createpassword"],
 };

@@ -46,6 +46,11 @@ export default function Login() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setServerError(null); // Clear server error on input change
+    
+    // Clear URL error parameter when user starts typing
+    if (urlError) {
+      window.history.replaceState({}, '', '/login');
+    }
   };
 
   const handleBlur = (field: keyof typeof touched) => {
@@ -73,8 +78,19 @@ export default function Login() {
       if (result?.error) {
         setServerError(result.error);
         setIsLoading(false);
+        // Clear URL error by replacing the URL without the error parameter
+        window.history.replaceState({}, '', '/login');
       } else if (result?.ok) {
-        router.push("/dashboard");
+        // Fetch session to get user role for redirect
+        const response = await fetch("/api/auth/session");
+        const session = await response.json();
+        
+        // Redirect based on role
+        if (session?.user?.role === "ADMIN") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);

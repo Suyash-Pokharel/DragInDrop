@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image, { StaticImageData } from "next/image";
 import { useTheme } from "next-themes";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
@@ -76,6 +77,10 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
   const [activeDropdown, setActiveDropdown] = useState<"notifications" | "profile" | null>(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  
+  // Get fresh session data for role verification
+  const { data: session } = useSession();
+  
   // modal context
   const modal = useModal();
   const { tempImage } = useUser();
@@ -88,6 +93,10 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
     user?.image ||
     imageSrc ||
     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
+
+  // Compute isAdmin from fresh session data with fallback to prop
+  const isAdminFromSession = session?.user?.role === "ADMIN";
+  const isAdminUser = isAdminFromSession || isAdmin;
 
   const toggleDropdown = (menu: "notifications" | "profile") => {
     if (activeDropdown === menu) {
@@ -269,21 +278,15 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                 bg-surface border-border"
             >
               <div className="flex flex-col text-sm xl:text-lg 2xl:text-xl text-text-secondary">
-                {isAdmin && (
+                {isAdminUser && (
                   <>
                     <Link
                       href="/admin"
                       className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
+                      onClick={() => setActiveDropdown(null)}
                     >
-                      <LayoutDashboard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 text-primary" />
+                      <BarChart3 className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 text-primary" />
                       <span className="font-semibold text-primary">Admin Panel</span>
-                    </Link>
-                    <Link
-                      href="/admin"
-                      className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
-                    >
-                      <BarChart3 className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
-                      <span>Statistics</span>
                     </Link>
                     <div className="h-px w-full my-1 bg-border"></div>
                   </>
@@ -344,7 +347,19 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                 <button
                   className="flex items-center gap-3 px-4 py-2.5 xl:py-3 w-full text-left transition-colors 
                     text-error hover:bg-error/10 hover:text-error"
-                  onClick={() => signOut({ callbackUrl: "/" })}
+                  onClick={async () => {
+                    // Clear any client-side state
+                    setActiveDropdown(null);
+                    
+                    // Sign out and redirect to login
+                    await signOut({ 
+                      callbackUrl: "/login", 
+                      redirect: true 
+                    });
+                    
+                    // Force a hard reload to clear any cached state
+                    window.location.href = "/login";
+                  }}
                 >
                   <LogOut className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Log out</span>

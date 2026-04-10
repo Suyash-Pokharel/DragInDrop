@@ -9,7 +9,21 @@ export async function GET() {
   // At this point, adminCheck is the user
   const prisma = getPrisma();
   const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, role: true, createdAt: true },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      image: true,
+      emailVerified: true,
+      role: true,
+      createdAt: true,
+      accounts: {
+        select: {
+          provider: true,
+          providerAccountId: true,
+        },
+      },
+    },
   });
   return NextResponse.json({ users });
 }

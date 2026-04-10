@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { StaticImageData } from "next/image";
 import { PublicUser } from "@/lib/getCurrentUser";
 import UserNavbar from "./UserNavbar";
@@ -11,13 +12,12 @@ interface NavbarProps {
   user?: PublicUser | null;
 }
 
-// TODO: Replace with real auth session hook (e.g., useSession()) once available.
-// Defaulting to null so admin features are hidden until auth is integrated.
-const userRole: string | null = null;
-const isAdminUser = userRole === "admin";
-
 const NavbarWrapper = ({ imageSrc, user }: NavbarProps) => {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  
+  // Use session role as primary source (fresh data), fallback to server prop
+  const isAdminUser = session?.user?.role === "ADMIN" || user?.role === "ADMIN";
 
   // 1. Pages with NO Navbar (Login, Register, etc.)
   if (

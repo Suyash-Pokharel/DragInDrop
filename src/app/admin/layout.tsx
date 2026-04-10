@@ -1,19 +1,19 @@
 import React from "react";
-import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
+  
+  // Redirect non-admin users to dashboard
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="min-h-screen bg-background text-text-main">
-      <header className="bg-surface border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">DragInDrop — Admin</h1>
-          <nav className="flex gap-4 items-center">
-            <Link href="/">Home</Link>
-            <Link href="/dashboard">Dashboard</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 py-8">{children}</main>
+      <main className="max-w-7xl mx-auto px-2 py-4">{children}</main>
     </div>
   );
 }

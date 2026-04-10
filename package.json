@@ -16,6 +16,7 @@
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:generate": "dotenv -e .env.local -- prisma generate",
     "db:studio": "dotenv -e .env.local -- prisma studio",
+    "create-admin": "dotenv -e .env.local -- tsx scripts/create-admin.ts",
     "postinstall": "prisma generate"
   },
   "pnpm": {
@@ -46,12 +47,14 @@
     "rate-limiter-flexible": "^11.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
     "resend": "^6.10.0"
   },
   "devDependencies": {
     "@fast-check/vitest": "^0.4.0",
     "@prisma/config": "^7.6.0",
     "@tailwindcss/postcss": "^4.2.2",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
@@ -68,6 +71,7 @@
     "prettier": "^3.8.1",
     "prisma": "^7.6.0",
     "tailwindcss": "^4.2.2",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }
