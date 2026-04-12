@@ -72,6 +72,7 @@ export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
                   src={provider.logo}
                   alt={`${provider.name} logo`}
                   fill
+                  sizes="32px"
                   className="object-contain"
                 />
               </div>

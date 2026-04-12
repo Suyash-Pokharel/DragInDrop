@@ -1,12 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 type UserContextType = {
   tempImage: string | null;
   setTempImage: (url: string | null) => void;
   connectedPlatforms: string[];
-  togglePlatformConnection: (name: string) => void;
+  refetchConnectedPlatforms: () => Promise<void>;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -17,20 +17,42 @@ export const useUser = () => {
   return ctx;
 };
 
-/** Manages temporary UI state only (uploaded images, platform connections). Does not fetch or store database data. */
+/** Manages user state including connected platforms fetched from database. */
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [tempImage, setTempImage] = useState<string | null>(null);
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
 
-  const togglePlatformConnection = (name: string) => {
-    setConnectedPlatforms((prev) =>
-      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name],
-    );
-  };
+  // Fetch connected platforms from database
+  const refetchConnectedPlatforms = useCallback(async () => {
+    try {
+      const response = await fetch("/api/user/connected-platforms");
+      if (response.ok) {
+        const data = await response.json();
+        setConnectedPlatforms(data.connectedPlatforms || []);
+      } else if (response.status === 401) {
+        // User is not authenticated - this is expected, don't log error
+        setConnectedPlatforms([]);
+      } else {
+        console.error("Failed to fetch connected platforms:", response.statusText);
+        setConnectedPlatforms([]);
+      }
+    } catch (error) {
+      // Only log error if it's not a network/auth issue
+      if (error instanceof Error && !error.message.includes("fetch")) {
+        console.error("Error fetching connected platforms:", error);
+      }
+      setConnectedPlatforms([]);
+    }
+  }, []);
+
+  // Fetch connected platforms on mount
+  useEffect(() => {
+    refetchConnectedPlatforms();
+  }, [refetchConnectedPlatforms]);
 
   return (
     <UserContext.Provider
-      value={{ tempImage, setTempImage, connectedPlatforms, togglePlatformConnection }}
+      value={{ tempImage, setTempImage, connectedPlatforms, refetchConnectedPlatforms }}
     >
       {children}
     </UserContext.Provider>

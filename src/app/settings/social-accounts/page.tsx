@@ -1,28 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link2, LayoutGrid, Unlink } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 import { APP_PLATFORMS } from "@/lib/platforms";
 import { useUser } from "@/app/components/UserProvider";
 
 export default function SocialAccountsPage() {
-  const { connectedPlatforms, togglePlatformConnection } = useUser();
+  const { connectedPlatforms, refetchConnectedPlatforms } = useUser();
   const [platformToDisconnect, setPlatformToDisconnect] = useState<string | null>(null);
+  const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const searchParams = useSearchParams();
 
-  const handleConnect = (name: string) => {
-    togglePlatformConnection(name);
+  // Handle OAuth callback success/error messages
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const error = searchParams.get("error");
+
+    if (success) {
+      setToastMessage({ type: "success", message: "Account connected successfully!" });
+      refetchConnectedPlatforms();
+      // Clear the query parameter
+      window.history.replaceState({}, "", "/settings/social-accounts");
+    } else if (error) {
+      setToastMessage({ type: "error", message: error });
+      // Clear the query parameter
+      window.history.replaceState({}, "", "/settings/social-accounts");
+    }
+  }, [searchParams, refetchConnectedPlatforms]);
+
+  // Auto-hide toast after 5 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const handleConnect = async (name: string) => {
+    // For TikTok, redirect to OAuth authorization endpoint
+    if (name === "TikTok") {
+      setConnectingPlatform(name);
+      window.location.href = "/api/oauth/tiktok/authorize";
+    } else {
+      // Other platforms not yet implemented
+      setToastMessage({ type: "error", message: `${name} integration coming soon!` });
+    }
   };
 
   const handleForgetClick = (name: string) => {
     setPlatformToDisconnect(name);
   };
 
-  const confirmDisconnect = () => {
+  const confirmDisconnect = async () => {
     if (platformToDisconnect) {
-      if (connectedPlatforms.includes(platformToDisconnect)) {
-        togglePlatformConnection(platformToDisconnect);
+      // TODO: Call disconnect API endpoint when task 10 is implemented
+      // For now, just show a message
+      if (platformToDisconnect === "TikTok") {
+        try {
+          const response = await fetch("/api/oauth/tiktok/disconnect", {
+            method: "DELETE",
+          });
+
+          if (response.ok) {
+            setToastMessage({ type: "success", message: "Account disconnected successfully!" });
+            await refetchConnectedPlatforms();
+          } else {
+            const data = await response.json();
+            setToastMessage({ type: "error", message: data.error || "Failed to disconnect account" });
+          }
+        } catch (error) {
+          setToastMessage({ type: "error", message: "Failed to disconnect account" });
+        }
+      } else {
+        setToastMessage({ type: "error", message: `${platformToDisconnect} disconnect not yet implemented` });
       }
       setPlatformToDisconnect(null);
     }
@@ -68,6 +122,7 @@ export default function SocialAccountsPage() {
                       src={platform.icon}
                       alt={platform.name}
                       fill
+                      sizes="(max-width: 768px) 32px, 40px"
                       className="object-contain drop-shadow-sm group-hover:scale-110 transition-transform"
                     />
                   </div>
@@ -83,13 +138,19 @@ export default function SocialAccountsPage() {
                   onClick={() =>
                     isConnected ? handleForgetClick(platform.name) : handleConnect(platform.name)
                   }
+                  disabled={connectingPlatform === platform.name}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                     isConnected
-                      ? "bg-surface border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                      : "bg-surface border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
+                      ? "bg-surface border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      : "bg-surface border-green-500 text-green-500 hover:bg-green-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   }`}
                 >
-                  {isConnected ? (
+                  {connectingPlatform === platform.name ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Connecting...</span>
+                    </>
+                  ) : isConnected ? (
                     <>
                       <Unlink className="w-4 h-4" />
                       <span>Forget</span>
@@ -120,6 +181,21 @@ export default function SocialAccountsPage() {
           Request Integration
         </button>
       </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-2 duration-300">
+          <div
+            className={`px-4 py-3 rounded-lg shadow-lg border ${
+              toastMessage.type === "success"
+                ? "bg-green-500 border-green-600 text-white"
+                : "bg-red-500 border-red-600 text-white"
+            }`}
+          >
+            <p className="text-sm font-medium">{toastMessage.message}</p>
+          </div>
+        </div>
+      )}
 
       {/* Disconnect Confirmation Modal */}
       {platformToDisconnect && (

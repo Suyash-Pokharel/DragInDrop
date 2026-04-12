@@ -58,7 +58,7 @@ export default function UploadDropzone({ accept = "*", onFiles, files = [] }: Dr
         <div className="text-center">
           <div className="text-2xl text-text-secondary mb-2">📤</div>
           <div className="text-lg font-semibold text-text-main">Drag & Drop Video File Here</div>
-          <div className="text-sm text-text-secondary mt-2">Max resolution: 1080×1920 (200MB)</div>
+          <div className="text-sm text-text-secondary mt-2">Max resolution: 1080×1920 (250MB)</div>
           <button className="mt-6 px-4 py-2 rounded-md bg-primary text-white hover:bg-secondary transition-colors">
             Browse Files
           </button>

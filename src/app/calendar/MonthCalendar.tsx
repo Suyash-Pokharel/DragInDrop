@@ -110,6 +110,7 @@ const IconGroup = ({
             src={LOGO_MAP[post.platform]}
             alt={post.platform}
             fill
+            sizes="24px"
             className="object-contain drop-shadow-sm"
           />
         </div>

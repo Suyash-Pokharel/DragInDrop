@@ -229,6 +229,7 @@ export default function UserDetailsModal({
                               src={providerLogo}
                               alt={`${account.provider} logo`}
                               fill
+                              sizes="24px"
                               className="object-contain"
                             />
                           </div>

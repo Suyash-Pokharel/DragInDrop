@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useModal } from "@/app/components/ModalProvider";
 import { useUser } from "@/app/components/UserProvider";
 import { APP_PLATFORMS } from "@/lib/platforms";
@@ -13,7 +14,16 @@ interface SelectPlatformProps {
 }
 
 export default function SelectPlatform({ onClose }: SelectPlatformProps) {
-  const { clearUpload } = useModal();
+  const router = useRouter();
+  const { 
+    clearUpload,
+    postTitle,
+    postDescription,
+    postScheduledFor,
+    fileKey,
+    videoFileName,
+    videoFileSize,
+  } = useModal();
   const { connectedPlatforms } = useUser();
 
   const [mounted, setMounted] = useState(false);
@@ -21,6 +31,9 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Only show platforms that the user has verified/connected in settings
   const availablePlatforms = APP_PLATFORMS.filter((p) => connectedPlatforms.includes(p.name));
@@ -55,13 +68,82 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
     }, 250);
   };
 
-  const handleSchedule = () => {
-    alert("Post Scheduled for: " + selectedPlatforms.join(", "));
-    setShowModal(false);
-    setTimeout(() => {
-      clearUpload();
-      onClose();
-    }, 250);
+  const handleSchedule = async () => {
+    // Requirement 3.8 - Set isSubmitting to true during request
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // Requirement 4.4 - Include session token in request headers (handled by Next.js automatically)
+      // Requirement 4.5 - Convert scheduledFor to ISO 8601 format
+      const scheduledForISO = new Date(postScheduledFor).toISOString();
+
+      // Requirement 3.2 - Make POST request to /api/posts endpoint
+      // Requirement 4.4 - Gather all required data from context/props
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: postTitle,
+          description: postDescription,
+          scheduledFor: scheduledForISO,
+          videoFileKey: fileKey,
+          videoFileName,
+          videoFileSize,
+          selectedPlatforms,
+        }),
+      });
+
+      // Requirement 5.1 - Handle 401 errors with redirect to login
+      if (response.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      // Requirement 5.3 - Display validation errors from API response
+      // Requirement 5.4 - Display server errors with generic message
+      if (!response.ok) {
+        const error = await response.json();
+        
+        // Display specific validation message from API response
+        if (response.status === 400) {
+          setSubmitError(error.error || 'Validation error occurred');
+        } else if (response.status >= 500) {
+          // Server error - display generic message
+          setSubmitError('An error occurred while saving your post. Please try again.');
+        } else {
+          setSubmitError(error.error || 'Failed to create post');
+        }
+        return;
+      }
+
+      const data = await response.json();
+
+      // Requirement 3.3 - Show success message
+      setSuccessMessage(`Post scheduled successfully! ID: ${data.postId}`);
+
+      // Requirement 3.4, 3.5 - Close modals and clear state after showing success
+      setTimeout(() => {
+        setShowModal(false);
+        setTimeout(() => {
+          clearUpload();
+          onClose();
+        }, 250);
+      }, 2000); // Show success message for 2 seconds before closing
+    } catch (error) {
+      // Requirement 5.2 - Display network errors with retry option
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setSubmitError('Network error. Please check your connection and try again.');
+      } else {
+        // Requirement 3.6 - Display error message
+        setSubmitError(error instanceof Error ? error.message : 'An error occurred');
+      }
+    } finally {
+      // Requirement 6.4 - Set isSubmitting to false after request completes
+      setIsSubmitting(false);
+    }
   };
 
   const togglePlatform = (name: string) => {
@@ -126,6 +208,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
                         src={platform.icon}
                         alt={platform.name}
                         fill
+                        sizes="40px"
                         className="object-contain"
                       />
                     </div>
@@ -141,25 +224,57 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 p-4 border-t border-border bg-surface mt-auto">
-          <button
-            onClick={() => setShowDiscardConfirm(true)}
-            className="px-4 py-2 rounded-md text-sm text-text-secondary hover:bg-surface-highlight transition-colors"
-          >
-            Cancel Post
-          </button>
+        <div className="flex flex-col gap-2 p-4 border-t border-border bg-surface mt-auto">
+          {/* Requirement 3.3 - Display success message */}
+          {successMessage && (
+            <div className="text-sm text-[#10b981] bg-[#10b981]/10 border border-[#10b981]/20 rounded-md px-3 py-2">
+              {successMessage}
+            </div>
+          )}
+          
+          {/* Requirement 3.6, 5.5 - Display error message with retry option */}
+          {submitError && (
+            <div className="flex items-start justify-between gap-2 text-sm text-error bg-error/10 border border-error/20 rounded-md px-3 py-2">
+              <span className="flex-1">{submitError}</span>
+              <button
+                onClick={handleSchedule}
+                disabled={isSubmitting}
+                className="text-xs font-medium underline hover:no-underline disabled:opacity-50"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          
+          <div className="flex items-center justify-between gap-4">
+            <button
+              onClick={() => setShowDiscardConfirm(true)}
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded-md text-sm text-text-secondary hover:bg-surface-highlight transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel Post
+            </button>
 
-          <button
-            onClick={handleSchedule}
-            disabled={selectedPlatforms.length === 0}
-            className={`px-6 py-2 rounded-md text-sm font-medium text-white transition-colors ${
-              selectedPlatforms.length === 0
-                ? "bg-primary/60 cursor-not-allowed"
-                : "bg-primary hover:bg-secondary shadow-md"
-            }`}
-          >
-            Schedule Post
-          </button>
+            <button
+              onClick={handleSchedule}
+              disabled={selectedPlatforms.length === 0 || isSubmitting}
+              className={`px-6 py-2 rounded-md text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 ${
+                selectedPlatforms.length === 0 || isSubmitting
+                  ? "bg-primary/60 cursor-not-allowed"
+                  : "bg-primary hover:bg-secondary shadow-md"
+              }`}
+            >
+              {/* Requirement 3.8, 3.9 - Disable button and show loading spinner when submitting */}
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Scheduling...</span>
+                </>
+              ) : (
+                "Schedule Post"
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Discard Confirmation */}

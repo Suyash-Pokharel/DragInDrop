@@ -63,6 +63,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
                     src={tempImage || user?.image || ""}
                     alt="Profile"
                     fill
+                    sizes="(max-width: 768px) 96px, 128px"
                     className="object-cover"
                   />
                 ) : (

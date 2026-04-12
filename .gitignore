@@ -72,6 +72,8 @@ temp/
 *.txt
 *.test.ts
 *.test.tsx
+*.example.ts
+*.example.tsx
 
 # Logs and debug
 *.log

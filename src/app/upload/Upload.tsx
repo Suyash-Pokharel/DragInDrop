@@ -5,13 +5,14 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import UploadDropzone from "@/app/upload/UploadDropzone";
 import { useModal } from "@/app/components/ModalProvider";
+import { uploadService } from "@/lib/uploadService";
 
 interface UploadProps {
   onClose: () => void;
 }
 
 export default function Upload({ onClose }: UploadProps) {
-  const { file, uploading, progress, previewUrl, handleUpload, openEditPost, clearUpload } =
+  const { file, uploading, progress, previewUrl, handleUpload, openEditPost, clearUpload, uploadError, clearError } =
     useModal();
 
   const [mounted, setMounted] = useState(false);
@@ -81,12 +82,69 @@ export default function Upload({ onClose }: UploadProps) {
             Upload a Video
           </h2>
 
+          {/* Error Message Display */}
+          {uploadError && (
+            <div className="mx-8 mb-4 p-4 bg-error/10 border border-error/30 rounded-lg flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg
+                  className="w-5 h-5 text-error"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-error font-medium">{uploadError}</p>
+              </div>
+              <button
+                onClick={clearError}
+                className="flex-shrink-0 text-error/60 hover:text-error transition-colors"
+                aria-label="Dismiss error"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 place-items-center-safe gap-4">
             <div className="min-w-0 w-full ml-8 xl:ml-12 flex justify-center lg:justify-end">
               <UploadDropzone
                 accept="video/*"
                 onFiles={(f: File[]) => {
                   if (!f || f.length === 0) return;
+
+                  const selectedFile = f[0];
+
+                  // Client-side validation for file type
+                  if (!selectedFile.type.startsWith("video/")) {
+                    clearError(); // Clear any existing error first
+                    setTimeout(() => {
+                      // Use a custom error event to set the error message
+                      const errorEvent = new CustomEvent("error", {
+                        detail: { message: "Only video files are allowed", code: "INVALID_TYPE" },
+                      });
+                      uploadService.dispatchEvent(errorEvent);
+                    }, 0);
+                    return;
+                  }
+
+                  // Client-side validation for file size (250MB = 262,144,000 bytes)
+                  if (selectedFile.size > 262144000) {
+                    clearError(); // Clear any existing error first
+                    setTimeout(() => {
+                      const errorEvent = new CustomEvent("error", {
+                        detail: { message: "File size exceeds 250MB limit", code: "FILE_TOO_LARGE" },
+                      });
+                      uploadService.dispatchEvent(errorEvent);
+                    }, 0);
+                    return;
+                  }
 
                   if (uploading) {
                     setPendingFiles(f);
@@ -95,7 +153,7 @@ export default function Upload({ onClose }: UploadProps) {
                   }
 
                   setDirty(true);
-                  handleUpload(f[0]);
+                  handleUpload(selectedFile);
                 }}
                 files={file ? [file] : []}
               />
@@ -204,8 +262,38 @@ export default function Upload({ onClose }: UploadProps) {
                 <button
                   onClick={() => {
                     if (pendingFiles && pendingFiles.length > 0) {
+                      const selectedFile = pendingFiles[0];
+
+                      // Client-side validation for file type
+                      if (!selectedFile.type.startsWith("video/")) {
+                        setPendingFiles(null);
+                        setShowReplaceConfirm(false);
+                        clearError();
+                        setTimeout(() => {
+                          const errorEvent = new CustomEvent("error", {
+                            detail: { message: "Only video files are allowed", code: "INVALID_TYPE" },
+                          });
+                          uploadService.dispatchEvent(errorEvent);
+                        }, 0);
+                        return;
+                      }
+
+                      // Client-side validation for file size
+                      if (selectedFile.size > 262144000) {
+                        setPendingFiles(null);
+                        setShowReplaceConfirm(false);
+                        clearError();
+                        setTimeout(() => {
+                          const errorEvent = new CustomEvent("error", {
+                            detail: { message: "File size exceeds 250MB limit", code: "FILE_TOO_LARGE" },
+                          });
+                          uploadService.dispatchEvent(errorEvent);
+                        }, 0);
+                        return;
+                      }
+
                       setDirty(true);
-                      handleUpload(pendingFiles[0]);
+                      handleUpload(selectedFile);
                     }
                     setPendingFiles(null);
                     setShowReplaceConfirm(false);

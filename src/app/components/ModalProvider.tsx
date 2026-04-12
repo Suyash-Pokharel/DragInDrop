@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Upload from "../upload/Upload";
 import EditPost from "../upload/EditPost";
 import NoAccountModal from "../upload/NoAccountModal";
@@ -31,9 +33,26 @@ type ModalContextType = {
   handleUpload: (file: File) => void;
   abortUpload: () => void;
   clearUpload: () => void;
+  
+  // Error handling
+  uploadError: string | null;
+  clearError: () => void;
 
   selectedDate: Date | null;
   setSelectedDate: (date: Date | null) => void;
+
+  // File metadata
+  fileKey: string | null;
+  videoFileName: string | null;
+  videoFileSize: number | null;
+
+  // Post metadata
+  postTitle: string;
+  setPostTitle: (title: string) => void;
+  postDescription: string;
+  setPostDescription: (description: string) => void;
+  postScheduledFor: string;
+  setPostScheduledFor: (scheduledFor: string) => void;
 };
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
@@ -45,6 +64,8 @@ export const useModal = () => {
 };
 
 export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const { connectedPlatforms } = useUser();
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -58,8 +79,19 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const [progress, setProgress] = useState(0);
   const [uploaded, setUploaded] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // File metadata
+  const [fileKey, setFileKey] = useState<string | null>(null);
+  const [videoFileName, setVideoFileName] = useState<string | null>(null);
+  const [videoFileSize, setVideoFileSize] = useState<number | null>(null);
+
+  // Post metadata
+  const [postTitle, setPostTitle] = useState<string>("");
+  const [postDescription, setPostDescription] = useState<string>("");
+  const [postScheduledFor, setPostScheduledFor] = useState<string>("");
 
   const previewUrlRef = useRef<string | null>(null);
 
@@ -89,31 +121,60 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    const unsubStart = uploadService.onStart(() => setUploading(true));
+    const unsubStart = uploadService.onStart(() => {
+      setUploading(true);
+      setUploadError(null); // Clear any previous errors
+    });
     const unsubProg = uploadService.onProgress((pct: number) => setProgress(pct));
     const unsubDone = uploadService.onDone(
-      ({ status }: { status: number; responseText: string }) => {
+      ({ status, responseText }: { status: number; responseText: string }) => {
         setUploading(false);
         if (status >= 200 && status < 300) {
           setProgress(100);
           setUploaded(true);
+          setUploadError(null);
+          
+          // Parse upload response to extract fileKey
+          try {
+            const responseData = JSON.parse(responseText);
+            if (responseData.fileKey) {
+              setFileKey(responseData.fileKey);
+            }
+          } catch (error) {
+            console.error("Failed to parse upload response:", error);
+          }
         } else {
           setUploaded(false);
+          setUploadError("Upload failed. Please try again.");
           console.error("Upload failed with status:", status);
         }
       },
     );
 
-    const unsubError = uploadService.onError(() => {
+    const unsubError = uploadService.onError((detail: { message: string; code?: string }) => {
       setUploading(false);
       setUploaded(false);
-      console.error("Upload error occurred");
+      
+      console.log("Error detail received:", detail);
+      
+      // Handle authentication errors by redirecting to login
+      if (detail.code === "AUTH_FAILED") {
+        console.error("Authentication failed during upload");
+        router.push("/login");
+        return;
+      }
+      
+      // Set user-friendly error message with fallback
+      const errorMessage = detail?.message || "An unexpected error occurred. Please try again.";
+      setUploadError(errorMessage);
+      console.error("Upload error occurred:", detail);
     });
 
     const unsubAbort = uploadService.onAbort(() => {
       setUploading(false);
       setProgress(0);
       setUploaded(false);
+      setUploadError(null);
     });
 
     return () => {
@@ -123,13 +184,22 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       unsubError();
       unsubAbort();
     };
-  }, []);
+  }, [router]);
 
   const handleUpload = useCallback(
     (fileToUpload: File) => {
       updateFileState(fileToUpload);
       setUploaded(false);
       setProgress(0);
+      setUploadError(null); // Clear any previous errors
+      
+      // Clear previous fileKey when starting new upload
+      setFileKey(null);
+      
+      // Store videoFileName and videoFileSize from file
+      setVideoFileName(fileToUpload.name);
+      setVideoFileSize(fileToUpload.size);
+      
       uploadService.start(fileToUpload);
     },
     [updateFileState],
@@ -144,26 +214,55 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     setUploading(false);
     setProgress(0);
     setUploaded(false);
+    setUploadError(null);
   }, []);
 
   const clearUpload = useCallback(() => {
     abortUpload();
     updateFileState(null);
     setSelectedDate(null);
+    
+    // Reset all file metadata
+    setFileKey(null);
+    setVideoFileName(null);
+    setVideoFileSize(null);
+    
+    // Reset post metadata
+    setPostTitle("");
+    setPostDescription("");
+    setPostScheduledFor("");
   }, [abortUpload, updateFileState]);
+
+  const clearError = useCallback(() => {
+    setUploadError(null);
+  }, []);
 
   const openUpload = useCallback(
     (files?: File[] | null) => {
+      // Check authentication status
+      if (status === "unauthenticated") {
+        router.push("/login");
+        return;
+      }
+
+      // Don't proceed if session is still loading
+      if (status === "loading") {
+        return;
+      }
+
+      // Check if user has connected platforms
       if (connectedPlatforms.length === 0) {
         setIsNoAccountModalOpen(true);
         return;
       }
+
+      // Process files and open upload modal
       if (files && files.length > 0) {
         handleUpload(files[0]);
       }
       setIsUploadOpen(true);
     },
-    [handleUpload, connectedPlatforms],
+    [status, router, handleUpload, connectedPlatforms],
   );
 
   const closeUpload = useCallback(() => {
@@ -213,8 +312,19 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
         handleUpload,
         abortUpload,
         clearUpload,
+        uploadError,
+        clearError,
         selectedDate,
         setSelectedDate,
+        fileKey,
+        videoFileName,
+        videoFileSize,
+        postTitle,
+        setPostTitle,
+        postDescription,
+        setPostDescription,
+        postScheduledFor,
+        setPostScheduledFor,
       }}
     >
       {children}

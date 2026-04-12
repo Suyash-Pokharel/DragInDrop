@@ -10,8 +10,23 @@ interface EditPostProps {
 }
 
 export default function EditPost({ onClose }: EditPostProps) {
-  const { progress, previewUrl, uploaded, clearUpload, selectedDate, openSelectPlatform } =
-    useModal();
+  const { 
+    progress, 
+    previewUrl, 
+    uploaded, 
+    clearUpload, 
+    selectedDate, 
+    openSelectPlatform,
+    postTitle,
+    setPostTitle,
+    postDescription,
+    setPostDescription,
+    postScheduledFor,
+    setPostScheduledFor,
+    uploadError,
+    clearError,
+    handleUpload,
+  } = useModal();
 
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -23,19 +38,19 @@ export default function EditPost({ onClose }: EditPostProps) {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  // Form states
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [scheduleDate, setScheduleDate] = useState(
-    selectedDate ? formatDateTimeLocal(selectedDate) : "",
-  );
+  // Initialize scheduleDate from selectedDate if available
+  useEffect(() => {
+    if (selectedDate && !postScheduledFor) {
+      setPostScheduledFor(formatDateTimeLocal(selectedDate));
+    }
+  }, [selectedDate, postScheduledFor, setPostScheduledFor]);
 
   // Validation states
   const [titleTouched, setTitleTouched] = useState(false);
   const [dateTouched, setDateTouched] = useState(false);
 
-  const isTitleValid = title.trim() !== "";
-  const isDateValid = scheduleDate.trim() !== "";
+  const isTitleValid = postTitle.trim() !== "";
+  const isDateValid = postScheduledFor.trim() !== "";
   const isFormValid = isTitleValid && isDateValid;
 
   useEffect(() => {
@@ -108,13 +123,13 @@ export default function EditPost({ onClose }: EditPostProps) {
                     <label className="text-sm font-medium text-text-main">
                       Post Title <span className="text-error">*</span>
                     </label>
-                    <span className="text-xs text-text-secondary">{title.length}/100</span>
+                    <span className="text-xs text-text-secondary">{postTitle.length}/100</span>
                   </div>
                   <input
                     type="text"
-                    value={title}
+                    value={postTitle}
                     maxLength={100}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => setPostTitle(e.target.value)}
                     onBlur={() => setTitleTouched(true)}
                     placeholder="Catchy title for your post..."
                     className={`w-full bg-surface border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none transition-colors placeholder:text-text-secondary/50 ${
@@ -129,11 +144,11 @@ export default function EditPost({ onClose }: EditPostProps) {
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-text-main">Description & Tags</label>
-                    <span className="text-xs text-text-secondary">{description.length}/250</span>
+                    <span className="text-xs text-text-secondary">{postDescription.length}/250</span>
                   </div>
                   <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    value={postDescription}
+                    onChange={(e) => setPostDescription(e.target.value)}
                     maxLength={250}
                     placeholder="Write a description, add some #hashtags..."
                     className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-h-[140px] resize-none placeholder:text-text-secondary/50 custom-scrollbar"
@@ -147,9 +162,9 @@ export default function EditPost({ onClose }: EditPostProps) {
                   <div className="relative">
                     <input
                       type="datetime-local"
-                      value={scheduleDate}
+                      value={postScheduledFor}
                       onChange={(e) => {
-                        setScheduleDate(e.target.value);
+                        setPostScheduledFor(e.target.value);
                         setDateTouched(true);
                       }}
                       className={`w-full bg-surface border rounded-lg pl-4 pr-12 py-3 text-sm text-text-main focus:outline-none transition-colors dark:[color-scheme:dark] appearance-none [&::-webkit-calendar-picker-indicator]:hidden ${
@@ -201,18 +216,69 @@ export default function EditPost({ onClose }: EditPostProps) {
                 </div>
 
                 <div className="w-full mt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-medium text-text-main">
-                      {uploaded ? "Upload Complete" : "Uploading"}
+                  {uploadError ? (
+                    <div className="mb-3">
+                      <div className="flex items-start gap-2 p-3 bg-error/10 border border-error/30 rounded-lg mb-3">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-error mb-1">Upload Failed</div>
+                          <div className="text-xs text-error/90">{uploadError}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <label className="flex-1 px-3 py-2 rounded-md text-sm font-medium text-white bg-primary hover:bg-secondary transition-colors cursor-pointer text-center">
+                          Select Different Video
+                          <input
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = e.target.files;
+                              if (files && files.length > 0) {
+                                clearError();
+                                handleUpload(files[0]);
+                              }
+                            }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => {
+                            if (previewUrl) {
+                              clearError();
+                              // Re-upload the same file
+                              fetch(previewUrl)
+                                .then(res => res.blob())
+                                .then(blob => {
+                                  const file = new File([blob], "video.mp4", { type: blob.type });
+                                  handleUpload(file);
+                                })
+                                .catch(() => {
+                                  // If retry fails, just clear the error and let user select new file
+                                  clearError();
+                                });
+                            }
+                          }}
+                          className="px-3 py-2 rounded-md text-sm font-medium text-text-main border border-border hover:bg-surface-highlight transition-colors"
+                        >
+                          Retry Upload
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-xs text-text-secondary">{progress}%</div>
-                  </div>
-                  <div className="w-full bg-background border border-border rounded-full h-1.5 mb-3 overflow-hidden">
-                    <div
-                      className={`h-1.5 transition-all ${uploaded ? "bg-green-500" : "bg-primary"}`}
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-medium text-text-main">
+                          {uploaded ? "Upload Complete" : "Uploading"}
+                        </div>
+                        <div className="text-xs text-text-secondary">{progress}%</div>
+                      </div>
+                      <div className="w-full bg-background border border-border rounded-full h-1.5 mb-3 overflow-hidden">
+                        <div
+                          className={`h-1.5 transition-all ${uploaded ? "bg-green-500" : "bg-primary"}`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

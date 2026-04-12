@@ -59,3 +59,16 @@ export const perEmailLoginLimiter = createResilientLimiter({
   points: 10, // 10 login attempts per email
   duration: 15 * 60, // per 15 minutes
 });
+
+// OAuth rate limiters
+export const perIpOAuthLimiter = createResilientLimiter({
+  keyPrefix: "rl_oauth_ip",
+  points: 50, // 50 OAuth attempts (increased for development/testing)
+  duration: 15 * 60, // per 15 minutes
+});
+
+export const perUserOAuthLimiter = createResilientLimiter({
+  keyPrefix: "rl_oauth_user",
+  points: 20, // 20 OAuth attempts per user (increased for development/testing)
+  duration: 15 * 60, // per 15 minutes
+});
