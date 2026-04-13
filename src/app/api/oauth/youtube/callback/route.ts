@@ -280,7 +280,7 @@ export async function GET(request: NextRequest) {
         requestDetails: {
           clientId,
           redirectUri,
-          codeLength: sanitizedCode.length,
+          codeLength: code.length,
         },
       });
 
