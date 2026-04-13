@@ -13,8 +13,8 @@ export default function RecentUsersList({
   users,
   onViewAll,
 }: RecentUsersListProps) {
-  // Get 10 most recent users (already sorted by createdAt desc)
-  const recentUsers = useMemo(() => users.slice(0, 10), [users]);
+  // Get 5 most recent users (already sorted by createdAt desc)
+  const recentUsers = useMemo(() => users.slice(0, 5), [users]);
 
   return (
     <div
@@ -33,14 +33,14 @@ export default function RecentUsersList({
       </div>
 
       {/* User List */}
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[295px]">
         {recentUsers.length === 0 ? (
           <p className="text-text-secondary text-sm text-center py-8">
             No users registered yet
           </p>
         ) : (
           recentUsers.map((user) => {
-            const oauthCount = user.accounts.length;
+            const oauthCount = user.socialAccounts.length;
 
             return (
               <div
@@ -77,7 +77,7 @@ export default function RecentUsersList({
 
       {/* Click hint */}
       {recentUsers.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-border">
+        <div className="mt-4 pt-4 border-t border-border">
           <p className="text-xs text-text-secondary text-center">
             Click to view all users
           </p>

@@ -23,6 +23,14 @@ export async function GET() {
           providerAccountId: true,
         },
       },
+      socialAccounts: {
+        select: {
+          platform: true,
+          platformAccountId: true,
+          platformUsername: true,
+          isActive: true,
+        },
+      },
     },
   });
   return NextResponse.json({ users });

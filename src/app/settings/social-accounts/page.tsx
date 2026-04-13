@@ -154,7 +154,6 @@ export default function SocialAccountsPage() {
                 >
                   {connectingPlatform === platform.name ? (
                     <>
-                      <span className="animate-spin">⏳</span>
                       <span>Connecting...</span>
                     </>
                   ) : isConnected ? (

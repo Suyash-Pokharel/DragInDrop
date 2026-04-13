@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
 import { UserWithAccounts } from "./AdminDashboard";
@@ -18,12 +19,48 @@ interface RegistrationTrendChartProps {
 export default function RegistrationTrendChart({
   users,
 }: RegistrationTrendChartProps) {
-  // Calculate last 30 days registration data
+  // Get theme colors dynamically from CSS variables
+  const [colors, setColors] = useState<{
+    primary: string;
+    textSecondary: string;
+    surface: string;
+    border: string;
+    textMain: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Read computed CSS variables from the document
+    const updateColors = () => {
+      const computedStyle = getComputedStyle(document.documentElement);
+      
+      setColors({
+        primary: computedStyle.getPropertyValue("--primary").trim(),
+        textSecondary: computedStyle.getPropertyValue("--text-secondary").trim(),
+        surface: computedStyle.getPropertyValue("--surface").trim(),
+        border: computedStyle.getPropertyValue("--border").trim(),
+        textMain: computedStyle.getPropertyValue("--text-main").trim(),
+      });
+    };
+
+    // Initial update
+    updateColors();
+
+    // Listen for theme changes (class changes on html/body)
+    const observer = new MutationObserver(updateColors);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Calculate last 7 days registration data (rolling week)
   const chartData = useMemo(() => {
-    // Generate array of last 30 days
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
+    // Generate array of last 7 days (including today)
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
+      date.setDate(date.getDate() - (6 - i));
       date.setHours(0, 0, 0, 0);
       return date;
     });
@@ -41,7 +78,7 @@ export default function RegistrationTrendChart({
     );
 
     // Map to chart data format with "MMM DD" labels
-    return last30Days.map((date) => {
+    return last7Days.map((date) => {
       const dateKey = date.toISOString().split("T")[0];
       return {
         date: date.toLocaleDateString("en-US", {
@@ -54,47 +91,56 @@ export default function RegistrationTrendChart({
   }, [users]);
 
   return (
-    <div className="w-full h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-        >
-          <XAxis
-            dataKey="date"
-            stroke="hsl(var(--text-secondary))"
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            stroke="hsl(var(--text-secondary))"
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-            allowDecimals={false}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "hsl(var(--surface))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "8px",
-              color: "hsl(var(--text-main))",
-            }}
-            labelStyle={{
-              color: "hsl(var(--text-main))",
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="count"
-            stroke="hsl(var(--primary))"
-            strokeWidth={2}
-            dot={{ fill: "hsl(var(--primary))", r: 4 }}
-            activeDot={{ r: 6 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="w-full h-full min-h-[300px]">
+      {colors && (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 5, right: 20, left: -20, bottom: 5 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={colors.border}
+              vertical={false}
+            />
+            <XAxis
+              dataKey="date"
+              stroke={colors.textSecondary}
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              stroke={colors.textSecondary}
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={false}
+            />
+            <Tooltip
+              cursor={{ fill: "transparent" }}
+              contentStyle={{
+                backgroundColor: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: "8px",
+                color: colors.textMain,
+              }}
+              labelStyle={{
+                color: colors.textMain,
+              }}
+            />
+            <Bar
+              dataKey="count"
+              fill={colors.primary}
+              radius={[8, 8, 0, 0]}
+              activeBar={{
+                fill: colors.primary,
+                opacity: 0.8,
+              }}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }

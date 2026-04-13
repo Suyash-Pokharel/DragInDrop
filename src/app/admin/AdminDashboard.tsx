@@ -22,6 +22,12 @@ export interface UserWithAccounts {
     provider: string;
     providerAccountId: string;
   }[];
+  socialAccounts: {
+    platform: string;
+    platformAccountId: string;
+    platformUsername: string | null;
+    isActive: boolean;
+  }[];
 }
 
 interface AdminDashboardProps {
@@ -69,7 +75,7 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
   };
 
   return (
-    <div className="w-full bg-background p-4 md:p-6 lg:p-8">
+    <div className="w-full bg-background p-4 md:p-5 lg:p-6">
       {/* Error Display Component */}
       {error && (
         <div className="mb-6 bg-error/10 border border-error text-error px-4 py-3 rounded-lg flex items-start gap-3">
@@ -96,27 +102,26 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
         </div>
       ) : (
         <>
-          {/* Main Grid Layout - 2 columns tablet/desktop, 1 column mobile */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Column - Registration Trend Chart */}
-        <div className="bg-surface border border-border rounded-lg p-6">
+          <OAuthProviderStats users={users} />
+
+          {/* Main Grid Layout - 3:2 ratio (60% Registration / 40% Recent Users) */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-6">
+        {/* Left Column - Registration Trend Chart (3/5 = 60%) */}
+        <div className="md:col-span-3 bg-surface border border-border rounded-lg p-6 flex flex-col">
           <h3 className="text-lg font-semibold text-text-main mb-4">Registration Trends</h3>
-          <RegistrationTrendChart users={users} />
+          <div className="flex-1">
+            <RegistrationTrendChart users={users} />
+          </div>
         </div>
 
-        {/* Right Column - Recent Users List */}
-        <div className="bg-surface border border-border rounded-lg p-6">
+        {/* Right Column - Recent Users List (2/5 = 40%) */}
+        <div className="md:col-span-2 bg-surface border border-border rounded-lg p-6 flex flex-col">
           <RecentUsersList
             users={users}
             onViewAll={() => setShowAllUsersModal(true)}
           />
         </div>
       </div>
-
-          {/* OAuth Provider Stats - Full width section above grid */}
-          <div className="mt-6 bg-surface border border-border rounded-lg p-6">
-            <OAuthProviderStats users={users} />
-          </div>
         </>
       )}
 

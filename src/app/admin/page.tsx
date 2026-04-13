@@ -14,7 +14,7 @@ export default async function AdminPage() {
 
   const prisma = getPrisma();
   
-  // Fetch users with their OAuth accounts
+  // Fetch users with their OAuth login accounts and social media accounts
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -28,6 +28,14 @@ export default async function AdminPage() {
         select: {
           provider: true,
           providerAccountId: true,
+        },
+      },
+      socialAccounts: {
+        select: {
+          platform: true,
+          platformAccountId: true,
+          platformUsername: true,
+          isActive: true,
         },
       },
     },

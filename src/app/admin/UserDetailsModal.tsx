@@ -8,9 +8,11 @@ import { UserWithAccounts } from "./AdminDashboard";
 // Logo imports
 import GoogleLogo from "@/app/assets/logo/Google.webp";
 import FacebookLogo from "@/app/assets/logo/Facebook.webp";
+import InstagramLogo from "@/app/assets/logo/Instagram.webp";
 import TwitterLogo from "@/app/assets/logo/X.webp";
 import LinkedInLogo from "@/app/assets/logo/LinkedIn.webp";
 import TikTokLogo from "@/app/assets/logo/TikTok.webp";
+import YoutubeLogo from "@/app/assets/logo/Youtube.webp";
 
 interface UserDetailsModalProps {
   user: UserWithAccounts;
@@ -19,13 +21,14 @@ interface UserDetailsModalProps {
   onDelete: () => void;
 }
 
-// Map provider names to logos
+// Map platform names to logos
 const PROVIDER_LOGOS: Record<string, any> = {
-  google: GoogleLogo,
-  facebook: FacebookLogo,
-  twitter: TwitterLogo,
-  linkedin: LinkedInLogo,
-  tiktok: TikTokLogo,
+  YouTube: YoutubeLogo,
+  Instagram: InstagramLogo,
+  TikTok: TikTokLogo,
+  Facebook: FacebookLogo,
+  Twitter: TwitterLogo,
+  LinkedIn: LinkedInLogo,
 };
 
 export default function UserDetailsModal({
@@ -201,21 +204,21 @@ export default function UserDetailsModal({
               </div>
             </div>
 
-            {/* OAuth Providers Section */}
+            {/* Social Media Connections Section */}
             <div className="space-y-4 pt-4 border-t border-border">
               <h3 className="text-lg font-semibold text-text-main">
-                Connected OAuth Providers
+                Connected Social Media Accounts
               </h3>
 
-              {user.accounts.length === 0 ? (
+              {user.socialAccounts.length === 0 ? (
                 <p className="text-sm text-text-secondary py-4">
-                  No OAuth providers connected (Manual registration)
+                  No social media accounts connected
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {user.accounts.map((account, index) => {
-                    const providerKey = account.provider.toLowerCase();
-                    const providerLogo = PROVIDER_LOGOS[providerKey];
+                  {user.socialAccounts.map((socialAccount, index) => {
+                    const platform = socialAccount.platform;
+                    const providerLogo = PROVIDER_LOGOS[platform];
 
                     return (
                       <div
@@ -227,7 +230,7 @@ export default function UserDetailsModal({
                           <div className="w-8 h-8 relative flex-shrink-0">
                             <Image
                               src={providerLogo}
-                              alt={`${account.provider} logo`}
+                              alt={`${platform} logo`}
                               fill
                               sizes="24px"
                               className="object-contain"
@@ -235,14 +238,29 @@ export default function UserDetailsModal({
                           </div>
                         )}
                         
-                        {/* Provider Name */}
+                        {/* Provider Name and Details */}
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-text-main capitalize">
-                            {account.provider}
+                          <p className="text-sm font-medium text-text-main">
+                            {platform}
                           </p>
                           <p className="text-xs text-text-secondary">
-                            Account ID: {account.providerAccountId}
+                            {socialAccount.platformUsername || `ID: ${socialAccount.platformAccountId}`}
                           </p>
+                        </div>
+
+                        {/* Active Status Badge */}
+                        <div className="flex-shrink-0">
+                          {socialAccount.isActive ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                              <CheckCircle className="w-3 h-3" />
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-500">
+                              <XCircle className="w-3 h-3" />
+                              Inactive
+                            </span>
+                          )}
                         </div>
                       </div>
                     );

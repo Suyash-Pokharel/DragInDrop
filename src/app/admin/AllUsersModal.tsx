@@ -140,7 +140,7 @@ export default function AllUsersModal({
                     </thead>
                     <tbody>
                       {sortedUsers.map((user) => {
-                        const oauthCount = user.accounts.length;
+                        const oauthCount = user.socialAccounts.length;
                         const registeredDate = new Date(user.createdAt).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "short",
@@ -189,7 +189,7 @@ export default function AllUsersModal({
                 {/* Mobile Card View */}
                 <div className="md:hidden space-y-4">
                   {sortedUsers.map((user) => {
-                    const oauthCount = user.accounts.length;
+                    const oauthCount = user.socialAccounts.length;
                     const registeredDate = new Date(user.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
