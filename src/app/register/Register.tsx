@@ -129,7 +129,7 @@ export default function Register() {
   return (
     <Reveal width="100%" delay={0.05}>
       <div className="w-full flex justify-center p-4 animate-in fade-in duration-500">
-        <div className="w-full max-w-md bg-surface border border-border rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+        <div className="w-full max-w-sm bg-surface border border-border rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
           {/* Header */}
           <Reveal width="100%" delay={0.1}>
             <div className="text-center mb-8">
@@ -184,7 +184,7 @@ export default function Register() {
               </div>
 
               {/* Disclaimer */}
-              <p className="text-xs text-text-secondary text-center leading-relaxed px-11">
+              <p className="text-xs text-text-secondary text-center leading-relaxed px-6">
                 By clicking &quot;Create Account&quot;, you agree to our{" "}
                 <Link
                   href="/terms"

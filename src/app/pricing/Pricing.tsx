@@ -43,7 +43,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-text-main pt-10 pb-5 px-3 transition-colors duration-300 font-sans">
+    <div className="min-h-screen bg-background text-text-main py-17 px-3 transition-colors duration-300 font-sans">
       <div className="max-w-[90%] mx-auto">
         {/* --- HEADER --- */}
         <div className="text-center max-w-3xl mx-auto mb-10 px-3">
@@ -181,7 +181,6 @@ export default function PricingPage() {
                   "250 MB Video Size",
                   "Unlimited Scheduled Posts",
                   "Schedule Upto 1 Month in Advance",
-                  "Limited AI Integration",
                   "Basic Upload Analytics",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
@@ -231,12 +230,11 @@ export default function PricingPage() {
 
               <ul className="w-full space-y-4 flex-1 text-sm text-text-main mb-10">
                 {[
-                  "All 8 Supported Social Accounts",
-                  "2 User / Accounts",
+                  "All 6 Supported Social Accounts",
+                  "1 User per Accounts",
                   "500 MB Video Size",
                   "Unlimited Scheduled Posts",
                   "Schedule Upto 3 Month in Advance",
-                  "AI suggested Title, Description, Tags",
                   "Advanced Upload Analytics",
                   "Priority Email & Chat Support",
                 ].map((feature, i) => (
@@ -272,12 +270,10 @@ export default function PricingPage() {
 
               <ul className="w-full space-y-4 flex-1 text-sm text-text-main mb-8">
                 {[
-                  "All 8 Supported Social Accounts",
+                  "All 6 Supported Social Accounts",
                   "Team Collab (Unlimited Users)",
                   "Unlimited Scheduled Posts",
-                  "AI Suggested Title, Description, Tags",
                   "Advanced Upload Analytics",
-                  "AI Analyzed Analytics and Summary",
                   "Email Notification on Every Upload",
                   "Dedicated Account Manager",
                 ].map((feature, i) => (
