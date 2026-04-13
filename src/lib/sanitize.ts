@@ -56,6 +56,27 @@ export function sanitizeTikTokProfile(profile: {
 }
 
 /**
+ * Sanitizes Google user profile data from YouTube OAuth
+ * @param profile - Google user profile object
+ * @returns Sanitized profile data
+ */
+export function sanitizeGoogleProfile(profile: {
+  id?: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+  verified_email?: boolean;
+}) {
+  return {
+    id: sanitizeString(profile.id, 100),
+    email: sanitizeString(profile.email, 255),
+    name: sanitizeString(profile.name, 100),
+    picture: sanitizeUrl(profile.picture),
+    verified_email: profile.verified_email,
+  };
+}
+
+/**
  * Validates and sanitizes a URL
  * @param url - The URL to validate
  * @returns Sanitized URL or empty string if invalid

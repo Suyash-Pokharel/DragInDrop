@@ -135,7 +135,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
     >
       {/* --- LEFT SIDE --- */}
       <div className="flex items-center gap-1 md:gap-7 2xl:gap-11">
-        <Link href="/" className="cursor-pointer">
+        <Link href="/dashboard" className="cursor-pointer">
           <div
             className="font-bold tracking-relaxed whitespace-nowrap text-primary
               text-xl md:text-2xl xl:text-3xl 2xl:text-4xl hover:text-secondary transition-colors"
@@ -249,7 +249,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
           <button
             onClick={() => toggleDropdown("profile")}
             className={`relative rounded-full overflow-hidden border transition-all duration-200 active:scale-95
-              w-8 h-8 md:w-9 md:h-9 xl:w-12 xl:h-12 2xl:w-14 2xl:h-14
+              w-8 h-8 md:w-9 md:h-9 xl:w-10 xl:h-10 2xl:w-11 2xl:h-11
               bg-background
               ${
                 activeDropdown === "profile"
@@ -264,7 +264,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
               fill
               priority={true}
               className="object-cover"
-              sizes="(max-width: 768px) 32px, (max-width: 1280px) 48px, 64px"
+              sizes="(max-width: 768px) 32px, (max-width: 1280px) 40px, 44px"
             />
           </button>
 

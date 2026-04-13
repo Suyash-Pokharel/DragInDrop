@@ -37,26 +37,37 @@ function getEncryptionKey(): string {
  * // Returns: "a1b2c3d4e5f6....:1234abcd....:5678efgh...."
  */
 export function encryptToken(token: string): string {
-  const ENCRYPTION_KEY = getEncryptionKey();
+  try {
+    const ENCRYPTION_KEY = getEncryptionKey();
 
-  // Generate a random 16-byte initialization vector
-  const iv = crypto.randomBytes(16);
+    // Generate a random 16-byte initialization vector
+    const iv = crypto.randomBytes(16);
 
-  // Convert the hex encryption key to a Buffer
-  const key = Buffer.from(ENCRYPTION_KEY, 'hex');
+    // Convert the hex encryption key to a Buffer
+    const key = Buffer.from(ENCRYPTION_KEY, 'hex');
 
-  // Create cipher with algorithm, key, and IV
-  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+    // Create cipher with algorithm, key, and IV
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
-  // Encrypt the token
-  let encrypted = cipher.update(token, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
+    // Encrypt the token
+    let encrypted = cipher.update(token, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
 
-  // Extract the authentication tag for integrity verification
-  const authTag = cipher.getAuthTag();
+    // Extract the authentication tag for integrity verification
+    const authTag = cipher.getAuthTag();
 
-  // Return in format: iv:authTag:encryptedData (all hex-encoded)
-  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+    // Return in format: iv:authTag:encryptedData (all hex-encoded)
+    return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+  } catch (error) {
+    // Requirement: 10.14 - Log encryption errors without logging plaintext tokens
+    // Requirement: 10.15 - Never log plaintext tokens
+    console.error('[encryptToken] Token encryption failed:', {
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown encryption error',
+      tokenLength: token?.length || 0,
+    });
+    throw error;
+  }
 }
 
 /**
@@ -99,6 +110,14 @@ export function decryptToken(encryptedToken: string): string {
 
     return decrypted;
   } catch (error) {
+    // Requirement: 10.14 - Log decryption errors without logging plaintext tokens
+    // Requirement: 10.15 - Never log plaintext tokens
+    console.error('[decryptToken] Token decryption failed:', {
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown decryption error',
+      encryptedTokenLength: encryptedToken?.length || 0,
+    });
+
     // Handle authentication tag verification failures
     if (error instanceof Error && error.message.includes('Unsupported state or unable to authenticate data')) {
       throw new Error('Token decryption failed: invalid authentication tag');

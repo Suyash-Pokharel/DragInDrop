@@ -4,8 +4,8 @@ import { getPrisma } from "@/lib/prisma";
 import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
 
 /**
- * DELETE /api/oauth/tiktok/disconnect
- * Disconnects a user's TikTok account by deactivating the SocialAccount
+ * DELETE /api/oauth/youtube/disconnect
+ * Disconnects a user's YouTube account by deactivating the SocialAccount
  * Requirements: 7.1, 8.3, 10.12, 10.13
  */
 export async function DELETE(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest) {
       await perIpOAuthLimiter.consume(ip);
     }
   } catch (rateLimitError) {
-    console.error("[DELETE /api/oauth/tiktok/disconnect] Rate limit exceeded:", {
+    console.error("[DELETE /api/oauth/youtube/disconnect] Rate limit exceeded:", {
       ip,
       timestamp: new Date().toISOString(),
     });
@@ -32,7 +32,7 @@ export async function DELETE(request: NextRequest) {
   // Requirement: 8.3 - Return 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
-    console.error("[DELETE /api/oauth/tiktok/disconnect] Authentication failed:", {
+    console.error("[DELETE /api/oauth/youtube/disconnect] Authentication failed:", {
       timestamp: new Date().toISOString(),
       error: "Unauthenticated request",
     });
@@ -43,7 +43,7 @@ export async function DELETE(request: NextRequest) {
   try {
     await perUserOAuthLimiter.consume(user.id);
   } catch (rateLimitError) {
-    console.error("[DELETE /api/oauth/tiktok/disconnect] User rate limit exceeded:", {
+    console.error("[DELETE /api/oauth/youtube/disconnect] User rate limit exceeded:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
     });
@@ -56,26 +56,26 @@ export async function DELETE(request: NextRequest) {
   const prisma = getPrisma();
 
   try {
-    // Find the user's TikTok SocialAccount
-    // Requirements: 7.2, 10.12 - Query SocialAccount where userId matches and platform="TikTok"
+    // Find the user's YouTube SocialAccount
+    // Requirements: 7.2, 10.12 - Query SocialAccount where userId matches and platform="YouTube"
     // Requirement: 10.12 - Validate user owns SocialAccount before disconnection
-    console.log("[DELETE /api/oauth/tiktok/disconnect] Finding SocialAccount:", {
+    console.log("[DELETE /api/oauth/youtube/disconnect] Finding SocialAccount:", {
       userId: user.id,
-      platform: "TikTok",
+      platform: "YouTube",
       timestamp: new Date().toISOString(),
     });
 
     const socialAccount = await prisma.socialAccount.findFirst({
       where: {
         userId: user.id,
-        platform: "TikTok",
+        platform: "YouTube",
         isActive: true,
       },
     });
 
     // Requirement: 7.5 - Return 404 if no account found
     if (!socialAccount) {
-      console.log("[DELETE /api/oauth/tiktok/disconnect] No active account found:", {
+      console.log("[DELETE /api/oauth/youtube/disconnect] No active account found:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
       });
@@ -85,14 +85,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Note: Token revocation with TikTok is skipped for performance reasons.
-    // Tokens expire naturally, and the account is marked inactive in our database,
-    // preventing further use. Users can also revoke access directly in their
-    // TikTok account settings if needed.
+    // Note: Token revocation with Google is skipped for performance reasons.
+    // Tokens expire naturally (typically within 1 hour), and the account is marked
+    // inactive in our database, preventing further use. Users can also revoke access
+    // directly in their Google Account settings if needed.
 
     // Deactivate the SocialAccount
     // Requirements: 7.3, 7.4 - Set isActive to false, return 200 with success message
-    console.log("[DELETE /api/oauth/tiktok/disconnect] Deactivating SocialAccount:", {
+    console.log("[DELETE /api/oauth/youtube/disconnect] Deactivating SocialAccount:", {
       userId: user.id,
       socialAccountId: socialAccount.id,
       timestamp: new Date().toISOString(),
@@ -107,7 +107,7 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-    console.log("[DELETE /api/oauth/tiktok/disconnect] Account disconnected successfully:", {
+    console.log("[DELETE /api/oauth/youtube/disconnect] Account disconnected successfully:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
     });
@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
     );
   } catch (error) {
     // Requirement: 7.6 - Return 500 if database error occurs
-    console.error("[DELETE /api/oauth/tiktok/disconnect] Database error:", {
+    console.error("[DELETE /api/oauth/youtube/disconnect] Database error:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",

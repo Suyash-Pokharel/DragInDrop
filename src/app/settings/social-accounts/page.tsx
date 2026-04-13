@@ -45,6 +45,10 @@ export default function SocialAccountsPage() {
     if (name === "TikTok") {
       setConnectingPlatform(name);
       window.location.href = "/api/oauth/tiktok/authorize";
+    } else if (name === "YouTube") {
+      // For YouTube, redirect to OAuth authorization endpoint
+      setConnectingPlatform(name);
+      window.location.href = "/api/oauth/youtube/authorize";
     } else {
       // Other platforms not yet implemented
       setToastMessage({ type: "error", message: `${name} integration coming soon!` });
@@ -57,11 +61,14 @@ export default function SocialAccountsPage() {
 
   const confirmDisconnect = async () => {
     if (platformToDisconnect) {
-      // TODO: Call disconnect API endpoint when task 10 is implemented
-      // For now, just show a message
-      if (platformToDisconnect === "TikTok") {
+      // Call disconnect API endpoint for TikTok and YouTube
+      if (platformToDisconnect === "TikTok" || platformToDisconnect === "YouTube") {
         try {
-          const response = await fetch("/api/oauth/tiktok/disconnect", {
+          const endpoint = platformToDisconnect === "TikTok" 
+            ? "/api/oauth/tiktok/disconnect"
+            : "/api/oauth/youtube/disconnect";
+          
+          const response = await fetch(endpoint, {
             method: "DELETE",
           });
 

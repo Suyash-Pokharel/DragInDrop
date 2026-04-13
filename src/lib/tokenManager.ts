@@ -8,6 +8,11 @@ import { getPrisma } from './prisma';
 const TIKTOK_TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 
 /**
+ * Google OAuth token endpoint
+ */
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+
+/**
  * Token refresh buffer time in milliseconds (5 minutes)
  * Tokens will be refreshed if they expire within this window
  */
@@ -115,12 +120,29 @@ export async function refreshToken(
     };
   }
 
-  // Get environment variables
-  const clientKey = process.env.TIKTOK_CLIENT_KEY;
-  const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+  // Get environment variables based on platform
+  let clientKey: string | undefined;
+  let clientSecret: string | undefined;
+  let tokenUrl: string;
+
+  if (socialAccount.platform === 'TikTok') {
+    clientKey = process.env.TIKTOK_CLIENT_KEY;
+    clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+    tokenUrl = TIKTOK_TOKEN_URL;
+  } else if (socialAccount.platform === 'YouTube') {
+    clientKey = process.env.GOOGLE_YOUTUBE_CLIENT_ID;
+    clientSecret = process.env.GOOGLE_YOUTUBE_CLIENT_SECRET;
+    tokenUrl = GOOGLE_TOKEN_URL;
+  } else {
+    console.error('Unsupported platform for token refresh:', socialAccount.platform);
+    return {
+      success: false,
+      error: 'Unsupported platform',
+    };
+  }
 
   if (!clientKey || !clientSecret) {
-    console.error('Missing TikTok OAuth credentials');
+    console.error(`Missing ${socialAccount.platform} OAuth credentials`);
     return {
       success: false,
       error: 'OAuth configuration error',
@@ -132,17 +154,22 @@ export async function refreshToken(
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
       const result = await attemptTokenRefresh(
+        socialAccount.platform,
         clientKey,
         clientSecret,
-        decryptedRefreshToken
+        decryptedRefreshToken,
+        tokenUrl
       );
 
       if (result.success && result.tokens) {
         // Update the SocialAccount with new tokens
+        // For YouTube, Google doesn't return a new refresh_token on refresh
+        // so we keep the existing one
+        const newRefreshToken = result.tokens.refreshToken || decryptedRefreshToken;
         return await updateSocialAccountTokens(
           socialAccount,
           result.tokens.accessToken,
-          result.tokens.refreshToken,
+          newRefreshToken,
           result.tokens.expiresIn
         );
       }
@@ -150,7 +177,7 @@ export async function refreshToken(
       // If rate limited, don't retry immediately
       // Requirement: 8.6 - Handle rate limit errors
       if (result.isRateLimited) {
-        console.error('Token refresh rate limited by TikTok API:', {
+        console.error(`Token refresh rate limited by ${socialAccount.platform} API:`, {
           userId: socialAccount.userId,
           platform: socialAccount.platform,
           retryAfter: result.retryAfter,
@@ -216,14 +243,16 @@ export async function refreshToken(
  * Internal function to attempt a single token refresh request
  */
 async function attemptTokenRefresh(
+  platform: string,
   clientKey: string,
   clientSecret: string,
-  refreshToken: string
+  refreshToken: string,
+  tokenUrl: string
 ): Promise<{
   success: boolean;
   tokens?: {
     accessToken: string;
-    refreshToken: string;
+    refreshToken?: string; // Optional for YouTube (Google doesn't return new refresh_token)
     expiresIn: number;
   };
   error?: string;
@@ -231,12 +260,29 @@ async function attemptTokenRefresh(
   retryAfter?: number;
   isTimeout?: boolean;
 }> {
-  const params = new URLSearchParams({
-    client_key: clientKey,
-    client_secret: clientSecret,
-    grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-  });
+  let params: URLSearchParams;
+
+  // Build request parameters based on platform
+  if (platform === 'TikTok') {
+    params = new URLSearchParams({
+      client_key: clientKey,
+      client_secret: clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    });
+  } else if (platform === 'YouTube') {
+    params = new URLSearchParams({
+      client_id: clientKey,
+      client_secret: clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    });
+  } else {
+    return {
+      success: false,
+      error: 'Unsupported platform',
+    };
+  }
 
   // Requirement: 8.7 - Handle network timeouts
   const controller = new AbortController();
@@ -244,7 +290,7 @@ async function attemptTokenRefresh(
 
   let response: Response;
   try {
-    response = await fetch(TIKTOK_TOKEN_URL, {
+    response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -286,15 +332,18 @@ async function attemptTokenRefresh(
   if (!response.ok || data.error) {
     return {
       success: false,
-      error: data.error || 'Token refresh failed',
+      error: data.error || data.error_description || 'Token refresh failed',
     };
   }
 
+  // Parse response based on platform
+  // TikTok returns: access_token, refresh_token, expires_in
+  // Google returns: access_token, expires_in (no new refresh_token)
   return {
     success: true,
     tokens: {
       accessToken: data.access_token,
-      refreshToken: data.refresh_token,
+      refreshToken: data.refresh_token, // Will be undefined for YouTube
       expiresIn: data.expires_in,
     },
   };
@@ -311,8 +360,26 @@ async function updateSocialAccountTokens(
 ): Promise<TokenRefreshResult> {
   try {
     // Encrypt the new tokens
-    const encryptedAccessToken = encryptToken(accessToken);
-    const encryptedRefreshToken = encryptToken(refreshToken);
+    let encryptedAccessToken: string;
+    let encryptedRefreshToken: string;
+
+    try {
+      encryptedAccessToken = encryptToken(accessToken);
+      encryptedRefreshToken = encryptToken(refreshToken);
+    } catch (encryptionError) {
+      // Requirement: 10.14 - Log encryption errors without logging plaintext tokens
+      // Requirement: 10.15 - Never log plaintext tokens
+      console.error('[updateSocialAccountTokens] Token encryption failed:', {
+        userId: socialAccount.userId,
+        platform: socialAccount.platform,
+        timestamp: new Date().toISOString(),
+        error: encryptionError instanceof Error ? encryptionError.message : 'Unknown encryption error',
+      });
+      return {
+        success: false,
+        error: 'Failed to encrypt tokens',
+      };
+    }
 
     // Calculate new expiration timestamp
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
