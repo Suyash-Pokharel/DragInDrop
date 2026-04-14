@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { X, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { X, AlertTriangle, CheckCircle, XCircle, User } from "lucide-react";
 import Image from "next/image";
 import { UserWithAccounts } from "./AdminDashboard";
 
@@ -17,6 +18,7 @@ import YoutubeLogo from "@/app/assets/logo/Youtube.webp";
 interface UserDetailsModalProps {
   user: UserWithAccounts;
   isOpen: boolean;
+  isTopModal: boolean;
   onClose: () => void;
   onDelete: () => void;
 }
@@ -34,25 +36,44 @@ const PROVIDER_LOGOS: Record<string, any> = {
 export default function UserDetailsModal({
   user,
   isOpen,
+  isTopModal,
   onClose,
   onDelete,
 }: UserDetailsModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) setIsClosing(false);
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 250);
+  };
 
   // Handle Escape key to close modal
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !isTopModal) return;
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        handleClose();
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
+  }, [isOpen, isTopModal]);
 
   // Focus trap within modal
   useEffect(() => {
@@ -90,7 +111,7 @@ export default function UserDetailsModal({
     return () => modal.removeEventListener("keydown", handleTab as any);
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const registeredDate = new Date(user.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
@@ -98,36 +119,41 @@ export default function UserDetailsModal({
     day: "numeric",
   });
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/60 z-[120] transition-opacity cursor-pointer ${
+          isClosing ? "opacity-0 duration-200" : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
+        }`}
+        onClick={handleClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
       <div 
         ref={modalRef}
-        className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+        className={`fixed inset-0 z-[130] flex items-center justify-center p-4 pointer-events-none transition-all duration-200 ${
+          isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
+        }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="user-details-modal-title"
       >
-        <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+        <div className={`bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl pointer-events-auto ${!isClosing && 'animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]'}`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-6 md:p-8 border-b border-border">
-            <h2 id="user-details-modal-title" className="text-xl font-bold text-text-main">
-              User Details
+          <div className="flex items-center justify-between p-6 md:p-8 border-b border-border/60 bg-surface/40 backdrop-blur-md rounded-t-[2rem]">
+            <h2 id="user-details-modal-title" className="text-xl font-bold flex items-center gap-2 text-text-main">
+              <User className="w-6 h-6 text-primary" />
+              User Profile
             </h2>
             <button
               ref={closeButtonRef}
-              onClick={onClose}
-              className="p-2 hover:bg-surface-highlight rounded-xl transition-colors"
+              onClick={handleClose}
+              className="p-2.5 hover:bg-surface-highlight rounded-xl transition-colors bg-surface border border-border shadow-sm active:scale-95"
               aria-label="Close user details modal"
             >
-              <X className="w-5 h-5 text-text-secondary" />
+              <X className="w-5 h-5 text-text-main" />
             </button>
           </div>
 
@@ -140,65 +166,66 @@ export default function UserDetailsModal({
               </h3>
               
               <div className="space-y-3">
-                {/* Name */}
-                <div>
-                  <p className="text-sm text-text-secondary">Name</p>
-                  <p className="text-base font-medium text-text-main">
-                    {user.name || "Unnamed User"}
-                  </p>
+                {/* Name & Avatar */}
+                <div className="flex items-center gap-4 bg-surface/30 p-4 rounded-2xl border border-border/50">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center justify-center text-primary text-xl font-black shadow-sm shrink-0 uppercase">
+                    {user.name ? user.name.charAt(0) : "U"}
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-text-main group-hover:text-primary transition-colors">
+                      {user.name || "Unnamed User"}
+                    </p>
+                    <p className="text-sm text-text-secondary">
+                      {user.email}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Email */}
-                <div>
-                  <p className="text-sm text-text-secondary">Email</p>
-                  <p className="text-base font-medium text-text-main">
-                    {user.email}
-                  </p>
-                </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  {/* Registration Date */}
+                  <div className="bg-surface/30 p-4 rounded-2xl border border-border/50">
+                    <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">Registration Date</p>
+                    <p className="text-sm font-bold text-text-main">
+                      {registeredDate}
+                    </p>
+                  </div>
 
-                {/* Registration Date */}
-                <div>
-                  <p className="text-sm text-text-secondary">Registration Date</p>
-                  <p className="text-base font-medium text-text-main">
-                    {registeredDate}
-                  </p>
+                  {/* User Role */}
+                  <div className="bg-surface/30 p-4 rounded-2xl border border-border/50">
+                    <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">User Role</p>
+                    <div
+                      className={`inline-flex px-3 py-1 mt-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-colors ${
+                        user.role === "ADMIN"
+                          ? "bg-secondary/10 text-secondary border border-secondary/20"
+                          : "bg-surface-highlight text-text-secondary border border-border"
+                      }`}
+                    >
+                      {user.role}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Email Verification Status */}
-                <div>
-                  <p className="text-sm text-text-secondary mb-2">Email Verification Status</p>
+                <div className="bg-surface/30 p-4 rounded-2xl border border-border/50 col-span-2">
+                  <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">Email Verification</p>
                   <div
-                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                    className={`inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider shadow-sm transition-colors ${
                       user.emailVerified
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                        : "bg-red-500/10 text-red-600 dark:text-red-400"
+                        ? "bg-primary/10 text-primary border border-primary/20"
+                        : "bg-error/10 text-error border border-error/20"
                     }`}
                   >
                     {user.emailVerified ? (
                       <>
-                        <CheckCircle className="w-4 h-4" />
+                        <CheckCircle className="w-3.5 h-3.5" />
                         Verified
                       </>
                     ) : (
                       <>
-                        <XCircle className="w-4 h-4" />
+                        <XCircle className="w-3.5 h-3.5" />
                         Not Verified
                       </>
                     )}
-                  </div>
-                </div>
-
-                {/* User Role */}
-                <div>
-                  <p className="text-sm text-text-secondary mb-2">User Role</p>
-                  <div
-                    className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                      user.role === "ADMIN"
-                        ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                        : "bg-primary/10 text-primary"
-                    }`}
-                  >
-                    {user.role}
                   </div>
                 </div>
               </div>
@@ -271,18 +298,19 @@ export default function UserDetailsModal({
           </div>
 
           {/* Footer - Delete Button */}
-          <div className="p-6 border-t border-border">
+          <div className="p-6 border-t border-border/60 bg-surface/40 backdrop-blur-md">
             <button
               onClick={onDelete}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-error hover:bg-error/90 text-white rounded-2xl transition-colors font-semibold"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 border border-error text-error bg-error/5 hover:bg-error hover:text-white rounded-2xl transition-all duration-300 font-bold active:scale-95 group"
               aria-label="Delete user account"
             >
-              <AlertTriangle className="w-5 h-5" aria-hidden="true" />
-              Delete User
+              <AlertTriangle className="w-5 h-5 group-hover:rotate-12 transition-transform" aria-hidden="true" />
+              Delete Account
             </button>
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

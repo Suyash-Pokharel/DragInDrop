@@ -1,64 +1,19 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from "recharts";
+import { useState, useEffect, useMemo } from "react";
 import { UserWithAccounts } from "./AdminDashboard";
 
 interface RegistrationTrendChartProps {
   users: UserWithAccounts[];
 }
 
-export default function RegistrationTrendChart({
-  users,
-}: RegistrationTrendChartProps) {
+export default function RegistrationTrendChart({ users }: RegistrationTrendChartProps) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
-  
-  // Get theme colors dynamically from CSS variables
-  const [colors, setColors] = useState<{
-    primary: string;
-    textSecondary: string;
-    surface: string;
-    border: string;
-    textMain: string;
-  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    // Read computed CSS variables from the document
-    const updateColors = () => {
-      const computedStyle = getComputedStyle(document.documentElement);
-      
-      setColors({
-        primary: computedStyle.getPropertyValue("--primary").trim(),
-        textSecondary: computedStyle.getPropertyValue("--text-secondary").trim(),
-        surface: computedStyle.getPropertyValue("--surface").trim(),
-        border: computedStyle.getPropertyValue("--border").trim(),
-        textMain: computedStyle.getPropertyValue("--text-main").trim(),
-      });
-    };
-
-    // Initial update
-    updateColors();
-
-    // Listen for theme changes (class changes on html/body)
-    const observer = new MutationObserver(updateColors);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
   }, []);
 
   // Calculate last 7 days registration data (rolling week)
@@ -91,71 +46,106 @@ export default function RegistrationTrendChart({
           month: "short",
           day: "numeric",
         }),
-        count: registrationsByDate[dateKey] || 0,
+        registrations: registrationsByDate[dateKey] || 0,
       };
     });
   }, [users]);
 
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="h-[300px] w-full flex flex-col items-center justify-center border border-dashed border-border/50 rounded-2xl text-text-secondary mt-4 bg-surface/30 backdrop-blur-sm relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+        <div className="w-16 h-16 bg-surface-highlight rounded-full flex items-center justify-center mb-4 shadow-sm relative z-10">
+          <svg className="w-8 h-8 text-text-secondary/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <span className="text-sm font-medium z-10">No registration activity yet.</span>
+        <span className="text-xs text-text-secondary/70 z-10 mt-1">User registration trends will appear here once users sign up.</span>
+      </div>
+    );
+  }
+
+  if (!mounted) {
+    return (
+      <div className="h-[300px] w-full mt-6 relative z-10 flex items-center justify-center">
+        <div className="animate-pulse text-text-secondary">Loading chart...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full h-full min-h-[300px]">
-      {mounted && colors && (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={chartData}
-            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+    <div className="h-[300px] w-full mt-6 relative z-10">
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart 
+          data={chartData} 
+          margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+          onMouseMove={(state: any) => {
+            if (state.isTooltipActive) setActiveIndex(state.activeTooltipIndex);
+            else setActiveIndex(null);
+          }}
+          onMouseLeave={() => setActiveIndex(null)}
+        >
+          <defs>
+            <linearGradient id="registrationBarGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+              <stop offset="100%" stopColor="var(--secondary)" stopOpacity={0.6} />
+            </linearGradient>
+            <linearGradient id="registrationBarGradientHover" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.9} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" strokeOpacity={0.4} />
+          <XAxis 
+            dataKey="date" 
+            stroke="var(--text-secondary)" 
+            fontSize={12} 
+            tickLine={false} 
+            axisLine={false} 
+            dy={10}
+            className="font-medium"
+          />
+          <YAxis 
+            stroke="var(--text-secondary)" 
+            fontSize={12} 
+            tickLine={false} 
+            axisLine={false} 
+            allowDecimals={false} 
+            dx={-10}
+            className="font-medium"
+          />
+          <Tooltip 
+            cursor={false}
+            contentStyle={{ 
+              borderRadius: '12px', 
+              border: '1px solid var(--border)', 
+              backgroundColor: 'var(--surface)',
+              color: 'var(--text-main)',
+              boxShadow: '0 10px 30px -10px var(--shadow-color)',
+              padding: '12px 16px',
+            }}
+            labelStyle={{ fontWeight: 'bold', marginBottom: '4px', color: 'var(--text-secondary)' }}
+            itemStyle={{ color: 'var(--text-main)', fontWeight: 600 }}
+          />
+          <Bar 
+            dataKey="registrations" 
+            radius={[6, 6, 0, 0]} 
+            maxBarSize={48} 
+            animationDuration={1500}
+            animationEasing="ease-out"
           >
-            <defs>
-              <linearGradient id="adminBarGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
-                <stop offset="100%" stopColor="var(--secondary)" stopOpacity={0.6} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={colors.border}
-              vertical={false}
-              strokeOpacity={0.4}
-            />
-            <XAxis
-              dataKey="date"
-              stroke={colors.textSecondary}
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              dy={10}
-            />
-            <YAxis
-              stroke={colors.textSecondary}
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              allowDecimals={false}
-              dx={-10}
-            />
-            <Tooltip
-              cursor={false}
-              contentStyle={{
-                backgroundColor: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: "12px",
-                color: colors.textMain,
-                boxShadow: "0 10px 30px -10px rgba(0,0,0,0.2)",
-                padding: "12px 16px",
-              }}
-              labelStyle={{ color: colors.textSecondary, fontWeight: "bold", marginBottom: "4px" }}
-              itemStyle={{ color: colors.textMain, fontWeight: 600 }}
-            />
-            <Bar
-              dataKey="count"
-              radius={[6, 6, 0, 0]}
-              maxBarSize={48}
-              animationDuration={1500}
-              animationEasing="ease-out"
-              fill="url(#adminBarGradient)"
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      )}
+            {chartData.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={activeIndex === index ? "url(#registrationBarGradientHover)" : "url(#registrationBarGradient)"} 
+                className="transition-all duration-300"
+                style={{ filter: activeIndex === index ? "drop-shadow(0px 0px 8px var(--primary))" : "none" }}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }

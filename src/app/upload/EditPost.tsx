@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Calendar, ChevronLeft } from "lucide-react";
+import { X, Calendar, ChevronLeft, Loader2 } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
 
 interface EditPostProps {
@@ -27,11 +27,19 @@ export default function EditPost({ onClose }: EditPostProps) {
     clearError,
     handleUpload,
     goBackToUpload,
+    fileKey,
+    videoFileName,
+    videoFileSize,
   } = useModal();
 
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  // Draft save operation states
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [showDraftSuccess, setShowDraftSuccess] = useState(false);
 
   // Helper to format Date for datetime-local (YYYY-MM-DDTHH:mm)
   const formatDateTimeLocal = (d: Date) => {
@@ -97,6 +105,64 @@ export default function EditPost({ onClose }: EditPostProps) {
   const handleSchedule = () => {
     // Add API logic here for scheduling post details
     openSelectPlatform();
+  };
+
+  const handleSaveDraft = async () => {
+    // Pre-flight validation
+    if (!postTitle.trim()) {
+      setDraftError("Title is required");
+      return;
+    }
+
+    if (!fileKey || !videoFileName || !videoFileSize) {
+      setDraftError("Video upload incomplete. Please upload a video first.");
+      return;
+    }
+
+    setIsSavingDraft(true);
+    setDraftError(null);
+
+    try {
+      const response = await fetch('/api/posts/drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: postTitle,
+          description: postDescription || undefined,
+          videoFileKey: fileKey,
+          videoFileName,
+          videoFileSize,
+        }),
+      });
+
+      if (response.status === 401) {
+        // Authentication error - redirect to login
+        window.location.href = '/login';
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save draft');
+      }
+
+      // Success
+      setShowDraftSuccess(true);
+      setTimeout(() => {
+        clearUpload();
+        onClose();
+      }, 2000);
+
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setDraftError("Network error. Please check your connection and try again.");
+      } else {
+        setDraftError(error instanceof Error ? error.message : 'An error occurred while saving your draft. Please try again.');
+      }
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   if (!mounted) return null;
@@ -324,18 +390,16 @@ export default function EditPost({ onClose }: EditPostProps) {
             </button>
 
             <button
-              onClick={() => {
-                // Future Save as Draft logic
-                console.log("Saving as draft...");
-              }}
-              disabled={!isTitleValid}
-              className={`py-2.5 text-sm font-semibold transition-all ${
-                !isTitleValid
+              onClick={handleSaveDraft}
+              disabled={postTitle.trim() === "" || isSavingDraft}
+              className={`flex items-center gap-2 py-2.5 text-sm font-semibold transition-all ${
+                postTitle.trim() === "" || isSavingDraft
                   ? "text-text-secondary/40 cursor-not-allowed"
                   : "text-text-secondary hover:text-text-main cursor-pointer active:scale-95"
               }`}
             >
-              Save as Draft
+              {isSavingDraft && <Loader2 size={16} className="animate-spin" />}
+              {isSavingDraft ? "Saving..." : "Save as Draft"}
             </button>
           </div>
 
@@ -372,6 +436,58 @@ export default function EditPost({ onClose }: EditPostProps) {
                   className="px-5 py-2.5 rounded-xl text-sm font-bold bg-error text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
                 >
                   Discard post
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Draft Success Message */}
+        {showDraftSuccess && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Draft Saved!</h3>
+              <p className="text-sm text-text-secondary text-center">
+                Your post has been saved as a draft. You can continue editing it later from your dashboard.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Draft Error Message */}
+        {draftError && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-error" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Failed to Save Draft</h3>
+              <p className="text-sm text-text-secondary text-center mb-6">
+                {draftError}
+              </p>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+                <button
+                  onClick={() => setDraftError(null)}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 hover:bg-surface-highlight shadow-sm active:scale-95 w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveDraft}
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
+                >
+                  Retry
                 </button>
               </div>
             </div>

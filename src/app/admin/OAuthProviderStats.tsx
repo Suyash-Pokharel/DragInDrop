@@ -36,6 +36,20 @@ const PROVIDERS: ProviderConfig[] = [
   { name: "LinkedIn", logo: LinkedInLogo, key: "LinkedIn", type: "social" },
 ];
 
+// Helper function to get platform-specific glow class
+const getPlatformGlowClass = (platform: string): string => {
+  const glowClasses: Record<string, string> = {
+    'YouTube': 'hover:shadow-[0_0_30px_-5px_#FF0000]',
+    'Instagram': 'hover:shadow-[0_0_30px_-5px_#E1306C]',
+    'TikTok': 'hover:shadow-[0_0_30px_-5px_#00F2EA]',
+    'Facebook': 'hover:shadow-[0_0_30px_-5px_#1877F2]',
+    'Twitter': 'hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)]',
+    'LinkedIn': 'hover:shadow-[0_0_30px_-5px_#0A66C2]',
+    'Google': 'hover:shadow-[0_0_30px_-5px_#4285F4]',
+  };
+  return glowClasses[platform] || 'hover:shadow-[0_0_30px_-5px_var(--primary)]';
+};
+
 export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
   // Calculate provider counts from both login accounts and social accounts
   const providerCounts = useMemo(() => {
@@ -73,38 +87,39 @@ export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
   }, [users]);
 
   return (
-    <div className="flex gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-7 md:overflow-x-visible pb-2">
-      {PROVIDERS.map((provider) => (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {PROVIDERS.slice(0, 8).map((provider) => (
         <div
           key={provider.key}
-          className="flex-shrink-0 w-40 md:w-auto bg-surface/60 backdrop-blur-md border border-border rounded-2xl p-4 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+          className={`bg-surface/60 backdrop-blur-md border border-border rounded-3xl p-6 hover:-translate-y-1 transition-all duration-300 ${getPlatformGlowClass(provider.name)}`}
         >
-          <div className="flex flex-col items-center gap-2">
-            {/* Provider Icon */}
-            <div className="w-10 h-10 relative">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo */}
+            <div className="w-12 h-12 relative">
               <Image
                 src={provider.logo}
                 alt={`${provider.name} logo`}
                 fill
-                sizes="40px"
+                sizes="48px"
                 className="object-contain"
               />
             </div>
             
-            {/* Provider Name */}
-            <p className="text-xs font-semibold text-text-secondary text-center">
-              {provider.name}
-            </p>
-            
-            {/* User Count */}
-            <p className="text-2xl font-black text-text-main">
-              {providerCounts[provider.key]}
-            </p>
-            
-            <p className="text-[10px] text-text-secondary font-medium">
-              {providerCounts[provider.key] === 1 ? "user" : "users"}
-            </p>
+            {/* Right: Count */}
+            <div className="text-right">
+              <p className="text-3xl md:text-4xl font-black text-text-main">
+                {providerCounts[provider.key]}
+              </p>
+              <p className="text-xs text-text-secondary font-medium">
+                {providerCounts[provider.key] === 1 ? "user" : "users"}
+              </p>
+            </div>
           </div>
+          
+          {/* Platform Name */}
+          <p className="text-sm font-semibold text-text-secondary mt-4">
+            {provider.name}
+          </p>
         </div>
       ))}
     </div>

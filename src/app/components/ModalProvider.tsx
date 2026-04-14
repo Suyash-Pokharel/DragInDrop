@@ -23,6 +23,7 @@ type ModalContextType = {
   isSelectPlatformOpen: boolean;
   openSelectPlatform: () => void;
   closeSelectPlatform: () => void;
+  goBackToEditPost: () => void;
 
   // Global Upload State
   file: File | null;
@@ -293,6 +294,11 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSelectPlatformOpen(false);
   }, []);
 
+  const goBackToEditPost = useCallback(() => {
+    setIsSelectPlatformOpen(false);
+    setIsEditPostOpen(true);
+  }, []);
+
   const closeNoAccountModal = useCallback(() => {
     setIsNoAccountModalOpen(false);
   }, []);
@@ -310,6 +316,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
         isSelectPlatformOpen,
         openSelectPlatform,
         closeSelectPlatform,
+        goBackToEditPost,
         file,
         setFile: updateFileState,
         uploading,

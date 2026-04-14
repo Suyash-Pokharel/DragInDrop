@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/components/ModalProvider";
@@ -17,6 +17,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   const router = useRouter();
   const { 
     clearUpload,
+    goBackToEditPost,
     postTitle,
     postDescription,
     postScheduledFor,
@@ -34,6 +35,11 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Draft save states
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [showDraftSuccess, setShowDraftSuccess] = useState(false);
 
   // Only show platforms that the user has verified/connected in settings
   const availablePlatforms = APP_PLATFORMS.filter((p) => connectedPlatforms.includes(p.name));
@@ -152,6 +158,64 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
     );
   };
 
+  const handleSaveDraft = async () => {
+    // Pre-flight validation
+    if (!postTitle.trim()) {
+      setDraftError("Title is required");
+      return;
+    }
+
+    if (!fileKey || !videoFileName || !videoFileSize) {
+      setDraftError("Video upload incomplete. Please upload a video first.");
+      return;
+    }
+
+    setIsSavingDraft(true);
+    setDraftError(null);
+
+    try {
+      const response = await fetch('/api/posts/drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: postTitle,
+          description: postDescription || undefined,
+          videoFileKey: fileKey,
+          videoFileName,
+          videoFileSize,
+        }),
+      });
+
+      if (response.status === 401) {
+        // Authentication error - redirect to login
+        window.location.href = '/login';
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save draft');
+      }
+
+      // Success
+      setShowDraftSuccess(true);
+      setTimeout(() => {
+        clearUpload();
+        onClose();
+      }, 2000);
+
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setDraftError("Network error. Please check your connection and try again.");
+      } else {
+        setDraftError(error instanceof Error ? error.message : 'An error occurred while saving your draft. Please try again.');
+      }
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   if (!mounted) return null;
 
   return createPortal(
@@ -247,19 +311,37 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
           )}
           
           <div className="flex items-center justify-between gap-4 mt-2">
-            <button
-              onClick={() => setShowDiscardConfirm(true)}
-              disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 text-text-main hover:bg-surface-highlight transition-colors shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel Post
-            </button>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setTimeout(() => goBackToEditPost(), 250);
+                }}
+                disabled={isSubmitting || isSavingDraft}
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 text-text-main hover:bg-surface-highlight transition-colors shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={16} />
+                Back
+              </button>
+
+              <button
+                onClick={handleSaveDraft}
+                disabled={!postTitle.trim() || isSavingDraft || isSubmitting}
+                className={`py-2.5 text-sm font-semibold transition-all ${
+                  !postTitle.trim() || isSavingDraft || isSubmitting
+                    ? "text-text-secondary/40 cursor-not-allowed"
+                    : "text-text-secondary hover:text-text-main cursor-pointer active:scale-95"
+                }`}
+              >
+                {isSavingDraft ? "Saving..." : "Save as Draft"}
+              </button>
+            </div>
 
             <button
               onClick={handleSchedule}
-              disabled={selectedPlatforms.length === 0 || isSubmitting}
+              disabled={selectedPlatforms.length === 0 || isSubmitting || isSavingDraft}
               className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 active:scale-95 ${
-                selectedPlatforms.length === 0 || isSubmitting
+                selectedPlatforms.length === 0 || isSubmitting || isSavingDraft
                   ? "bg-primary/60 cursor-not-allowed"
                   : "bg-primary hover:bg-secondary shadow-md hover:shadow-lg"
               }`}
@@ -283,7 +365,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
             <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
               <h3 className="text-xl font-bold mb-2 text-text-main">Discard Post?</h3>
               <p className="text-sm text-text-secondary mb-6">
-                If you leave now, you’ll lose your scheduled details and video.
+                If you leave now, you'll lose your scheduled details and video.
               </p>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
@@ -297,6 +379,58 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
                   className="px-5 py-2.5 rounded-xl text-sm font-bold bg-error text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
                 >
                   Discard post
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Draft Success Message */}
+        {showDraftSuccess && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Draft Saved!</h3>
+              <p className="text-sm text-text-secondary text-center">
+                Your post has been saved as a draft. You can continue editing it later from your dashboard.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Draft Error Message */}
+        {draftError && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-error" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Failed to Save Draft</h3>
+              <p className="text-sm text-text-secondary text-center mb-6">
+                {draftError}
+              </p>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+                <button
+                  onClick={() => setDraftError(null)}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 hover:bg-surface-highlight shadow-sm active:scale-95 w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveDraft}
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
+                >
+                  Retry
                 </button>
               </div>
             </div>
