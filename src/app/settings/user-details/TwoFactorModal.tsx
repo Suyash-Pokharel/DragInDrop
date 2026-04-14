@@ -68,13 +68,13 @@ export default function TwoFactorModal({ onClose, onSuccess }: TwoFactorModalPro
       <div
         role="dialog"
         aria-modal="true"
-        className={`bg-background w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col relative border border-border transition-all duration-300 ease-out transform ${
+        className={`bg-surface/80 backdrop-blur-xl w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/50 transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
         <button
           onClick={doClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-surface text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
+          className="absolute top-5 right-5 z-20 p-2.5 rounded-xl bg-surface border border-border/60 shadow-sm text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
         >
           <X size={18} />
         </button>
@@ -99,13 +99,13 @@ export default function TwoFactorModal({ onClose, onSuccess }: TwoFactorModalPro
               <div className="w-full flex gap-3">
                 <button
                   onClick={doClose}
-                  className="flex-1 py-3 px-4 rounded-lg text-sm font-medium border border-border text-text-main hover:bg-surface-highlight transition-colors"
+                  className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold border border-border/60 text-text-main hover:bg-surface-highlight transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 px-4 rounded-lg text-sm font-medium bg-primary text-white hover:bg-secondary transition-colors shadow-sm"
+                  className="flex-1 py-3 px-4 rounded-xl text-sm font-bold bg-primary text-white hover:bg-secondary transition-colors shadow-sm"
                 >
                   Enter Code
                 </button>
@@ -130,14 +130,14 @@ export default function TwoFactorModal({ onClose, onSuccess }: TwoFactorModalPro
               <div className="w-full flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 px-4 rounded-lg text-sm font-medium border border-border text-text-main hover:bg-surface-highlight transition-colors"
+                  className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold border border-border/60 text-text-main hover:bg-surface-highlight transition-colors"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleVerify}
                   disabled={code.length !== 6}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-colors shadow-sm ${
                     code.length === 6
                       ? "bg-primary text-white hover:bg-secondary"
                       : "bg-primary/50 text-white/70 cursor-not-allowed"

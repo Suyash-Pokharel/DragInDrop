@@ -183,7 +183,7 @@ const MonthCalendar = () => {
   };
 
   return (
-    <div className="w-full max-w-350 mx-auto text-text-main select-none">
+    <div className="w-full max-w-7xl mx-auto text-text-main select-none">
       {/* --- HEADER --- */}
       <div className="flex items-center justify-between mb-4 px-2">
         <h2 className="text-xl md:text-2xl font-bold text-text-main uppercase tracking-tight">
@@ -196,19 +196,19 @@ const MonthCalendar = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={prevMonth}
-            className="p-1.5 text-text-secondary hover:text-text-main hover:bg-surface-highlight rounded-lg transition-colors"
+            className="p-1.5 text-text-secondary hover:text-text-main hover:bg-surface-highlight rounded-xl transition-colors"
           >
             <ChevronLeft size={20} />
           </button>
           <button
             onClick={goToToday}
-            className="px-3 py-1.5 text-xs font-medium bg-surface border border-border text-text-main rounded-md shadow-sm hover:bg-surface-highlight hover:border-text-secondary transition-colors"
+            className="px-4 py-2 text-sm font-semibold bg-surface/90 backdrop-blur-md border border-border text-text-main rounded-xl shadow-sm hover:bg-surface-highlight hover:border-primary/40 transition-colors"
           >
             Today
           </button>
           <button
             onClick={nextMonth}
-            className="p-1.5 text-text-secondary hover:text-text-main hover:bg-surface-highlight rounded-lg transition-colors"
+            className="p-1.5 text-text-secondary hover:text-text-main hover:bg-surface-highlight rounded-xl transition-colors"
           >
             <ChevronRight size={20} />
           </button>
@@ -235,7 +235,7 @@ const MonthCalendar = () => {
           {prevMonthPadding.map((day) => (
             <div
               key={`prev-${day}`}
-              className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
+              className="h-17.5 sm:h-20 lg:h-25 bg-surface/30 border border-transparent rounded-2xl p-3 md:p-4 opacity-40 flex flex-col items-start pointer-events-none"
             >
               <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
             </div>
@@ -250,17 +250,17 @@ const MonthCalendar = () => {
             return (
               <div
                 key={`curr-${day}`}
-                className={`group relative h-17.5 sm:h-20 lg:h-25 rounded-xl p-1.5 md:p-2 flex flex-col gap-1.5 transition-all duration-200 overflow-hidden
+                className={`group relative h-17.5 sm:h-20 lg:h-25 rounded-2xl p-3 md:p-4 flex flex-col gap-1.5 transition-all duration-300 overflow-hidden
                   border
                   ${
                     today
-                      ? "border-primary bg-primary/5" // Use Primary with opacity for Today background
-                      : "border-border bg-surface"
+                      ? "border-primary bg-primary/5 backdrop-blur-md" 
+                      : "border-border/60 bg-surface/60 backdrop-blur-sm"
                   }
                   ${
                     past
-                      ? "bg-background opacity-60 cursor-default border-transparent"
-                      : "hover:bg-surface-highlight hover:border-primary/30 hover:shadow-sm cursor-pointer"
+                      ? "bg-background/30 opacity-60 cursor-default border-transparent"
+                      : "hover:bg-surface-highlight/90 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
                   }
                 `}
               >
@@ -293,14 +293,15 @@ const MonthCalendar = () => {
                         openUpload();
                       }}
                       className="
+                        absolute top-1.5 right-1.5 md:top-2 md:right-2
                         opacity-0 group-hover:opacity-100 transition-all duration-200
                         flex items-center justify-center
-                        rounded md:rounded-md
-                        bg-surface-highlight border border-border
-                        text-text-secondary
+                        rounded-lg
+                        bg-surface border border-border
+                        text-text-secondary shadow-sm
                         hover:text-primary hover:border-primary
                         /* Sizes strictly matched to date number size */
-                        w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6
+                        w-5 h-5 md:w-7 md:h-7
                       "
                       title="Schedule Post"
                     >
@@ -322,7 +323,7 @@ const MonthCalendar = () => {
           {nextMonthPadding.map((day) => (
             <div
               key={`next-${day}`}
-              className="h-17.5 sm:h-20 lg:h-25 border border-transparent rounded-xl p-2 opacity-30 flex flex-col items-start pointer-events-none"
+              className="h-17.5 sm:h-20 lg:h-25 bg-surface/30 border border-transparent rounded-2xl p-3 md:p-4 opacity-40 flex flex-col items-start pointer-events-none"
             >
               <span className="text-xs md:text-sm font-medium text-text-secondary">{day}</span>
             </div>

@@ -166,13 +166,13 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
       <div
         role="dialog"
         aria-modal="true"
-        className={`bg-background w-full max-w-2xl max-h-[86dvh] rounded-2xl shadow-2xl overflow-hidden flex flex-col relative border border-border transition-all duration-300 ease-out transform ${
+        className={`bg-surface/85 backdrop-blur-2xl w-full max-w-2xl max-h-[86dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/60 transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
         <button
           onClick={handleCloseRequest}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-surface text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
+          className="absolute top-5 right-5 z-20 p-2.5 rounded-xl bg-surface/60 backdrop-blur-md border border-border/60 shadow-sm text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
         >
           <X size={18} />
         </button>
@@ -187,7 +187,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
 
           <div className="flex flex-wrap justify-center gap-4 md:gap-5 w-full max-w-lg mb-4 mx-auto">
             {availablePlatforms.length === 0 ? (
-              <div className="w-full text-center text-sm py-12 text-text-secondary bg-surface rounded-xl border border-border">
+              <div className="w-full text-center text-sm py-12 text-text-secondary bg-surface/40 backdrop-blur-md rounded-2xl border border-border/60 shadow-sm">
                 No connected platforms found.
               </div>
             ) : (
@@ -199,8 +199,8 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
                     onClick={() => togglePlatform(platform.name)}
                     className={`flex flex-col items-center justify-center gap-4 p-5 rounded-2xl border-[2px] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.85rem)] aspect-[6/5] sm:aspect-square ${
                       isSelected
-                        ? "border-[#10b981] bg-background shadow-sm"
-                        : "border-border/60 bg-surface hover:border-border"
+                        ? "border-[#10b981] bg-background shadow-md bg-gradient-to-t from-[#10b981]/10 to-transparent"
+                        : "border-border/60 bg-surface/40 backdrop-blur-md hover:border-border/80 shadow-sm"
                     }`}
                   >
                     <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden flex shrink-0 items-center justify-center drop-shadow-sm">
@@ -224,7 +224,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 p-4 border-t border-border bg-surface mt-auto">
+        <div className="flex flex-col gap-2 p-5 border-t border-border/60 bg-surface/40 backdrop-blur-md mt-auto">
           {/* Requirement 3.3 - Display success message */}
           {successMessage && (
             <div className="text-sm text-[#10b981] bg-[#10b981]/10 border border-[#10b981]/20 rounded-md px-3 py-2">
@@ -246,11 +246,11 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
             </div>
           )}
           
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 mt-2">
             <button
               onClick={() => setShowDiscardConfirm(true)}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-md text-sm text-text-secondary hover:bg-surface-highlight transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 text-text-main hover:bg-surface-highlight transition-colors shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel Post
             </button>
@@ -258,10 +258,10 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
             <button
               onClick={handleSchedule}
               disabled={selectedPlatforms.length === 0 || isSubmitting}
-              className={`px-6 py-2 rounded-md text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 ${
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 active:scale-95 ${
                 selectedPlatforms.length === 0 || isSubmitting
                   ? "bg-primary/60 cursor-not-allowed"
-                  : "bg-primary hover:bg-secondary shadow-md"
+                  : "bg-primary hover:bg-secondary shadow-md hover:shadow-lg"
               }`}
             >
               {/* Requirement 3.8, 3.9 - Disable button and show loading spinner when submitting */}
@@ -279,22 +279,22 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
 
         {/* Discard Confirmation */}
         {showDiscardConfirm && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40">
-            <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-2">Discard Post?</h3>
-              <p className="text-sm text-text-secondary mb-4">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <h3 className="text-xl font-bold mb-2 text-text-main">Discard Post?</h3>
+              <p className="text-sm text-text-secondary mb-6">
                 If you leave now, you’ll lose your scheduled details and video.
               </p>
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setShowDiscardConfirm(false)}
-                  className="px-4 py-2 rounded-md text-sm border border-border hover:bg-surface-highlight transition-colors"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 hover:bg-surface-highlight shadow-sm active:scale-95 w-full sm:w-auto"
                 >
                   Continue editing
                 </button>
                 <button
                   onClick={doClose}
-                  className="px-4 py-2 rounded-md text-sm bg-error text-white hover:opacity-95 transition-opacity"
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-error text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
                 >
                   Discard post
                 </button>

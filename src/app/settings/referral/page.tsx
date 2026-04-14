@@ -22,7 +22,7 @@ export default function ReferralPage() {
         </p>
       </div>
 
-      <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-8 shadow-sm">
+      <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col gap-8 shadow-lg">
         {/* Your Referral Link */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2 border-b border-border pb-2">
@@ -30,7 +30,7 @@ export default function ReferralPage() {
             <h3 className="text-lg font-medium text-text-main">Your Referral Link</h3>
           </div>
 
-          <div className="bg-background border border-border p-5 rounded-xl mt-2">
+          <div className="bg-surface/40 backdrop-blur-md border border-border/60 p-5 rounded-2xl mt-2 shadow-sm">
             <p className="text-sm text-text-main mb-3">
               Share this link with your network. When they sign up and subscribe, you get account
               credits!
@@ -41,11 +41,11 @@ export default function ReferralPage() {
                 type="text"
                 readOnly
                 value={referralLink}
-                className="flex-1 bg-surface-highlight border border-border rounded-lg px-4 py-3 text-sm font-mono text-text-main focus:outline-none"
+                className="flex-1 bg-background/50 border border-border/60 rounded-xl px-4 py-3 text-sm font-mono text-text-main focus:outline-none shadow-inner"
               />
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-2 px-5 py-3 bg-primary hover:bg-secondary text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+                className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-secondary text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copied ? "Copied!" : "Copy"}
@@ -68,9 +68,9 @@ export default function ReferralPage() {
               <input
                 type="text"
                 placeholder="Enter referral code"
-                className="flex-1 bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors uppercase"
+                className="flex-1 bg-surface/40 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors uppercase shadow-sm"
               />
-              <button className="px-5 py-2.5 border border-border hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-medium rounded-lg transition-colors">
+              <button className="px-6 py-3 border border-border/60 hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95">
                 Apply Code
               </button>
             </div>

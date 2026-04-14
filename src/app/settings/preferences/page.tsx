@@ -10,7 +10,7 @@ export default function PreferencesPage() {
         </p>
       </div>
 
-      <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-8 shadow-sm">
+      <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col gap-8 shadow-lg">
         {/* Date & Time */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2 border-b border-border pb-2">
@@ -23,7 +23,7 @@ export default function PreferencesPage() {
                 <CalendarDays className="w-4 h-4 text-text-secondary" />
                 Date Format
               </label>
-              <select className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer">
+              <select className="w-full bg-surface/40 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer shadow-sm">
                 <option value="MM/DD/YYYY">MM/DD/YYYY (10/25/2026)</option>
                 <option value="DD/MM/YYYY">DD/MM/YYYY (25/10/2026)</option>
                 <option value="YYYY-MM-DD">YYYY-MM-DD (2026-10-25)</option>
@@ -34,7 +34,7 @@ export default function PreferencesPage() {
                 <Clock className="w-4 h-4 text-text-secondary" />
                 Time Format
               </label>
-              <select className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer">
+              <select className="w-full bg-surface/40 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer shadow-sm">
                 <option value="12h">12-hour (02:30 PM)</option>
                 <option value="24h">24-hour (14:30)</option>
               </select>
@@ -44,7 +44,7 @@ export default function PreferencesPage() {
                 <SlidersHorizontal className="w-4 h-4 text-text-secondary" />
                 First Day of the Week
               </label>
-              <select className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer">
+              <select className="w-full bg-surface/40 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer shadow-sm">
                 <option value="sunday">Sunday</option>
                 <option value="monday">Monday</option>
                 <option value="saturday">Saturday</option>
@@ -76,7 +76,7 @@ export default function PreferencesPage() {
         </section>
 
         <div className="mt-2 flex justify-end">
-          <button className="px-5 py-2 bg-primary hover:bg-secondary text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+          <button className="px-6 py-2.5 bg-primary hover:bg-secondary text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
             Save Preferences
           </button>
         </div>

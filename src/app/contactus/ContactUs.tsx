@@ -117,7 +117,7 @@ export default function ContactUs() {
         {/* --- RIGHT COLUMN: FORM --- */}
         {/* 4. Reveal the Form Card with more Delay */}
         <Reveal width="100%" delay={0.3}>
-          <div className="w-full max-w-sm md:min-w-sm md:max-w-lg mx-auto lg:mx-0 bg-surface border border-border rounded-2xl shadow-lg p-6 md:p-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+          <div className="w-full max-w-sm md:min-w-sm md:max-w-lg mx-auto lg:mx-0 bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] shadow-lg p-6 md:p-10 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all duration-300">
             {isSuccess ? (
               // Success State
               <div className="flex flex-col items-center justify-center py-12 text-center animate-in zoom-in-95 duration-300">
@@ -258,7 +258,7 @@ export default function ContactUs() {
                 <button
                   type="submit"
                   disabled={isLoading || !isFormValid}
-                  className="w-full py-3 px-4 rounded-lg bg-primary text-white font-semibold hover:bg-secondary active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 rounded-xl bg-primary text-white font-bold hover:bg-secondary active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>

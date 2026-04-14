@@ -102,7 +102,7 @@ export default function SocialAccountsPage() {
         </p>
       </div>
 
-      <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-sm">
+      <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col gap-6 shadow-lg">
         <div className="flex items-center gap-3 border-b border-border pb-4">
           <div className="p-2 bg-primary/10 rounded-lg">
             <LayoutGrid className="w-5 h-5 text-primary" />
@@ -121,7 +121,7 @@ export default function SocialAccountsPage() {
             return (
               <div
                 key={platform.name}
-                className="bg-background border border-border p-4 rounded-xl flex items-center justify-between transition-all hover:border-primary/50 group"
+                className="bg-surface/40 backdrop-blur-md border border-border/60 p-5 rounded-2xl flex items-center justify-between transition-all hover:border-primary/50 group shadow-sm"
               >
                 <div className="flex items-center gap-4">
                   <div className="relative w-8 h-8 md:w-10 md:h-10">
@@ -146,7 +146,7 @@ export default function SocialAccountsPage() {
                     isConnected ? handleForgetClick(platform.name) : handleConnect(platform.name)
                   }
                   disabled={connectingPlatform === platform.name}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 border ${
                     isConnected
                       ? "bg-surface border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       : "bg-surface border-green-500 text-green-500 hover:bg-green-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
@@ -175,7 +175,7 @@ export default function SocialAccountsPage() {
       </div>
 
       {/* Secondary Box to balance page height and fill vertical space */}
-      <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+      <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
         <div>
           <h3 className="text-lg font-medium text-text-main">Missing a Platform?</h3>
           <p className="text-sm text-text-secondary mt-1 max-w-sm">
@@ -183,7 +183,7 @@ export default function SocialAccountsPage() {
             see next!
           </p>
         </div>
-        <button className="px-5 py-2.5 border border-border hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-medium rounded-xl transition-colors shrink-0 whitespace-nowrap">
+        <button className="px-6 py-2.5 border border-border/60 hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95 shrink-0 whitespace-nowrap">
           Request Integration
         </button>
       </div>

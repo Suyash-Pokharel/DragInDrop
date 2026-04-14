@@ -82,7 +82,7 @@ export default function AllUsersModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -90,21 +90,21 @@ export default function AllUsersModal({
       {/* Modal */}
       <div 
         ref={modalRef}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-[70] flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="all-users-modal-title"
       >
-        <div className="bg-surface border border-border rounded-lg w-full max-w-6xl max-h-[90vh] flex flex-col">
+        <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <h2 id="all-users-modal-title" className="text-xl font-semibold text-text-main">
+          <div className="flex items-center justify-between p-6 md:p-8 border-b border-border">
+            <h2 id="all-users-modal-title" className="text-xl font-bold text-text-main">
               All Users ({users.length})
             </h2>
             <button
               ref={closeButtonRef}
               onClick={onClose}
-              className="p-2 hover:bg-surface-highlight rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-highlight rounded-xl transition-colors"
               aria-label="Close all users modal"
             >
               <X className="w-5 h-5 text-text-secondary" />
@@ -151,7 +151,7 @@ export default function AllUsersModal({
                           <tr
                             key={user.id}
                             onClick={() => onSelectUser(user)}
-                            className="border-b border-border last:border-b-0 hover:bg-surface-highlight cursor-pointer transition-colors"
+                            className="border-b border-border/60 last:border-b-0 hover:bg-surface-highlight/60 cursor-pointer transition-colors rounded-xl"
                           >
                             <td className="py-3 px-4">
                               <p className="text-sm font-medium text-text-main">
@@ -200,7 +200,7 @@ export default function AllUsersModal({
                       <div
                         key={user.id}
                         onClick={() => onSelectUser(user)}
-                        className="bg-background border border-border rounded-lg p-4 hover:bg-surface-highlight cursor-pointer transition-colors"
+                        className="bg-background border border-border rounded-2xl p-4 hover:bg-surface-highlight cursor-pointer transition-all hover:border-primary/30 hover:-translate-y-0.5"
                       >
                         <div className="space-y-2">
                           <div>

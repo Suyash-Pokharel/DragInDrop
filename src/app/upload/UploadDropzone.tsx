@@ -31,9 +31,8 @@ export default function UploadDropzone({ accept = "*", onFiles, files = [] }: Dr
   };
 
   return (
-    // 1. Hardcoded Max-Widths on the Parent Wrapper
-    // This stops the entire dropzone section from growing out of control
-    <div className="w-full max-w-[260px] sm:max-w-[340px] md:max-w-[420px] lg:max-w-[360px] xl:max-w-[420px]">
+    // The parent grid strictly controls the exact max-widths so both columns match sizes symmetrically.
+    <div className="w-full h-full flex flex-col">
       <div
         onClick={openFilePicker}
         onDragOver={(e) => {
@@ -42,8 +41,8 @@ export default function UploadDropzone({ accept = "*", onFiles, files = [] }: Dr
         }}
         onDragLeave={() => setIsDrag(false)}
         onDrop={onDrop}
-        className={`w-full min-h-85 border-2 rounded-xl flex flex-col items-center justify-center p-6 transition-colors cursor-pointer ${
-          isDrag ? "border-primary bg-primary/5" : "border-dashed border-border bg-background"
+        className={`w-full flex-1 min-h-[280px] border-2 rounded-2xl flex flex-col items-center justify-center p-6 transition-colors cursor-pointer shadow-sm ${
+          isDrag ? "border-primary bg-primary/5" : "border-dashed border-border/60 bg-surface/40 backdrop-blur-md hover:bg-surface/60 hover:border-border"
         }`}
       >
         <input
@@ -59,16 +58,16 @@ export default function UploadDropzone({ accept = "*", onFiles, files = [] }: Dr
           <div className="text-2xl text-text-secondary mb-2">📤</div>
           <div className="text-lg font-semibold text-text-main">Drag & Drop Video File Here</div>
           <div className="text-sm text-text-secondary mt-2">Max resolution: 1080×1920 (250MB)</div>
-          <button className="mt-6 px-4 py-2 rounded-md bg-primary text-white hover:bg-secondary transition-colors">
+          <button className="mt-6 px-6 py-2.5 rounded-xl font-bold bg-primary text-white hover:bg-secondary transition-all shadow-md hover:shadow-lg active:scale-95">
             Browse Files
           </button>
         </div>
       </div>
 
       {/* Always-visible file info box */}
-      <div className="mt-4 p-3 border border-border rounded-md bg-surface flex items-center justify-between">
+      <div className="mt-4 p-4 border border-border/60 rounded-xl bg-surface/40 backdrop-blur-md flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-background rounded-md flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 bg-surface-highlight border border-border/40 rounded-lg flex items-center justify-center flex-shrink-0 text-lg shadow-inner drop-shadow-sm">
             🎬
           </div>
           <div>

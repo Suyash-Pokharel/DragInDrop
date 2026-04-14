@@ -17,7 +17,7 @@ export default function SubscriptionPage() {
           </p>
         </div>
 
-        <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-8 shadow-sm">
+        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col gap-8 shadow-lg">
           {/* Current Plan */}
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-border pb-2">
@@ -30,7 +30,7 @@ export default function SubscriptionPage() {
               </span>
             </div>
 
-            <div className="bg-gradient-to-br from-primary/5 to-surface-highlight border border-border rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mt-2">
+            <div className="bg-surface/50 backdrop-blur-md border border-border/60 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mt-2 shadow-sm">
               <div className="flex flex-col gap-1">
                 <h4 className="text-2xl font-bold text-text-main flex items-center gap-2">
                   Pro Tier <Zap className="w-5 h-5 text-secondary fill-secondary" />
@@ -51,11 +51,11 @@ export default function SubscriptionPage() {
               <div className="flex flex-col gap-2 w-full md:w-auto">
                 <button
                   onClick={() => setShowPricingPopup(true)}
-                  className="px-6 py-2.5 bg-primary hover:bg-secondary text-white text-sm font-medium rounded-lg transition-colors shadow-sm w-full md:w-auto"
+                  className="px-6 py-2.5 bg-primary hover:bg-secondary text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full md:w-auto"
                 >
                   Change Plan
                 </button>
-                <button className="px-6 py-2.5 border border-border hover:bg-error/10 hover:text-error hover:border-error/30 text-text-main text-sm font-medium rounded-lg transition-colors w-full md:w-auto">
+                <button className="px-6 py-2.5 border border-border/60 hover:bg-error/10 hover:text-error hover:border-error/30 text-text-main text-sm font-semibold rounded-xl transition-all shadow-sm w-full md:w-auto active:scale-95">
                   Cancel Subscription
                 </button>
               </div>
@@ -67,7 +67,7 @@ export default function SubscriptionPage() {
             <div className="flex items-center gap-2 border-b border-border pb-2">
               <h3 className="text-lg font-medium text-text-main">Payment Method</h3>
             </div>
-            <div className="flex items-center justify-between bg-background border border-border p-4 rounded-xl mt-2">
+            <div className="flex items-center justify-between bg-surface/40 backdrop-blur-md border border-border/60 p-5 rounded-2xl shadow-sm mt-2">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-8 bg-surface-highlight border border-border rounded-md flex items-center justify-center text-xs font-bold font-mono">
                   VISA

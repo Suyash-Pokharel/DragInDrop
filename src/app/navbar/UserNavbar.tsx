@@ -130,8 +130,8 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
 
   return (
     <nav
-      className="w-full flex items-center justify-between transition-colors duration-300 ease-in-out relative z-50
-        h-16 xl:h-20 2xl:h-24 px-4 md:px-8 2xl:px-12 bg-surface border-b border-border text-text-main select-none"
+      className="w-full flex items-center justify-between transition-colors duration-300 ease-in-out sticky top-0 z-50
+        h-16 xl:h-20 2xl:h-24 px-4 md:px-8 2xl:px-12 bg-surface/85 backdrop-blur-xl border-b border-border/60 text-text-main select-none shadow-sm"
     >
       {/* --- LEFT SIDE --- */}
       <div className="flex items-center gap-1 md:gap-7 2xl:gap-11">
@@ -145,8 +145,8 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
         </Link>
 
         <button
-          className="font-medium border rounded-md border-border transition-all active:scale-95 text-xs md:text-sm xl:text-lg 2xl:text-xl
-            px-3 py-1 md:px-4 md:py-1.5 xl:px-6 xl:py-2 bg-background text-text-secondary hover:bg-surface-highlight hover:text-text-main"
+          className="font-bold border rounded-xl border-border/60 transition-all active:scale-95 text-xs md:text-sm xl:text-sm 2xl:text-base
+            px-3 py-1 md:px-4 md:py-1.5 xl:px-6 xl:py-2 bg-background/50 backdrop-blur-md text-text-main hover:bg-surface-highlight hover:border-primary/40 shadow-sm"
         >
           {user?.name?.split(" ")[0]?.toUpperCase() || "USER"}
         </button>
@@ -174,15 +174,15 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
 
           {activeDropdown === "notifications" && (
             <div
-              className="absolute -right-15 md:right-0 shadow-xl rounded-lg border 
+              className="absolute -right-15 md:right-0 shadow-2xl rounded-[1.5rem] border border-border/50
                 top-12 xl:top-16 2xl:top-20
                 w-72 md:w-80 xl:w-96 2xl:w-md
-                animate-in fade-in zoom-in-95 duration-100 origin-top-right
+                animate-in fade-in zoom-in-95 duration-200 origin-top-right
                 overflow-hidden
                 /* Dropdown Styling */
-                bg-surface border-border"
+                bg-surface/90 backdrop-blur-xl"
             >
-              <div className="px-4 py-3 border-b border-border flex justify-between items-center bg-surface-highlight">
+              <div className="px-5 py-4 border-b border-border/50 flex justify-between items-center bg-surface/50 backdrop-blur-md">
                 <span className="font-semibold text-text-main text-sm xl:text-base">
                   Notifications
                 </span>
@@ -195,11 +195,11 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                 {NOTIFICATIONS.map((note) => (
                   <div
                     key={note.id}
-                    className={`px-4 py-3 flex gap-3 transition-colors cursor-pointer border-b border-border last:border-0
+                    className={`px-5 py-4 flex gap-3 transition-colors cursor-pointer border-b border-border/40 last:border-0
                       ${
                         note.unread
-                          ? "bg-primary/5 hover:bg-primary/10"
-                          : "hover:bg-surface-highlight"
+                          ? "bg-primary/10 hover:bg-primary/20 backdrop-blur-sm"
+                          : "hover:bg-surface-highlight/70"
                       }`}
                   >
                     <div className="mt-1 text-primary">
@@ -270,25 +270,26 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
 
           {activeDropdown === "profile" && (
             <div
-              className="absolute right-0 shadow-xl rounded-lg border py-1 xl:py-2
+              className="absolute right-0 shadow-2xl rounded-[1.5rem] border border-border/50 py-2
                 top-12 xl:top-16 2xl:top-20
                 w-48 xl:w-64 2xl:w-72
-                animate-in fade-in zoom-in-95 duration-100 origin-top-right
+                animate-in fade-in zoom-in-95 duration-200 origin-top-right
+                overflow-hidden
                 /* Dropdown Styling using globals */
-                bg-surface border-border"
+                bg-surface/90 backdrop-blur-xl"
             >
               <div className="flex flex-col text-sm xl:text-lg 2xl:text-xl text-text-secondary">
                 {isAdminUser && (
                   <>
                     <Link
                       href="/admin"
-                      className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
+                      className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-surface-highlight/80 hover:text-text-main"
                       onClick={() => setActiveDropdown(null)}
                     >
                       <BarChart3 className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6 text-primary" />
                       <span className="font-semibold text-primary">Admin Panel</span>
                     </Link>
-                    <div className="h-px w-full my-1 bg-border"></div>
+                    <div className="h-px w-full my-1 bg-border/50"></div>
                   </>
                 )}
 
@@ -298,14 +299,14 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                     else setShowPricingPopup(true);
                     setActiveDropdown(null);
                   }}
-                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 w-full text-left transition-colors hover:bg-surface-highlight hover:text-text-main"
+                  className="flex items-center gap-3 px-5 py-3 w-full text-left transition-colors hover:bg-surface-highlight/80 hover:text-text-main"
                 >
                   <Upload className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Upload</span>
                 </button>
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
+                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-surface-highlight/80 hover:text-text-main"
                 >
                   <LayoutDashboard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Dashboard</span>
@@ -314,7 +315,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                 {/* Linked Calendar */}
                 <Link
                   href="/calendar"
-                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
+                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-surface-highlight/80 hover:text-text-main"
                 >
                   <Calendar className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Calendar</span>
@@ -326,7 +327,7 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                     setShowPricingPopup(true);
                     setActiveDropdown(null);
                   }}
-                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main cursor-pointer"
+                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-surface-highlight/80 hover:text-text-main cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Pricing</span>
@@ -335,17 +336,17 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                 {/* Settings Link */}
                 <Link
                   href="/settings/user-details"
-                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 transition-colors hover:bg-surface-highlight hover:text-text-main"
+                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-surface-highlight/80 hover:text-text-main"
                   onClick={() => setActiveDropdown(null)}
                 >
                   <Settings className="w-4 h-4 xl:w-5 xl:h-5 2xl:w-6 2xl:h-6" />
                   <span>Settings</span>
                 </Link>
 
-                <div className="h-px w-full my-1 bg-border"></div>
+                <div className="h-px w-full my-1 bg-border/50"></div>
 
                 <button
-                  className="flex items-center gap-3 px-4 py-2.5 xl:py-3 w-full text-left transition-colors 
+                  className="flex items-center gap-3 px-5 py-3 w-full text-left transition-colors 
                     text-error hover:bg-error/10 hover:text-error"
                   onClick={async () => {
                     // Clear any client-side state

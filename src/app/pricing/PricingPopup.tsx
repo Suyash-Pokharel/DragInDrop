@@ -59,14 +59,14 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
     >
       {/* Modal Container */}
       <div
-        className={`bg-background w-full max-w-6xl max-h-[87dvh] md:max-h-[90dvh] rounded-2xl shadow-2xl overflow-hidden flex flex-col relative border border-border transition-all duration-300 ease-out transform ${
+        className={`bg-surface/85 backdrop-blur-xl w-full max-w-6xl max-h-[87dvh] md:max-h-[90dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/50 transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-surface text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
+          className="absolute top-5 right-5 z-20 p-2.5 rounded-xl bg-surface border border-border/60 shadow-sm text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
         >
           <X size={20} />
         </button>
@@ -128,7 +128,7 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 w-full gap-y-12 gap-x-8 max-w-5xl mx-auto justify-items-center items-start pt-4 pb-8 px-2">
             {/* 1. STARTER PLAN */}
             <Reveal width="100%" delay={0.1}>
-              <div className="w-[300px] bg-surface text-text-main border border-surface rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border-2 hover:border-primary transform hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden flex flex-col h-full items-center">
+              <div className="w-[300px] bg-surface/60 backdrop-blur-md text-text-main border border-border/60 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:border-primary/50 transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden flex flex-col h-full items-center">
                 <div className="text-center mb-6">
                   <h2 className="text-3xl font-bold mb-2">Starter</h2>
                   <p className="text-sm text-text-secondary h-8 ">
@@ -168,7 +168,7 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
                 <Link
                   href="/payment"
                   onClick={handleClose}
-                  className="block w-full py-3 px-8 rounded-lg bg-background border border-border text-text-main font-semibold hover:border-primary hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform duration-400 text-center"
+                  className="block w-full py-3 px-8 rounded-xl bg-surface border border-border/60 text-text-main font-semibold hover:border-primary/50 hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform duration-400 text-center shadow-sm"
                 >
                   Get Started
                 </Link>
@@ -177,7 +177,7 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
 
             {/* 2. PRO PLAN */}
             <Reveal width="100%" delay={0.15}>
-              <div className="w-[300px] order-first lg:-order-1 xl:order-0 relative bg-surface text-text-main border-3 border-primary rounded-2xl p-8 shadow-glow transform md:-translate-y-4 hover:-translate-y-6 transition-transform duration-300 overflow-hidden flex flex-col h-full items-center z-10">
+              <div className="w-[300px] order-first lg:-order-1 xl:order-0 relative bg-surface/80 backdrop-blur-xl text-text-main border-2 border-primary rounded-3xl p-8 shadow-glow transform md:-translate-y-4 hover:-translate-y-6 transition-all duration-300 overflow-hidden flex flex-col h-full items-center z-10 box-border border-b-4">
                 <div className="absolute top-0 right-0">
                   <div className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm tracking-wide">
                     MOST POPULAR
@@ -224,7 +224,7 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
                 <Link
                   href="/payment"
                   onClick={handleClose}
-                  className="block w-full py-3 px-6 rounded-lg bg-primary text-white font-semibold hover:bg-secondary transition-all duration-400 hover:-translate-y-1.5 active:-translate-y-0.5 text-center shadow-lg"
+                  className="block w-full py-3 px-6 rounded-xl bg-primary text-white font-bold hover:bg-secondary transition-all duration-400 hover:-translate-y-1.5 active:-translate-y-0.5 text-center shadow-lg"
                 >
                   Start 14-Day Trial
                 </Link>
@@ -233,7 +233,7 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
 
             {/* 3. BUSINESS PLAN */}
             <Reveal width="100%" delay={0.2}>
-              <div className="w-[300px] bg-surface text-text-main border border-surface rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:border-2 hover:border-primary transform hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden flex flex-col h-full items-center">
+              <div className="w-[300px] bg-surface/60 backdrop-blur-md text-text-main border border-border/60 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:border-primary/50 transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden flex flex-col h-full items-center">
                 <div className="text-center mb-6">
                   <h2 className="text-3xl font-bold mb-2">Business</h2>
                   <p className="text-sm text-text-secondary h-8">
@@ -264,7 +264,7 @@ export default function PricingPopup({ onClose }: PricingPopupProps) {
                 <Link
                   href="/contactus"
                   onClick={handleClose}
-                  className="block w-full py-3 px-8 rounded-lg bg-background border border-border text-text-main font-semibold hover:border-primary hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform duration-400 text-center"
+                  className="block w-full py-3 px-8 rounded-xl bg-surface border border-border/60 text-text-main font-semibold hover:border-primary/50 hover:bg-surface-highlight hover:-translate-y-1.5 active:-translate-y-0.5 hover:shadow-lg transition-transform duration-400 text-center shadow-sm"
                 >
                   Contact Sales
                 </Link>

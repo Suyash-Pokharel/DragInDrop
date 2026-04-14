@@ -19,7 +19,7 @@ export default function RecentUsersList({
   return (
     <div
       onClick={onViewAll}
-      className="cursor-pointer hover:bg-surface-highlight transition-colors rounded-lg p-4 -m-4"
+      className="cursor-pointer hover:bg-surface-highlight transition-colors rounded-3xl p-4 -m-4"
     >
       {/* Header with total user count */}
       <div className="flex items-center justify-between mb-4">

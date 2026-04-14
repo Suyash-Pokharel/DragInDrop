@@ -27,8 +27,8 @@ export default function PublicNavbar() {
 
   return (
     <nav
-      className="w-full flex items-center justify-between transition-colors duration-300 ease-in-out relative z-50
-        h-16 xl:h-20 2xl:h-24 px-4 md:px-8 2xl:px-12 bg-surface border-b border-border text-text-main select-none"
+      className="w-full flex items-center justify-between transition-colors duration-300 ease-in-out sticky top-0 z-50
+        h-16 xl:h-20 2xl:h-24 px-4 md:px-8 2xl:px-12 bg-surface/85 backdrop-blur-xl border-b border-border/60 text-text-main select-none shadow-sm"
     >
       {/* --- LEFT: LOGO --- */}
       <Link href="/" className="cursor-pointer">
@@ -75,7 +75,7 @@ export default function PublicNavbar() {
           {/* Google Button */}
           <button
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-text-main text-sm font-medium hover:bg-surface-highlight hover:border-text-secondary/30 transition-all active:scale-95"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-background/50 backdrop-blur-md border border-border/60 text-text-main text-sm font-bold hover:bg-surface-highlight hover:border-primary/40 transition-all active:scale-95 shadow-sm"
           >
             <Image
               src={GoogleLogo}
@@ -90,7 +90,7 @@ export default function PublicNavbar() {
           {/* Sign In Button */}
           <Link
             href="/login"
-            className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-secondary transition-all active:scale-95 shadow-md hover:shadow-lg"
+            className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-secondary transition-all active:scale-95 shadow-md hover:shadow-lg"
           >
             Sign In
           </Link>

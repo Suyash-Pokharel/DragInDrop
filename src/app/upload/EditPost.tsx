@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Calendar } from "lucide-react";
+import { X, Calendar, ChevronLeft } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
 
 interface EditPostProps {
@@ -26,6 +26,7 @@ export default function EditPost({ onClose }: EditPostProps) {
     uploadError,
     clearError,
     handleUpload,
+    goBackToUpload,
   } = useModal();
 
   const [mounted, setMounted] = useState(false);
@@ -50,7 +51,21 @@ export default function EditPost({ onClose }: EditPostProps) {
   const [dateTouched, setDateTouched] = useState(false);
 
   const isTitleValid = postTitle.trim() !== "";
-  const isDateValid = postScheduledFor.trim() !== "";
+  const isDateFilled = postScheduledFor.trim() !== "";
+
+  // Must be at least 10 minutes in the future
+  const getDateError = (): string | null => {
+    if (!isDateFilled) return null;
+    const selected = new Date(postScheduledFor);
+    const tenMinsFromNow = new Date(Date.now() + 10 * 60 * 1000);
+    if (selected < tenMinsFromNow) {
+      return "Schedule must be at least 10 minutes in the future.";
+    }
+    return null;
+  };
+
+  const dateError = dateTouched ? getDateError() : null;
+  const isDateValid = isDateFilled && getDateError() === null;
   const isFormValid = isTitleValid && isDateValid;
 
   useEffect(() => {
@@ -98,13 +113,13 @@ export default function EditPost({ onClose }: EditPostProps) {
       <div
         role="dialog"
         aria-modal="true"
-        className={`bg-background w-full max-w-2xl max-h-[86dvh] rounded-2xl shadow-2xl overflow-hidden flex flex-col relative border border-border transition-all duration-300 ease-out transform ${
+        className={`bg-surface/85 backdrop-blur-2xl w-full max-w-2xl max-h-[86dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/60 transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
         <button
           onClick={handleCloseRequest}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-surface text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
+          className="absolute top-5 right-5 z-20 p-2.5 rounded-xl bg-surface/60 backdrop-blur-md border border-border/60 shadow-sm text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
         >
           <X size={18} />
         </button>
@@ -114,10 +129,10 @@ export default function EditPost({ onClose }: EditPostProps) {
             Edit & Schedule Post
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 sm:gap-6 px-4 sm:px-6 md:px-8">
             {/* Left Side: Details Form */}
-            <div className="min-w-0 w-full ml-8 xl:ml-12 flex justify-center lg:justify-end order-last lg:order-first">
-              <div className="flex flex-col gap-6 w-full max-w-xs xl:max-w-sm">
+            <div className="min-w-0 w-full order-last md:order-first">
+              <div className="flex flex-col gap-5 w-full">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-text-main">
@@ -132,10 +147,10 @@ export default function EditPost({ onClose }: EditPostProps) {
                     onChange={(e) => setPostTitle(e.target.value)}
                     onBlur={() => setTitleTouched(true)}
                     placeholder="Catchy title for your post..."
-                    className={`w-full bg-surface border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none transition-colors placeholder:text-text-secondary/50 ${
+                    className={`w-full bg-surface/40 backdrop-blur-md border rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none transition-colors shadow-sm placeholder:text-text-secondary/50 ${
                       titleTouched && !isTitleValid
                         ? "border-error focus:border-error ring-1 ring-error/20"
-                        : "border-border focus:border-primary"
+                        : "border-border/60 focus:border-primary"
                     }`}
                     required
                   />
@@ -151,7 +166,7 @@ export default function EditPost({ onClose }: EditPostProps) {
                     onChange={(e) => setPostDescription(e.target.value)}
                     maxLength={250}
                     placeholder="Write a description, add some #hashtags..."
-                    className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-h-[140px] resize-none placeholder:text-text-secondary/50 custom-scrollbar"
+                    className="w-full bg-surface/40 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none focus:border-primary transition-colors min-h-[140px] shadow-sm resize-none placeholder:text-text-secondary/50 custom-scrollbar"
                   />
                 </div>
 
@@ -167,16 +182,15 @@ export default function EditPost({ onClose }: EditPostProps) {
                         setPostScheduledFor(e.target.value);
                         setDateTouched(true);
                       }}
-                      className={`w-full bg-surface border rounded-lg pl-4 pr-12 py-3 text-sm text-text-main focus:outline-none transition-colors dark:[color-scheme:dark] appearance-none [&::-webkit-calendar-picker-indicator]:hidden ${
-                        dateTouched && !isDateValid
+                      className={`w-full bg-surface/40 backdrop-blur-md border rounded-xl pl-4 pr-12 py-3 text-sm text-text-main shadow-sm focus:outline-none transition-colors dark:[color-scheme:dark] appearance-none [&::-webkit-calendar-picker-indicator]:hidden ${
+                        dateTouched && (!isDateFilled || dateError)
                           ? "border-error focus:border-error ring-1 ring-error/20"
-                          : "border-border focus:border-primary"
+                          : "border-border/60 focus:border-primary"
                       }`}
                       required
                     />
-                    {/* Opaque cover block functions as the clickable custom Calendar button, masking native icons */}
                     <div
-                      className="group absolute right-[1px] top-[1px] bottom-[1px] w-12 bg-surface flex items-center justify-center rounded-r-[7px] cursor-pointer hover:bg-primary/5 active:bg-primary/10 transition-colors"
+                      className="group absolute right-[1px] top-[1px] bottom-[1px] w-12 bg-transparent flex items-center justify-center rounded-r-[11px] cursor-pointer hover:bg-primary/10 active:bg-primary/20 transition-colors"
                       onClick={(e) => {
                         try {
                           const input = e.currentTarget.previousElementSibling as HTMLInputElement;
@@ -192,15 +206,25 @@ export default function EditPost({ onClose }: EditPostProps) {
                       <Calendar className="w-[18px] h-[18px] text-text-secondary group-hover:text-primary group-hover:drop-shadow-[0_0_8px_currentColor] group-active:scale-90 group-active:text-primary transition-all duration-300" />
                     </div>
                   </div>
+                  {/* Date validation error message */}
+                  {dateError && (
+                    <p className="text-xs text-error mt-1.5 flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      {dateError}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Right Side: Video Preview & Progress */}
-            <div className="flex justify-center min-w-0 order-first lg:order-last">
-              <div className="bg-surface border border-border rounded-lg pt-4 px-4 flex flex-col items-center w-auto">
-                <div className="flex items-center justify-center">
-                  <div className="rounded-md overflow-hidden border border-border bg-black flex items-center justify-center w-[198px] aspect-9/16">
+            {/* Fixed-width column — takes only what the video naturally needs */}
+            <div className="flex-shrink-0 w-[240px] order-first md:order-last mx-auto">
+              <div className="bg-surface/40 backdrop-blur-md border border-border/60 shadow-sm rounded-2xl pt-4 px-4 flex flex-col items-center w-full">
+                <div className="flex items-center justify-center w-full">
+                  <div className="rounded-xl overflow-hidden border border-border/60 bg-black flex items-center justify-center w-full max-w-[220px] aspect-[9/16]">
                     {previewUrl ? (
                       <video
                         src={previewUrl}
@@ -224,9 +248,10 @@ export default function EditPost({ onClose }: EditPostProps) {
                           <div className="text-xs text-error/90">{uploadError}</div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <label className="flex-1 px-3 py-2 rounded-md text-sm font-medium text-white bg-primary hover:bg-secondary transition-colors cursor-pointer text-center">
-                          Select Different Video
+                      {/* FIXED responsive gap- flex buttons for long error strings */}
+                      <div className="flex flex-col sm:flex-row gap-2 w-full">
+                        <label className="flex-1 px-3 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-secondary transition-all cursor-pointer text-center shadow-sm active:scale-95 leading-tight flex items-center justify-center">
+                          Change Video
                           <input
                             type="file"
                             accept="video/*"
@@ -257,9 +282,9 @@ export default function EditPost({ onClose }: EditPostProps) {
                                 });
                             }
                           }}
-                          className="px-3 py-2 rounded-md text-sm font-medium text-text-main border border-border hover:bg-surface-highlight transition-colors"
+                          className="px-3 py-2.5 rounded-xl text-xs font-bold text-text-main border border-border/60 hover:bg-surface-highlight transition-all shadow-sm active:scale-95 w-full sm:w-auto"
                         >
-                          Retry Upload
+                          Retry
                         </button>
                       </div>
                     </div>
@@ -271,7 +296,7 @@ export default function EditPost({ onClose }: EditPostProps) {
                         </div>
                         <div className="text-xs text-text-secondary">{progress}%</div>
                       </div>
-                      <div className="w-full bg-background border border-border rounded-full h-1.5 mb-3 overflow-hidden">
+                      <div className="w-full bg-surface-highlight border border-border/40 rounded-full h-1.5 mb-3 overflow-hidden">
                         <div
                           className={`h-1.5 transition-all ${uploaded ? "bg-green-500" : "bg-primary"}`}
                           style={{ width: `${progress}%` }}
@@ -285,22 +310,42 @@ export default function EditPost({ onClose }: EditPostProps) {
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-4 p-4 border-t border-border bg-surface">
-          <button
-            onClick={() => setShowDiscardConfirm(true)}
-            className="px-4 py-2 rounded-md text-sm text-text-secondary hover:bg-surface-highlight transition-colors"
-          >
-            Cancel Post
-          </button>
+        <div className="flex items-center justify-between gap-4 p-5 border-t border-border/60 bg-surface/40 backdrop-blur-md">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={() => {
+                setShowModal(false);
+                setTimeout(() => goBackToUpload(), 250);
+              }}
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 text-text-main hover:bg-surface-highlight transition-colors shadow-sm active:scale-95"
+            >
+              <ChevronLeft size={16} />
+              Back
+            </button>
+
+            <button
+              onClick={() => {
+                // Future Save as Draft logic
+                console.log("Saving as draft...");
+              }}
+              disabled={!isTitleValid}
+              className={`py-2.5 text-sm font-semibold transition-all ${
+                !isTitleValid
+                  ? "text-text-secondary/40 cursor-not-allowed"
+                  : "text-text-secondary hover:text-text-main cursor-pointer active:scale-95"
+              }`}
+            >
+              Save as Draft
+            </button>
+          </div>
 
           <button
             onClick={handleSchedule}
             disabled={!isFormValid}
-            className={`px-6 py-2 rounded-md text-sm font-medium text-white transition-colors ${
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-95 ${
               !isFormValid
                 ? "bg-primary/60 cursor-not-allowed"
-                : "bg-primary hover:bg-secondary shadow-md"
+                : "bg-primary hover:bg-secondary shadow-md hover:shadow-lg"
             }`}
           >
             Select Platform
@@ -309,22 +354,22 @@ export default function EditPost({ onClose }: EditPostProps) {
 
         {/* Discard Confirmation */}
         {showDiscardConfirm && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40">
-            <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-2">Discard Post?</h3>
-              <p className="text-sm text-text-secondary mb-4">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <h3 className="text-xl font-bold mb-2 text-text-main">Discard Post?</h3>
+              <p className="text-sm text-text-secondary mb-6">
                 If you leave now, you’ll lose your scheduled details and video.
               </p>
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setShowDiscardConfirm(false)}
-                  className="px-4 py-2 rounded-md text-sm border border-border hover:bg-surface-highlight transition-colors"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 hover:bg-surface-highlight shadow-sm active:scale-95 w-full sm:w-auto"
                 >
                   Continue editing
                 </button>
                 <button
                   onClick={doClose}
-                  className="px-4 py-2 rounded-md text-sm bg-error text-white hover:opacity-95 transition-opacity"
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-error text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
                 >
                   Discard post
                 </button>

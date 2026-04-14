@@ -18,6 +18,7 @@ type ModalContextType = {
   isEditPostOpen: boolean;
   openEditPost: () => void;
   closeEditPost: () => void;
+  goBackToUpload: () => void;
 
   isSelectPlatformOpen: boolean;
   openSelectPlatform: () => void;
@@ -278,6 +279,11 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     setIsEditPostOpen(false);
   }, []);
 
+  const goBackToUpload = useCallback(() => {
+    setIsEditPostOpen(false);
+    setIsUploadOpen(true);
+  }, []);
+
   const openSelectPlatform = useCallback(() => {
     setIsEditPostOpen(false);
     setIsSelectPlatformOpen(true);
@@ -300,6 +306,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
         isEditPostOpen,
         openEditPost,
         closeEditPost,
+        goBackToUpload,
         isSelectPlatformOpen,
         openSelectPlatform,
         closeSelectPlatform,

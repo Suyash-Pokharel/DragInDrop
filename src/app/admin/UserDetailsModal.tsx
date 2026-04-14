@@ -102,7 +102,7 @@ export default function UserDetailsModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -110,21 +110,21 @@ export default function UserDetailsModal({
       {/* Modal */}
       <div 
         ref={modalRef}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-[70] flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="user-details-modal-title"
       >
-        <div className="bg-surface border border-border rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <h2 id="user-details-modal-title" className="text-xl font-semibold text-text-main">
+          <div className="flex items-center justify-between p-6 md:p-8 border-b border-border">
+            <h2 id="user-details-modal-title" className="text-xl font-bold text-text-main">
               User Details
             </h2>
             <button
               ref={closeButtonRef}
               onClick={onClose}
-              className="p-2 hover:bg-surface-highlight rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-highlight rounded-xl transition-colors"
               aria-label="Close user details modal"
             >
               <X className="w-5 h-5 text-text-secondary" />
@@ -223,7 +223,7 @@ export default function UserDetailsModal({
                     return (
                       <div
                         key={index}
-                        className="flex items-center gap-3 p-3 bg-background border border-border rounded-lg"
+                        className="flex items-center gap-3 p-3 bg-background border border-border rounded-2xl"
                       >
                         {/* Provider Icon */}
                         {providerLogo && (
@@ -274,7 +274,7 @@ export default function UserDetailsModal({
           <div className="p-6 border-t border-border">
             <button
               onClick={onDelete}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-error hover:bg-error/90 text-white rounded-2xl transition-colors font-semibold"
               aria-label="Delete user account"
             >
               <AlertTriangle className="w-5 h-5" aria-hidden="true" />

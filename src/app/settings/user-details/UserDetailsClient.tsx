@@ -42,7 +42,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
         </p>
       </div>
 
-      <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-sm">
+      <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col gap-6 shadow-lg">
         {/* Profile Info */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2 border-b border-border pb-2 mb-2">
@@ -100,7 +100,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
                   key={user?.id}
                   value={user?.name || ""}
                   readOnly
-                  className="w-full bg-background/50 border border-border rounded-lg px-4 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed"
+                  className="w-full bg-surface/40 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed shadow-sm"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -110,14 +110,14 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
                   key={user?.id}
                   value={user?.email || ""}
                   readOnly
-                  className="w-full bg-background/50 border border-border rounded-lg px-4 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed"
+                  className="w-full bg-surface/40 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 text-sm text-text-secondary focus:outline-none focus:border-primary transition-colors cursor-not-allowed shadow-sm"
                 />
               </div>
             </div>
           </div>
 
           <div className="mt-2 flex justify-end">
-            <button className="px-5 py-2 bg-primary hover:bg-secondary text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+            <button className="px-6 py-2.5 bg-primary hover:bg-secondary text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
               Save Changes
             </button>
           </div>
@@ -130,7 +130,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
             <h3 className="text-lg font-medium text-text-main">Security</h3>
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-background border border-border p-4 rounded-xl">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/40 backdrop-blur-md border border-border/60 p-5 rounded-2xl shadow-sm">
             <div className="flex gap-4">
               <div className="p-2 bg-surface-highlight rounded-lg flex items-center justify-center">
                 <KeyRound className="w-5 h-5 text-text-secondary" />
@@ -142,12 +142,12 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
                 </p>
               </div>
             </div>
-            <button className="px-4 py-2 border border-border hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-medium rounded-lg transition-all whitespace-nowrap">
+            <button className="px-5 py-2.5 border border-border/60 hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-semibold rounded-xl transition-all whitespace-nowrap shadow-sm hover:shadow-md active:scale-95">
               Update Password
             </button>
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-background border border-border p-4 rounded-xl">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/40 backdrop-blur-md border border-border/60 p-5 rounded-2xl shadow-sm">
             <div className="flex gap-4">
               <div className="p-2 bg-surface-highlight rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-text-secondary" />
@@ -163,7 +163,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
             {is2FAEnabled ? (
               <button
                 onClick={() => setIs2FAEnabled(false)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-surface-highlight border border-border text-text-main text-sm font-medium rounded-lg transition-all whitespace-nowrap hover:bg-error/10 hover:text-error hover:border-error/20"
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-surface-highlight/50 backdrop-blur-md border border-border/60 text-text-main text-sm font-semibold rounded-xl transition-all whitespace-nowrap hover:bg-error/10 hover:text-error hover:border-error/20 shadow-sm active:scale-95"
               >
                 <CheckCircle2 className="w-4 h-4 text-primary" />
                 Active (Disable)
@@ -171,7 +171,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
             ) : (
               <button
                 onClick={() => setShow2FAModal(true)}
-                className="px-4 py-2 border border-border hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-medium rounded-lg transition-all whitespace-nowrap"
+                className="px-5 py-2.5 border border-border/60 hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-semibold rounded-xl transition-all whitespace-nowrap shadow-sm hover:shadow-md active:scale-95"
               >
                 Enable 2FA
               </button>
@@ -190,7 +190,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
               Once you delete your account, there is no going back. Please be certain.
             </p>
             <div className="mt-2">
-              <button className="px-4 py-2 border border-error/50 bg-error/10 hover:bg-error hover:text-white text-error text-sm font-medium rounded-lg transition-colors shadow-sm">
+              <button className="px-5 py-2.5 border border-error/40 bg-error/10 hover:bg-error hover:text-white text-error text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95">
                 Delete Account
               </button>
             </div>

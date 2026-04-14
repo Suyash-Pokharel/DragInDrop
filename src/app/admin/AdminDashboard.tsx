@@ -75,13 +75,13 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
   };
 
   return (
-    <div className="w-full bg-background p-4 md:p-5 lg:p-6">
+    <div className="w-full bg-background p-4 md:p-5 lg:p-8 relative">
       {/* Error Display Component */}
       {error && (
-        <div className="mb-6 bg-error/10 border border-error text-error px-4 py-3 rounded-lg flex items-start gap-3">
+        <div className="mb-6 bg-error/10 border border-error/40 text-error px-5 py-4 rounded-2xl flex items-start gap-3 backdrop-blur-sm">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium">Error</p>
+            <p className="font-semibold">Error</p>
             <p className="text-sm">{error}</p>
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
 
       {/* Empty State - No users registered yet */}
       {users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] bg-surface border border-border rounded-lg p-8">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] bg-surface/60 backdrop-blur-xl border border-border rounded-[2rem] p-8">
           <div className="text-center space-y-3">
             <div className="w-16 h-16 mx-auto bg-surface-highlight rounded-full flex items-center justify-center">
               <AlertCircle className="w-8 h-8 text-text-secondary" />
@@ -106,22 +106,23 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
 
           {/* Main Grid Layout - 3:2 ratio (60% Registration / 40% Recent Users) */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-6">
-        {/* Left Column - Registration Trend Chart (3/5 = 60%) */}
-        <div className="md:col-span-3 bg-surface border border-border rounded-lg p-6 flex flex-col">
-          <h3 className="text-lg font-semibold text-text-main mb-4">Registration Trends</h3>
-          <div className="flex-1">
-            <RegistrationTrendChart users={users} />
-          </div>
-        </div>
+            {/* Left Column - Registration Trend Chart (3/5 = 60%) */}
+            <div className="md:col-span-3 bg-surface/50 backdrop-blur-xl border border-border rounded-[2rem] p-6 md:p-8 flex flex-col hover:border-primary/30 transition-colors">
+              <h3 className="text-xl font-bold text-text-main mb-2">Registration Trends</h3>
+              <p className="text-sm text-text-secondary mb-6">New user signups over the last 7 days</p>
+              <div className="flex-1">
+                <RegistrationTrendChart users={users} />
+              </div>
+            </div>
 
-        {/* Right Column - Recent Users List (2/5 = 40%) */}
-        <div className="md:col-span-2 bg-surface border border-border rounded-lg p-6 flex flex-col">
-          <RecentUsersList
-            users={users}
-            onViewAll={() => setShowAllUsersModal(true)}
-          />
-        </div>
-      </div>
+            {/* Right Column - Recent Users List (2/5 = 40%) */}
+            <div className="md:col-span-2 bg-surface/50 backdrop-blur-xl border border-border rounded-[2rem] p-6 md:p-8 flex flex-col hover:border-primary/30 transition-colors">
+              <RecentUsersList
+                users={users}
+                onViewAll={() => setShowAllUsersModal(true)}
+              />
+            </div>
+          </div>
         </>
       )}
 

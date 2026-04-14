@@ -26,7 +26,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             Settings
           </h1>
 
-          <nav className="flex flex-col gap-1 p-2 md:p-3 bg-surface border border-border rounded-xl md:rounded-2xl shadow-sm">
+          <nav className="flex flex-col gap-2 p-3 md:p-4 bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] shadow-lg">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -34,10 +34,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm md:text-base ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm md:text-base ${
                     isActive
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-text-secondary hover:bg-surface-highlight hover:text-text-main font-medium"
+                      ? "bg-primary/10 text-primary font-bold shadow-sm"
+                      : "text-text-secondary hover:bg-surface-highlight hover:text-text-main font-semibold"
                   }`}
                 >
                   <Icon

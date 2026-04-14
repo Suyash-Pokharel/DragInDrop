@@ -19,6 +19,8 @@ interface RegistrationTrendChartProps {
 export default function RegistrationTrendChart({
   users,
 }: RegistrationTrendChartProps) {
+  const [mounted, setMounted] = useState(false);
+  
   // Get theme colors dynamically from CSS variables
   const [colors, setColors] = useState<{
     primary: string;
@@ -27,6 +29,10 @@ export default function RegistrationTrendChart({
     border: string;
     textMain: string;
   } | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Read computed CSS variables from the document
@@ -92,16 +98,23 @@ export default function RegistrationTrendChart({
 
   return (
     <div className="w-full h-full min-h-[300px]">
-      {colors && (
-        <ResponsiveContainer width="100%" height="100%">
+      {mounted && colors && (
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart
             data={chartData}
-            margin={{ top: 5, right: 20, left: -20, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
           >
+            <defs>
+              <linearGradient id="adminBarGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+                <stop offset="100%" stopColor="var(--secondary)" stopOpacity={0.6} />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke={colors.border}
               vertical={false}
+              strokeOpacity={0.4}
             />
             <XAxis
               dataKey="date"
@@ -109,6 +122,7 @@ export default function RegistrationTrendChart({
               fontSize={12}
               tickLine={false}
               axisLine={false}
+              dy={10}
             />
             <YAxis
               stroke={colors.textSecondary}
@@ -116,27 +130,28 @@ export default function RegistrationTrendChart({
               tickLine={false}
               axisLine={false}
               allowDecimals={false}
+              dx={-10}
             />
             <Tooltip
-              cursor={{ fill: "transparent" }}
+              cursor={false}
               contentStyle={{
                 backgroundColor: colors.surface,
                 border: `1px solid ${colors.border}`,
-                borderRadius: "8px",
+                borderRadius: "12px",
                 color: colors.textMain,
+                boxShadow: "0 10px 30px -10px rgba(0,0,0,0.2)",
+                padding: "12px 16px",
               }}
-              labelStyle={{
-                color: colors.textMain,
-              }}
+              labelStyle={{ color: colors.textSecondary, fontWeight: "bold", marginBottom: "4px" }}
+              itemStyle={{ color: colors.textMain, fontWeight: 600 }}
             />
             <Bar
               dataKey="count"
-              fill={colors.primary}
-              radius={[8, 8, 0, 0]}
-              activeBar={{
-                fill: colors.primary,
-                opacity: 0.8,
-              }}
+              radius={[6, 6, 0, 0]}
+              maxBarSize={48}
+              animationDuration={1500}
+              animationEasing="ease-out"
+              fill="url(#adminBarGradient)"
             />
           </BarChart>
         </ResponsiveContainer>

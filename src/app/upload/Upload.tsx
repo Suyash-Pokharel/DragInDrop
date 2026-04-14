@@ -66,13 +66,13 @@ export default function Upload({ onClose }: UploadProps) {
       <div
         role="dialog"
         aria-modal="true"
-        className={`bg-background w-full max-w-2xl max-h-[86dvh] rounded-2xl shadow-2xl overflow-hidden flex flex-col relative border border-border transition-all duration-300 ease-out transform ${
+        className={`bg-surface/85 backdrop-blur-2xl w-full max-w-2xl max-h-[86dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/60 transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
         <button
           onClick={handleCloseRequest}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-surface text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
+          className="absolute top-5 right-5 z-20 p-2.5 rounded-xl bg-surface/60 backdrop-blur-md border border-border/60 shadow-sm text-text-secondary hover:text-text-main hover:bg-surface-highlight transition-colors"
         >
           <X size={18} />
         </button>
@@ -112,8 +112,8 @@ export default function Upload({ onClose }: UploadProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 place-items-center-safe gap-4">
-            <div className="min-w-0 w-full ml-8 xl:ml-12 flex justify-center lg:justify-end">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] items-stretch gap-4 sm:gap-6 px-4 sm:px-6 md:px-8 pb-4">
+            <div className="w-full flex flex-col h-full">
               <UploadDropzone
                 accept="video/*"
                 onFiles={(f: File[]) => {
@@ -159,10 +159,10 @@ export default function Upload({ onClose }: UploadProps) {
               />
             </div>
 
-            <div className="flex justify-center min-w-0">
-              <div className="bg-surface border border-border rounded-lg pt-4 px-4 flex flex-col items-center w-auto">
-                <div className="flex items-center justify-center">
-                  <div className="rounded-md overflow-hidden border border-border bg-black flex items-center justify-center w-[198px] aspect-9/16">
+            <div className="flex-shrink-0 w-[240px] flex">
+              <div className="bg-surface/40 backdrop-blur-md border border-border/60 shadow-sm rounded-2xl p-4 flex flex-col items-center w-full h-full justify-between">
+                <div className="flex items-center justify-center w-full flex-1 mb-4">
+                  <div className="rounded-xl overflow-hidden border border-border/60 bg-black flex items-center justify-center w-full max-h-full max-w-[220px] aspect-[9/16]">
                     {previewUrl ? (
                       <video
                         src={previewUrl}
@@ -177,12 +177,12 @@ export default function Upload({ onClose }: UploadProps) {
                   </div>
                 </div>
 
-                <div className="w-full mt-2">
+                <div className="w-full mt-auto">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-medium text-text-main">Uploading</div>
                     <div className="text-xs text-text-secondary">{progress}%</div>
                   </div>
-                  <div className="w-full bg-surface rounded-full h-1.5 mb-3 overflow-hidden">
+                  <div className="w-full bg-surface-highlight border border-border/40 rounded-full h-1.5 mb-3 overflow-hidden">
                     <div
                       className="h-1.5 bg-primary transition-all"
                       style={{ width: `${progress}%` }}
@@ -194,10 +194,10 @@ export default function Upload({ onClose }: UploadProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 p-4 border-t border-border bg-surface">
+        <div className="flex items-center justify-between gap-4 p-5 border-t border-border/60 bg-surface/40 backdrop-blur-md">
           <button
             onClick={() => setShowDiscardConfirm(true)}
-            className="px-4 py-2 rounded-md text-sm text-text-secondary hover:bg-surface-highlight transition-colors"
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 text-text-main hover:bg-surface-highlight transition-colors shadow-sm active:scale-95"
           >
             Cancel
           </button>
@@ -208,9 +208,9 @@ export default function Upload({ onClose }: UploadProps) {
               setTimeout(() => openEditPost(), 250);
             }}
             disabled={!file}
-            className={`px-6 py-2 rounded-md text-sm font-medium text-white ${
-              !file ? "bg-primary/60 cursor-not-allowed" : "bg-primary hover:bg-secondary shadow-md"
-            } transition-colors`}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-95 ${
+              !file ? "bg-primary/60 cursor-not-allowed" : "bg-primary hover:bg-secondary shadow-md hover:shadow-lg"
+            }`}
           >
             Continue to Details
           </button>
@@ -218,22 +218,22 @@ export default function Upload({ onClose }: UploadProps) {
 
         {/* Modals for Replace / Discard */}
         {showDiscardConfirm && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40">
-            <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-2">Discard Video?</h3>
-              <p className="text-sm text-text-secondary mb-4">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <h3 className="text-xl font-bold mb-2 text-text-main">Discard Video?</h3>
+              <p className="text-sm text-text-secondary mb-6">
                 You’ll permanently lose the uploaded video.
               </p>
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setShowDiscardConfirm(false)}
-                  className="px-4 py-2 rounded-md text-sm border border-border hover:bg-surface-highlight"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 hover:bg-surface-highlight shadow-sm active:scale-95 w-full sm:w-auto"
                 >
                   Continue editing
                 </button>
                 <button
                   onClick={doClose}
-                  className="px-4 py-2 rounded-md text-sm bg-error text-white hover:opacity-95"
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-error text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
                 >
                   Discard changes
                 </button>
@@ -243,28 +243,27 @@ export default function Upload({ onClose }: UploadProps) {
         )}
 
         {showReplaceConfirm && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40">
-            <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-2">Replace File?</h3>
-              <p className="text-sm text-text-secondary mb-4">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+              <h3 className="text-xl font-bold mb-2 text-text-main">Replace File?</h3>
+              <p className="text-sm text-text-secondary mb-6">
                 A file is currently uploading. Replace it?
               </p>
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => {
                     setShowReplaceConfirm(false);
                     setPendingFiles(null);
                   }}
-                  className="px-4 py-2 rounded-md text-sm border border-border hover:bg-surface-highlight"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-border/60 hover:bg-surface-highlight shadow-sm active:scale-95 w-full sm:w-auto"
                 >
-                  No, keep uploading
+                  Keep uploading
                 </button>
                 <button
                   onClick={() => {
                     if (pendingFiles && pendingFiles.length > 0) {
                       const selectedFile = pendingFiles[0];
 
-                      // Client-side validation for file type
                       if (!selectedFile.type.startsWith("video/")) {
                         setPendingFiles(null);
                         setShowReplaceConfirm(false);
@@ -278,7 +277,6 @@ export default function Upload({ onClose }: UploadProps) {
                         return;
                       }
 
-                      // Client-side validation for file size
                       if (selectedFile.size > 262144000) {
                         setPendingFiles(null);
                         setShowReplaceConfirm(false);
@@ -298,7 +296,7 @@ export default function Upload({ onClose }: UploadProps) {
                     setPendingFiles(null);
                     setShowReplaceConfirm(false);
                   }}
-                  className="px-4 py-2 rounded-md text-sm bg-primary text-white hover:opacity-95"
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-white shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
                 >
                   Yes, replace
                 </button>

@@ -10,7 +10,7 @@ export default function NotificationsPage() {
         </p>
       </div>
 
-      <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 flex flex-col gap-8 shadow-sm">
+      <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col gap-8 shadow-lg">
         {/* Email Notifications */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2 border-b border-border pb-2">

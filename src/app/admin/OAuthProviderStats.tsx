@@ -77,7 +77,7 @@ export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
       {PROVIDERS.map((provider) => (
         <div
           key={provider.key}
-          className="flex-shrink-0 w-40 md:w-auto bg-surface border border-border rounded-lg p-3 hover:bg-surface-highlight transition-colors"
+          className="flex-shrink-0 w-40 md:w-auto bg-surface/60 backdrop-blur-md border border-border rounded-2xl p-4 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
         >
           <div className="flex flex-col items-center gap-2">
             {/* Provider Icon */}
@@ -92,16 +92,16 @@ export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
             </div>
             
             {/* Provider Name */}
-            <p className="text-xs font-medium text-text-main text-center">
+            <p className="text-xs font-semibold text-text-secondary text-center">
               {provider.name}
             </p>
             
             {/* User Count */}
-            <p className="text-xl font-bold text-text-main">
+            <p className="text-2xl font-black text-text-main">
               {providerCounts[provider.key]}
             </p>
             
-            <p className="text-[10px] text-text-secondary">
+            <p className="text-[10px] text-text-secondary font-medium">
               {providerCounts[provider.key] === 1 ? "user" : "users"}
             </p>
           </div>
