@@ -79,9 +79,9 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
   };
 
   return (
-    <div className="space-y-10 pb-16 relative z-0">
+    <div className="space-y-10 pb-16 relative z-0 overflow-hidden">
       {/* Ambient Background Glows - Enhanced for better visibility */}
-      <div className="absolute top-0 left-1/4 w-full h-[400px] bg-primary/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
+      <div className="absolute top-0 left-1/4 w-full max-w-[100vw] h-[400px] bg-primary/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[500px] right-0 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[200px] left-0 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
       

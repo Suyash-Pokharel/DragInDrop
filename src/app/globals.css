@@ -7,25 +7,25 @@
 @layer base {
   /* LIGHT MODE (Default) */
   :root {
-    --primary: hsl(242, 80%, 60%);
-    --secondary: hsl(244, 65%, 52%);
+    --primary: hsl(185, 81%, 30%);
+    --secondary: hsl(205, 70%, 50%);
 
-    --background: hsl(220, 25%, 97%);
-    --surface: hsl(0, 0%, 100%);
-    --surface-highlight: hsl(220, 20%, 95%);
+    --background: hsl(180, 20%, 88%);
+    --surface: hsl(180, 100%, 100%);
+    --surface-highlight: hsl(180, 25%, 85%);
 
-    --text-main: hsl(216, 28%, 18%);
-    --text-secondary: hsl(218, 15%, 45%);
+    --text-main: hsl(205, 25%, 20%);
+    --text-secondary: hsl(205, 15%, 45%);
 
     --success: hsl(150, 60%, 40%);
     --warning: hsl(45, 93%, 47%);
     --error: hsl(0, 75%, 55%);
 
-    --border: hsl(220, 20%, 90%);
+    --border: hsl(180, 15%, 88%);
     --border-focus: var(--primary);
 
     /* Shadows */
-    --shadow-color: hsla(220, 30%, 85%, 0.5);
+    --shadow-color: hsla(180, 20%, 85%, 0.5);
   }
 
   /* OVERRIDE BROWSER AUTOFILL STYLES */
@@ -43,30 +43,31 @@
 
   /* DARK MODE (Override) */
   .dark {
-    --primary: hsl(239, 84%, 67%);
-    --secondary: hsl(243, 75%, 58%);
+    --primary: hsl(205, 70%, 50%);
+    --secondary: hsl(185, 81%, 30%);
 
-    --background: hsl(215, 39%, 11%);
-    --surface: hsl(215, 28%, 17%);
-    --surface-highlight: hsl(215, 28%, 22%);
+    --background: hsl(205, 30%, 12%);
+    --surface: hsl(205, 25%, 22%);
+    --surface-highlight: hsl(205, 25%, 30%);
 
-    --text-main: hsl(210, 14%, 82%);
-    --text-secondary: hsl(215, 14%, 65%);
+    --text-main: hsl(205, 20%, 90%);
+    --text-secondary: hsl(205, 15%, 70%);
 
-    --success: hsl(159, 82%, 40%);
-    --warning: hsl(45, 93%, 47%);
-    --error: hsl(0, 84%, 60%);
+    --success: hsl(150, 70%, 45%);
+    --warning: hsl(45, 93%, 55%);
+    --error: hsl(0, 75%, 60%);
 
-    --border: hsl(215, 19%, 27%);
+    --border: hsl(205, 25%, 25%);
     --border-focus: var(--primary);
 
     /* Shadows */
-    --shadow-color: hsla(0, 0%, 0%, 0.3);
+    --shadow-color: hsla(205, 30%, 0%, 0.5);
   }
 
   /* Apply defaults to body */
   body {
     @apply bg-background text-text-main antialiased transition-colors duration-300;
+    overflow-x: hidden;
   }
 }
 

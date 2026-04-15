@@ -24,6 +24,7 @@ const NavbarWrapper = ({ imageSrc, user }: NavbarProps) => {
     pathname === "/login" ||
     pathname === "/register" ||
     pathname === "/createpassword" ||
+    pathname === "/resetpassword" ||
     pathname === "/verification-sent"
   ) {
     return null;
