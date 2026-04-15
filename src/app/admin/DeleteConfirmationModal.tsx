@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, AlertTriangle } from "lucide-react";
 import { UserWithAccounts } from "./AdminDashboard";
@@ -28,21 +28,25 @@ export default function DeleteConfirmationModal({
   const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (isOpen) setIsClosing(false);
+    if (isOpen) {
+      const timer = setTimeout(() => setIsClosing(false), 0);
+      return () => clearTimeout(timer);
+    }
   }, [isOpen]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (isDeleting) return;
     setIsClosing(true);
     setTimeout(() => {
       onClose();
       setIsClosing(false);
     }, 250);
-  };
+  }, [isDeleting, onClose]);
 
   // Handle Escape key to close modal (only when not deleting)
   useEffect(() => {
@@ -56,7 +60,7 @@ export default function DeleteConfirmationModal({
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, isDeleting, isTopModal]);
+  }, [isOpen, isDeleting, isTopModal, handleClose]);
 
   // Focus trap within modal
   useEffect(() => {
@@ -90,8 +94,8 @@ export default function DeleteConfirmationModal({
       }
     };
 
-    modal.addEventListener("keydown", handleTab as any);
-    return () => modal.removeEventListener("keydown", handleTab as any);
+    modal.addEventListener("keydown", handleTab);
+    return () => modal.removeEventListener("keydown", handleTab);
   }, [isOpen]);
 
   if (!isOpen || !mounted) return null;

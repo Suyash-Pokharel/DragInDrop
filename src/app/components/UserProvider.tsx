@@ -47,8 +47,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Fetch connected platforms on mount
   useEffect(() => {
-    refetchConnectedPlatforms();
-  }, [refetchConnectedPlatforms]);
+    const fetchPlatforms = async () => {
+      try {
+        const res = await fetch("/api/user/connected-platforms");
+        if (res.ok) {
+          const data = await res.json();
+          setConnectedPlatforms(data.platforms || []);
+        }
+      } catch (error) {
+        if (error instanceof Error && !error.message.includes("fetch")) {
+          console.error("Error fetching connected platforms:", error);
+        }
+        setConnectedPlatforms([]);
+      }
+    };
+    fetchPlatforms();
+  }, []);
 
   return (
     <UserContext.Provider

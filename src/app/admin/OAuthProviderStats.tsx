@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 import { UserWithAccounts } from "./AdminDashboard";
 
 // Logo imports
@@ -19,7 +19,7 @@ interface OAuthProviderStatsProps {
 
 interface ProviderConfig {
   name: string;
-  logo: any;
+  logo: StaticImageData;
   key: string;
   type: "login" | "social";
 }

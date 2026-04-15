@@ -17,7 +17,7 @@ export async function DELETE(request: NextRequest) {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
     }
-  } catch (rateLimitError) {
+  } catch {
     console.error("[DELETE /api/oauth/youtube/disconnect] Rate limit exceeded:", {
       ip,
       timestamp: new Date().toISOString(),
@@ -42,7 +42,7 @@ export async function DELETE(request: NextRequest) {
   // Per-user rate limiting
   try {
     await perUserOAuthLimiter.consume(user.id);
-  } catch (rateLimitError) {
+  } catch {
     console.error("[DELETE /api/oauth/youtube/disconnect] User rate limit exceeded:", {
       userId: user.id,
       timestamp: new Date().toISOString(),

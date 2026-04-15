@@ -3,7 +3,7 @@ import { ensureAuth } from "@/lib/ensureAuth";
 import { encryptToken } from "@/lib/encryption";
 import { getPrisma } from "@/lib/prisma";
 import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
-import { sanitizeTikTokProfile, validateRedirectUri, validateHttps } from "@/lib/sanitize";
+import { validateHttps } from "@/lib/sanitize";
 
 /**
  * GET /api/oauth/tiktok/callback
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
     }
-  } catch (rateLimitError) {
+  } catch {
     console.error("[GET /api/oauth/tiktok/callback] Rate limit exceeded:", {
       ip,
       timestamp: new Date().toISOString(),
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   // Per-user rate limiting
   try {
     await perUserOAuthLimiter.consume(user.id);
-  } catch (rateLimitError) {
+  } catch {
     console.error("[GET /api/oauth/tiktok/callback] User rate limit exceeded:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
@@ -263,7 +263,6 @@ export async function GET(request: NextRequest) {
       refresh_token,
       expires_in,
       open_id,
-      scope,
     } = tokenData;
 
     if (!access_token || !refresh_token || !open_id) {

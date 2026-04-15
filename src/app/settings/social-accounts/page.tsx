@@ -21,12 +21,16 @@ export default function SocialAccountsPage() {
     const error = searchParams.get("error");
 
     if (success) {
-      setToastMessage({ type: "success", message: "Account connected successfully!" });
-      refetchConnectedPlatforms();
+      setTimeout(() => {
+        setToastMessage({ type: "success", message: "Account connected successfully!" });
+        refetchConnectedPlatforms();
+      }, 0);
       // Clear the query parameter
       window.history.replaceState({}, "", "/settings/social-accounts");
     } else if (error) {
-      setToastMessage({ type: "error", message: error });
+      setTimeout(() => {
+        setToastMessage({ type: "error", message: error });
+      }, 0);
       // Clear the query parameter
       window.history.replaceState({}, "", "/settings/social-accounts");
     }
@@ -44,11 +48,16 @@ export default function SocialAccountsPage() {
     // For TikTok, redirect to OAuth authorization endpoint
     if (name === "TikTok") {
       setConnectingPlatform(name);
-      window.location.href = "/api/oauth/tiktok/authorize";
+      // Use useEffect or router for navigation to avoid direct window modification
+      setTimeout(() => {
+        window.location.href = "/api/oauth/tiktok/authorize";
+      }, 0);
     } else if (name === "YouTube") {
       // For YouTube, redirect to OAuth authorization endpoint
       setConnectingPlatform(name);
-      window.location.href = "/api/oauth/youtube/authorize";
+      setTimeout(() => {
+        window.location.href = "/api/oauth/youtube/authorize";
+      }, 0);
     } else {
       // Other platforms not yet implemented
       setToastMessage({ type: "error", message: `${name} integration coming soon!` });
@@ -79,7 +88,7 @@ export default function SocialAccountsPage() {
             const data = await response.json();
             setToastMessage({ type: "error", message: data.error || "Failed to disconnect account" });
           }
-        } catch (error) {
+        } catch {
           setToastMessage({ type: "error", message: "Failed to disconnect account" });
         }
       } else {

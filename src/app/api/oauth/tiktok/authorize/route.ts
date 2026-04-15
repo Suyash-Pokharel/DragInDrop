@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
     }
-  } catch (rateLimitError) {
+  } catch {
     console.error("[GET /api/oauth/tiktok/authorize] Rate limit exceeded:", {
       ip,
       timestamp: new Date().toISOString(),
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   // Per-user rate limiting
   try {
     await perUserOAuthLimiter.consume(user.id);
-  } catch (rateLimitError) {
+  } catch {
     console.error("[GET /api/oauth/tiktok/authorize] User rate limit exceeded:", {
       userId: user.id,
       timestamp: new Date().toISOString(),

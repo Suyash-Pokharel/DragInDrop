@@ -169,57 +169,103 @@ export async function registerUser(
     const verificationLink = `${APP_URL}/createpassword?token=${encodeURIComponent(rawToken)}`;
 
     const emailHtml = `
-        <div style="font-family: sans-serif; padding: 20px;">
-          <h2>Welcome to DragInDrop, ${safeFirstName}!</h2>
-          <p>Please verify your email to finish setting up your account.</p>
-          <p style="margin: 24px 0;">
-            <a href="${verificationLink}" style="background-color: #6666ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-              Verify Email & Set Password
-            </a>
-          </p>
-          <p style="font-size: 14px; color: #666;">This link expires in 24 hours.</p>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #6666ff; font-size: 28px; font-weight: bold;">DragInDrop</h1>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px;">
+              <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 24px; font-weight: 600;">Welcome, ${safeFirstName}!</h2>
+              <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.6;">
+                Thank you for signing up for DragInDrop. To complete your registration and set up your account, please verify your email address by clicking the button below.
+              </p>
+              <!-- Button -->
+              <table role="presentation" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${verificationLink}" style="display: inline-block; background-color: #6666ff; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">Verify Email & Set Password</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 20px 0 0 0; color: #999999; font-size: 14px; line-height: 1.6;">
+                This verification link will expire in 24 hours. If you didn't create an account with DragInDrop, you can safely ignore this email.
+              </p>
+              <!-- Alternative Link -->
+              <p style="margin: 20px 0 0 0; color: #999999; font-size: 12px; line-height: 1.6;">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="${verificationLink}" style="color: #6666ff; word-break: break-all;">${verificationLink}</a>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 40px; background-color: #f9f9f9; border-top: 1px solid #eeeeee; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #999999; font-size: 12px; text-align: center;">
+                © ${new Date().getFullYear()} DragInDrop. All rights reserved.<br>
+                This is an automated message, please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
       `;
 
-    // Guard against resend being unexpectedly unavailable at send time
+    // Send verification email using Resend
     if (!resend) {
       console.error("Resend client missing at send time");
-      try {
-        await prisma.emailQueue.create({
-          data: {
-            to: normalizedEmail,
-            from: "onboarding@dragindrop.dev",
-            subject: "Verify your DragInDrop Account",
-            html: emailHtml,
-          },
-        });
-      } catch (qErr) {
-        console.error("Failed to enqueue email when Resend missing:", qErr);
-      }
-    } else {
-      try {
-        await resend.emails.send({
-          from: "onboarding@resend.dev",
-          to: normalizedEmail,
-          subject: "Verify your DragInDrop Account",
-          html: emailHtml,
-        });
-      } catch (sendErr) {
-        console.error("Email send failed, enqueuing:", sendErr);
-        // Fallback: enqueue for retry
-        try {
-          await prisma.emailQueue.create({
-            data: {
-              to: normalizedEmail,
-              from: "onboarding@dragindrop.dev",
-              subject: "Verify your DragInDrop Account",
-              html: emailHtml,
-            },
-          });
-        } catch (qErr) {
-          console.error("Failed to enqueue email:", qErr);
-        }
-      }
+      return { success: false, error: "Email service not configured." };
+    }
+
+    try {
+      console.log("[REGISTRATION] Attempting to send email to:", normalizedEmail);
+      console.log("[REGISTRATION] From address:", "DragInDrop <onboarding@contact.suyash-pokharel.com.np>");
+      
+      const emailResult = await resend.emails.send({
+        from: "DragInDrop <onboarding@contact.suyash-pokharel.com.np>",
+        to: normalizedEmail,
+        subject: "Verify your DragInDrop Account",
+        html: emailHtml,
+        text: `Welcome to DragInDrop, ${safeFirstName}!
+
+Thank you for signing up. To complete your registration and set up your account, please verify your email address.
+
+Verify your email and set your password by visiting this link:
+${verificationLink}
+
+This verification link will expire in 24 hours.
+
+If you didn't create an account with DragInDrop, you can safely ignore this email.
+
+---
+© ${new Date().getFullYear()} DragInDrop. All rights reserved.
+This is an automated message, please do not reply to this email.`,
+      });
+      
+      console.log("[REGISTRATION] Email sent successfully!");
+      console.log("[REGISTRATION] Email ID:", emailResult.data?.id);
+      console.log("[REGISTRATION] Email error:", emailResult.error);
+    } catch (sendErr) {
+      console.error("[REGISTRATION] Email send failed:", sendErr);
+      return { success: false, error: "Failed to send verification email. Please try again." };
     }
 
     return { success: true };
@@ -376,5 +422,271 @@ export async function loginUser(
   } catch (error: unknown) {
     console.error("Login Error:", error);
     return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Request a password reset email for a user.
+ */
+export async function requestPasswordReset(email: string): Promise<Result> {
+  if (!email) {
+    return { success: false, error: "Email is required." };
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(normalizedEmail)) {
+    return { success: false, error: "Invalid email address." };
+  }
+
+  if (!RESEND_API_KEY || !resend) {
+    console.error("Missing RESEND_API_KEY");
+    return { success: false, error: "Email service not configured." };
+  }
+
+  try {
+    // Rate-limit password reset requests
+    try {
+      await perEmailLimiter.consume(normalizedEmail);
+    } catch {
+      return {
+        success: false,
+        error: "Too many password reset requests. Try again later.",
+      };
+    }
+
+    const prisma = getPrisma();
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    // For security, always return success even if user doesn't exist
+    // This prevents email enumeration attacks
+    if (!user) {
+      return { success: true };
+    }
+
+    // Check if user has verified their email
+    if (!user.emailVerified) {
+      return { success: false, error: "Please verify your email first." };
+    }
+
+    // Check for recent password reset requests (5 minute cooldown)
+    const recent = await prisma.verificationToken.findFirst({
+      where: { userId: user.id, type: TokenType.RESET_PASSWORD },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (recent) {
+      const minBetweenMs = 5 * 60 * 1000; // 5 minutes
+      if (Date.now() - recent.createdAt.getTime() < minBetweenMs) {
+        return {
+          success: false,
+          error: "Please wait before requesting another password reset.",
+        };
+      }
+    }
+
+    // Generate reset token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Clean up old reset tokens
+    await prisma.verificationToken.deleteMany({
+      where: { userId: user.id, type: TokenType.RESET_PASSWORD },
+    });
+
+    // Create new reset token
+    await prisma.verificationToken.create({
+      data: {
+        tokenHash,
+        expiresAt,
+        type: TokenType.RESET_PASSWORD,
+        user: { connect: { id: user.id } },
+      },
+    });
+
+    // Prepare email
+    const safeFirst = (s: string) =>
+      s
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+
+    const firstName = user.name?.split(" ")[0] || "User";
+    const safeFirstName = safeFirst(firstName);
+    const resetLink = `${APP_URL}/resetpassword?token=${encodeURIComponent(rawToken)}`;
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Your Password</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #6666ff; font-size: 28px; font-weight: bold;">DragInDrop</h1>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px;">
+              <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 24px; font-weight: 600;">Password Reset Request</h2>
+              <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.6;">
+                Hi ${safeFirstName},
+              </p>
+              <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.6;">
+                We received a request to reset the password for your DragInDrop account. Click the button below to create a new password.
+              </p>
+              <!-- Button -->
+              <table role="presentation" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${resetLink}" style="display: inline-block; background-color: #6666ff; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">Reset Password</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 20px 0 0 0; color: #999999; font-size: 14px; line-height: 1.6;">
+                This password reset link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+              </p>
+              <!-- Alternative Link -->
+              <p style="margin: 20px 0 0 0; color: #999999; font-size: 12px; line-height: 1.6;">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="${resetLink}" style="color: #6666ff; word-break: break-all;">${resetLink}</a>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 40px; background-color: #f9f9f9; border-top: 1px solid #eeeeee; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #999999; font-size: 12px; text-align: center;">
+                © ${new Date().getFullYear()} DragInDrop. All rights reserved.<br>
+                This is an automated message, please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    // Send email
+    try {
+      console.log("[PASSWORD RESET] Attempting to send email to:", normalizedEmail);
+      console.log("[PASSWORD RESET] From address:", "DragInDrop <onboarding@contact.suyash-pokharel.com.np>");
+      
+      const emailResult = await resend.emails.send({
+        from: "DragInDrop <onboarding@contact.suyash-pokharel.com.np>",
+        to: normalizedEmail,
+        subject: "Reset Your DragInDrop Password",
+        html: emailHtml,
+        text: `Password Reset Request
+
+Hi ${safeFirstName},
+
+We received a request to reset the password for your DragInDrop account. Click the link below to create a new password:
+
+${resetLink}
+
+This password reset link will expire in 1 hour.
+
+If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+
+---
+© ${new Date().getFullYear()} DragInDrop. All rights reserved.
+This is an automated message, please do not reply to this email.`,
+      });
+      
+      console.log("[PASSWORD RESET] Email sent successfully!");
+      console.log("[PASSWORD RESET] Email ID:", emailResult.data?.id);
+      console.log("[PASSWORD RESET] Email error:", emailResult.error);
+    } catch (sendErr) {
+      console.error("[PASSWORD RESET] Email send failed:", sendErr);
+      return { success: false, error: "Failed to send password reset email. Please try again." };
+    }
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Password Reset Request Error:", error);
+    return { success: false, error: "Internal Server Error" };
+  }
+}
+
+/**
+ * Reset a user's password using a reset token.
+ */
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<Result & { email?: string }> {
+  if (!token || !newPassword) {
+    return { success: false, error: "Missing token or password." };
+  }
+
+  try {
+    const prisma = getPrisma();
+
+    // Hash incoming token and look up
+    const incomingHash = crypto.createHash("sha256").update(token).digest("hex");
+    const storedToken = await prisma.verificationToken.findFirst({
+      where: {
+        tokenHash: incomingHash,
+        type: TokenType.RESET_PASSWORD,
+      },
+      include: { user: true },
+    });
+
+    if (!storedToken) {
+      return { success: false, error: "Invalid or expired reset link." };
+    }
+
+    if (storedToken.expiresAt < new Date()) {
+      return {
+        success: false,
+        error: "Reset link has expired. Please request a new one.",
+      };
+    }
+
+    // Validate password
+    const { valid } = validatePassword(newPassword);
+    if (!valid) {
+      return {
+        success: false,
+        error:
+          "Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.",
+      };
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update password and delete token
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: storedToken.userId },
+        data: { password: hashedPassword },
+      }),
+      prisma.verificationToken.delete({
+        where: { id: storedToken.id },
+      }),
+    ]);
+
+    return { success: true, email: storedToken.user.email };
+  } catch (error: unknown) {
+    console.error("Reset Password Error:", error);
+    return { success: false, error: "Failed to reset password." };
   }
 }

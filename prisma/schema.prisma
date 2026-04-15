@@ -51,16 +51,6 @@ model VerificationToken {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model EmailQueue {
-  id        String   @id @default(cuid())
-  to        String
-  from      String
-  subject   String
-  html      String
-  attempts  Int      @default(0)
-  createdAt DateTime @default(now())
-}
-
 model RegistrationAttempt {
   id        String   @id @default(cuid())
   ip        String

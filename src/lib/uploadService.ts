@@ -104,7 +104,7 @@ class UploadService extends EventTarget {
       };
 
       // Implement onerror handler
-      xhr.onerror = (event) => {
+      xhr.onerror = () => {
         console.error("XHR error occurred during upload");
         console.error("XHR readyState:", xhr.readyState);
         console.error("XHR status:", xhr.status);

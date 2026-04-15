@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, AlertTriangle, CheckCircle, XCircle, User } from "lucide-react";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 import { UserWithAccounts } from "./AdminDashboard";
 
 // Logo imports
-import GoogleLogo from "@/app/assets/logo/Google.webp";
 import FacebookLogo from "@/app/assets/logo/Facebook.webp";
 import InstagramLogo from "@/app/assets/logo/Instagram.webp";
 import TwitterLogo from "@/app/assets/logo/X.webp";
@@ -24,7 +23,7 @@ interface UserDetailsModalProps {
 }
 
 // Map platform names to logos
-const PROVIDER_LOGOS: Record<string, any> = {
+const PROVIDER_LOGOS: Record<string, StaticImageData> = {
   YouTube: YoutubeLogo,
   Instagram: InstagramLogo,
   TikTok: TikTokLogo,
@@ -46,20 +45,24 @@ export default function UserDetailsModal({
   const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (isOpen) setIsClosing(false);
+    if (isOpen) {
+      const timer = setTimeout(() => setIsClosing(false), 0);
+      return () => clearTimeout(timer);
+    }
   }, [isOpen]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
       onClose();
       setIsClosing(false);
     }, 250);
-  };
+  }, [onClose]);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -73,7 +76,7 @@ export default function UserDetailsModal({
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, isTopModal]);
+  }, [isOpen, isTopModal, handleClose]);
 
   // Focus trap within modal
   useEffect(() => {
@@ -107,8 +110,8 @@ export default function UserDetailsModal({
       }
     };
 
-    modal.addEventListener("keydown", handleTab as any);
-    return () => modal.removeEventListener("keydown", handleTab as any);
+    modal.addEventListener("keydown", handleTab);
+    return () => modal.removeEventListener("keydown", handleTab);
   }, [isOpen]);
 
   if (!isOpen || !mounted) return null;

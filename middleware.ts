@@ -27,6 +27,15 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // --- Guard: /resetpassword requires a ?token= query param ---
+  if (pathname === "/resetpassword") {
+    const tokenParam = req.nextUrl.searchParams.get("token");
+    if (!tokenParam || tokenParam.trim() === "") {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    return NextResponse.next();
+  }
+
   // --- Guard: Protected routes require a valid session ---
   if (!isProtectedRoute(pathname)) return NextResponse.next();
 
@@ -59,5 +68,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/calendar/:path*", "/settings/:path*", "/createpassword"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/calendar/:path*", "/settings/:path*", "/createpassword", "/resetpassword"],
 };

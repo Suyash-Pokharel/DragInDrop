@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 /**
  * Debug endpoint to check YouTube OAuth configuration
  * DELETE THIS FILE AFTER DEBUGGING
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   const clientId = process.env.YOUTUBE_CLIENT_ID;
   const clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;

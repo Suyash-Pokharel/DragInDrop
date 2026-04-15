@@ -365,7 +365,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
             <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
               <h3 className="text-xl font-bold mb-2 text-text-main">Discard Post?</h3>
               <p className="text-sm text-text-secondary mb-6">
-                If you leave now, you'll lose your scheduled details and video.
+                If you leave now, you&apos;ll lose your scheduled details and video.
               </p>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button

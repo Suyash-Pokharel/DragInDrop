@@ -13,7 +13,8 @@ export default function RegistrationTrendChart({ users }: RegistrationTrendChart
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Calculate last 7 days registration data (rolling week)
@@ -80,9 +81,12 @@ export default function RegistrationTrendChart({ users }: RegistrationTrendChart
         <BarChart 
           data={chartData} 
           margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
-          onMouseMove={(state: any) => {
-            if (state.isTooltipActive) setActiveIndex(state.activeTooltipIndex);
-            else setActiveIndex(null);
+          onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | string | null }) => {
+            if (state.isTooltipActive && typeof state.activeTooltipIndex === 'number') {
+              setActiveIndex(state.activeTooltipIndex);
+            } else {
+              setActiveIndex(null);
+            }
           }}
           onMouseLeave={() => setActiveIndex(null)}
         >

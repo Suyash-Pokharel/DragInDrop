@@ -7,11 +7,9 @@ import Link from "next/link";
 import { 
   BarChart3, 
   Calendar, 
-  CheckCircle2, 
   Clock, 
   Link2, 
   Plus, 
-  XOctagon,
   AlertTriangle,
   ArrowRight,
   FileEdit
@@ -157,7 +155,7 @@ export default function DashboardPage() {
           <h2 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-secondary">
             Welcome back, {userName?.split(" ")[0] || "Creator"}.
           </h2>
-          <p className="text-text-secondary mt-2 text-lg">Here's your command center overview for today.</p>
+          <p className="text-text-secondary mt-2 text-lg">Here&apos;s your command center overview for today.</p>
         </div>
         <div className="flex w-full md:w-auto">
           <button 

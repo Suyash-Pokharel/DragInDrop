@@ -46,7 +46,7 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
     setTimeout(onClose, 300);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.trim()) {
@@ -56,13 +56,26 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
 
     setIsLoading(true);
 
-    // TODO: Replace with real password reset API call once the RESET_PASSWORD
-    // server action is implemented (the TokenType.RESET_PASSWORD enum already exists in the Prisma schema).
-    // Example: const res = await fetch('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        setView("success");
+      } else {
+        alert(result.error || "Failed to send password reset email. Please try again.");
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
-      setView("success");
-    }, 1500);
+    }
   };
 
   if (!mounted) return null;

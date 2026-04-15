@@ -88,7 +88,7 @@ export default function Home() {
             <p className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-3">
               Supported Platforms
             </p>
-            <div className="flex justify-center items-center gap-6 md:gap-10">
+            <div className="flex justify-center items-center gap-6 md:gap-8">
               {[
                 { name: "YouTube", src: YoutubeLogo },
                 { name: "Instagram", src: InstagramLogo },
@@ -98,7 +98,7 @@ export default function Home() {
                 { name: "Threads", src: ThreadsLogo },
               ].map((platform) => (
                 <div key={platform.name} title={platform.name} className="w-8 h-8 md:w-10 md:h-10 relative grayscale hover:grayscale-0 transition duration-300 transform hover:scale-110 cursor-pointer">
-                  <Image src={platform.src} alt={platform.name} fill className="object-contain" />
+                  <Image src={platform.src} alt={platform.name} fill sizes="(max-width: 768px) 32px, 40px" className="object-contain" />
                 </div>
               ))}
             </div>
@@ -194,7 +194,7 @@ export default function Home() {
                      />
                    ))}
                  </div>
-                 <p className="text-text-main leading-relaxed mb-6">"{review.text}"</p>
+                 <p className="text-text-main leading-relaxed mb-6">&quot;{review.text}&quot;</p>
                  <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center shadow-sm">
                      {review.avatarText}

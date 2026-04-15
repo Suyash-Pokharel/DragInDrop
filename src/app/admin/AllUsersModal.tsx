@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useRef, useState } from "react";
+import { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Users } from "lucide-react";
 import { UserWithAccounts } from "./AdminDashboard";
@@ -26,20 +26,24 @@ export default function AllUsersModal({
   const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (isOpen) setIsClosing(false);
+    if (isOpen) {
+      const timer = setTimeout(() => setIsClosing(false), 0);
+      return () => clearTimeout(timer);
+    }
   }, [isOpen]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
       onClose();
       setIsClosing(false);
     }, 250);
-  };
+  }, [onClose]);
 
   // Sort users by registration date (newest first)
   const sortedUsers = useMemo(
@@ -59,7 +63,7 @@ export default function AllUsersModal({
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, isTopModal]);
+  }, [isOpen, isTopModal, handleClose]);
 
   // Focus trap within modal
   useEffect(() => {
@@ -93,8 +97,8 @@ export default function AllUsersModal({
       }
     };
 
-    modal.addEventListener("keydown", handleTab as any);
-    return () => modal.removeEventListener("keydown", handleTab as any);
+    modal.addEventListener("keydown", handleTab);
+    return () => modal.removeEventListener("keydown", handleTab);
   }, [isOpen]);
 
   if (!isOpen || !mounted) return null;

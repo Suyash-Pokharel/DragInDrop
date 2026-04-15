@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
       userinfo: "https://open-api.tiktok.com/oauth/userinfo/",
       clientId: process.env.TIKTOK_CLIENT_KEY!,
       clientSecret: process.env.TIKTOK_CLIENT_SECRET!,
-      profile(profile: any) {
+      profile(profile: { data: { user: { open_id: string; email: string; display_name: string; avatar_url: string } } }) {
         return {
           id: profile.data.user.open_id,
           email: profile.data.user.email,
@@ -74,7 +74,7 @@ export const authOptions: NextAuthOptions = {
       userinfo: "https://api.linkedin.com/v2/me",
       clientId: process.env.LINKEDIN_CLIENT_ID!,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
-      profile(profile: any) {
+      profile(profile: { id: string; localizedFirstName?: string; localizedLastName?: string; email?: string; profilePicture?: { displayImage?: string } }) {
         const firstName = profile.localizedFirstName || "";
         const lastName = profile.localizedLastName || "";
         const fullName = lastName ? `${firstName} ${lastName}` : firstName;

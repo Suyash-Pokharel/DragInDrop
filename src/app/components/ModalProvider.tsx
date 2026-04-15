@@ -66,7 +66,7 @@ export const useModal = () => {
 };
 
 export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const { connectedPlatforms } = useUser();
 

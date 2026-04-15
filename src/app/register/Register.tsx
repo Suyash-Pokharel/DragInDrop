@@ -250,6 +250,7 @@ export default function Register() {
                 alt="Google Logo"
                 width={20}
                 height={20}
+                priority
                 className="group-hover:scale-110 transition-transform duration-200"
               />
               <span>Continue with Google</span>
