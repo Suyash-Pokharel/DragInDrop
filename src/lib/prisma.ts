@@ -21,7 +21,10 @@ export function getPrisma(): PrismaClient {
     connectionString: connectionString,
   });
 
-  const client = new PrismaClient({ adapter });
+  const client = new PrismaClient({
+    adapter,
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
 
   if (process.env.NODE_ENV !== "production") {
     global.__prismaClient = client;

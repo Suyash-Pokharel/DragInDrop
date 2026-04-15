@@ -13,74 +13,18 @@ class UploadService extends EventTarget {
     try {
       console.log("Starting upload for file:", { name: file.name, type: file.type, size: file.size });
       
-      // Request presigned URL from API
-      const presignResponse = await fetch("/api/upload/presign", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-        }),
-      });
+      // Create FormData with file and metadata
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileName', file.name);
+      formData.append('fileType', file.type);
 
-      console.log("Presign response status:", presignResponse.status);
-
-      // Handle non-OK response
-      if (!presignResponse.ok) {
-        const error = await presignResponse.json();
-        console.error("Failed to get presigned URL:", error);
-        
-        // Dispatch error with specific message
-        const errorMessage = error.error || "Failed to generate upload URL";
-        const errorCode = presignResponse.status === 401 ? "AUTH_FAILED" : "PRESIGN_FAILED";
-        this.dispatchEvent(
-          new CustomEvent<ErrorDetail>("error", {
-            detail: { message: errorMessage, code: errorCode },
-          })
-        );
-        return;
-      }
-
-      // Extract uploadUrl and fileKey from response
-      const responseData = await presignResponse.json();
-      console.log("Presign response data:", { 
-        hasUploadUrl: !!responseData.uploadUrl, 
-        hasFileKey: !!responseData.fileKey,
-        fileKey: responseData.fileKey 
-      });
-      const { uploadUrl, fileKey } = responseData;
-
-      // Validate we have the required data
-      if (!uploadUrl || !fileKey) {
-        console.error("Missing uploadUrl or fileKey from presign response");
-        this.dispatchEvent(
-          new CustomEvent<ErrorDetail>("error", {
-            detail: { message: "Invalid upload configuration received", code: "INVALID_PRESIGN_RESPONSE" },
-          })
-        );
-        return;
-      }
-
-      // Log the URL domain to verify it's correct
-      const urlObj = new URL(uploadUrl);
-      console.log("Upload destination:", {
-        host: urlObj.hostname,
-        bucket: urlObj.pathname.split('/')[1],
-        path: urlObj.pathname
-      });
-
-      // Create new XMLHttpRequest and store in xhr property
+      // Create new XMLHttpRequest
       const xhr = new XMLHttpRequest();
       this.xhr = xhr;
 
-      // Open XMLHttpRequest with PUT method and uploadUrl
-      xhr.open("PUT", uploadUrl);
-
-      // Set Content-Type header to file's type
-      xhr.setRequestHeader("Content-Type", file.type);
+      // Open XMLHttpRequest to backend upload endpoint
+      xhr.open("POST", "/api/upload/presign");
 
       // Implement upload progress handler
       xhr.upload.onprogress = (e) => {
@@ -91,15 +35,47 @@ class UploadService extends EventTarget {
         );
       };
 
-      // Implement onload handler that dispatches "done" event
+      // Implement onload handler
       xhr.onload = () => {
         const status = xhr.status;
-        console.log("XHR upload completed with status:", status);
-        // Create response with fileKey
-        const responseText = JSON.stringify({ fileKey, success: true });
-        this.dispatchEvent(
-          new CustomEvent<DoneDetail>("done", { detail: { status, responseText } }),
-        );
+        console.log("Upload completed with status:", status);
+        
+        if (status >= 200 && status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.fileKey) {
+              const responseText = JSON.stringify({ fileKey: response.fileKey, success: true });
+              this.dispatchEvent(
+                new CustomEvent<DoneDetail>("done", { detail: { status, responseText } }),
+              );
+            } else {
+              throw new Error("No fileKey in response");
+            }
+          } catch (error) {
+            console.error("Failed to parse upload response:", error);
+            this.dispatchEvent(
+              new CustomEvent<ErrorDetail>("error", {
+                detail: { message: "Upload completed but response was invalid", code: "INVALID_RESPONSE" },
+              })
+            );
+          }
+        } else {
+          // Handle error response
+          try {
+            const errorResponse = JSON.parse(xhr.responseText);
+            this.dispatchEvent(
+              new CustomEvent<ErrorDetail>("error", {
+                detail: { message: errorResponse.error || "Upload failed", code: "UPLOAD_FAILED" },
+              })
+            );
+          } catch {
+            this.dispatchEvent(
+              new CustomEvent<ErrorDetail>("error", {
+                detail: { message: "Upload failed. Please try again.", code: "UPLOAD_FAILED" },
+              })
+            );
+          }
+        }
         this.cleanup();
       };
 
@@ -131,9 +107,9 @@ class UploadService extends EventTarget {
       // Dispatch "start" event when upload begins
       this.dispatchEvent(new CustomEvent("start"));
 
-      // Send file directly (not wrapped in FormData)
-      console.log("Sending file to B2...");
-      xhr.send(file);
+      // Send FormData with file
+      console.log("Sending file to backend...");
+      xhr.send(formData);
     } catch (error) {
       console.error("Upload error:", error);
       this.dispatchEvent(

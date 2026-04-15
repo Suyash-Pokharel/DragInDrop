@@ -52,7 +52,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         const res = await fetch("/api/user/connected-platforms");
         if (res.ok) {
           const data = await res.json();
-          setConnectedPlatforms(data.platforms || []);
+          setConnectedPlatforms(data.connectedPlatforms || []);
         }
       } catch (error) {
         if (error instanceof Error && !error.message.includes("fetch")) {

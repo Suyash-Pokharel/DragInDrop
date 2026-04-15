@@ -75,6 +75,13 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   };
 
   const handleSchedule = async () => {
+    // Pre-flight validation
+    if (!fileKey || !videoFileName || !videoFileSize) {
+      console.error("Missing file data:", { fileKey, videoFileName, videoFileSize });
+      setSubmitError("Video upload incomplete. Please upload a video first.");
+      return;
+    }
+
     // Requirement 3.8 - Set isSubmitting to true during request
     setIsSubmitting(true);
     setSubmitError(null);
@@ -83,6 +90,16 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
       // Requirement 4.4 - Include session token in request headers (handled by Next.js automatically)
       // Requirement 4.5 - Convert scheduledFor to ISO 8601 format
       const scheduledForISO = new Date(postScheduledFor).toISOString();
+
+      console.log("Submitting post with data:", {
+        title: postTitle,
+        description: postDescription,
+        scheduledFor: scheduledForISO,
+        videoFileKey: fileKey,
+        videoFileName,
+        videoFileSize,
+        selectedPlatforms,
+      });
 
       // Requirement 3.2 - Make POST request to /api/posts endpoint
       // Requirement 4.4 - Gather all required data from context/props

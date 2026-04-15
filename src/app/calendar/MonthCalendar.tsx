@@ -47,21 +47,22 @@ const LOGO_MAP: Record<Platform, StaticImageData> = {
 };
 
 // --- MOCK DATA ---
+// Note: JavaScript months are 0-indexed (0 = January, 1 = February, 2 = March, 3 = April, etc.)
 const MOCK_POSTS: ScheduledPost[] = [
-  { id: 1, day: 8, month: 10, year: 2025, platform: "Instagram" },
-  { id: 2, day: 8, month: 10, year: 2025, platform: "TikTok" },
-  { id: 3, day: 11, month: 10, year: 2025, platform: "Linkedin" },
-  { id: 4, day: 11, month: 10, year: 2025, platform: "X" },
-  { id: 5, day: 18, month: 10, year: 2025, platform: "Facebook" },
-  { id: 6, day: 21, month: 10, year: 2025, platform: "Youtube" },
-  { id: 7, day: 21, month: 10, year: 2025, platform: "Google" },
-  { id: 8, day: 24, month: 10, year: 2025, platform: "Threads" },
-  { id: 9, day: 15, month: 10, year: 2025, platform: "Facebook" },
-  { id: 10, day: 15, month: 10, year: 2025, platform: "Instagram" },
-  { id: 11, day: 15, month: 10, year: 2025, platform: "TikTok" },
-  { id: 12, day: 15, month: 10, year: 2025, platform: "Linkedin" },
-  { id: 13, day: 15, month: 10, year: 2025, platform: "X" },
-  { id: 14, day: 15, month: 10, year: 2025, platform: "Youtube" },
+  { id: 1, day: 8, month: 3, year: 2026, platform: "Instagram" },
+  { id: 2, day: 8, month: 3, year: 2026, platform: "TikTok" },
+  { id: 3, day: 11, month: 3, year: 2026, platform: "Linkedin" },
+  { id: 4, day: 11, month: 3, year: 2026, platform: "X" },
+  { id: 5, day: 18, month: 3, year: 2026, platform: "Facebook" },
+  { id: 6, day: 21, month: 3, year: 2026, platform: "Youtube" },
+  { id: 7, day: 21, month: 3, year: 2026, platform: "Google" },
+  { id: 8, day: 24, month: 3, year: 2026, platform: "Threads" },
+  { id: 9, day: 15, month: 3, year: 2026, platform: "Facebook" },
+  { id: 10, day: 15, month: 3, year: 2026, platform: "Instagram" },
+  { id: 11, day: 15, month: 3, year: 2026, platform: "TikTok" },
+  { id: 12, day: 15, month: 3, year: 2026, platform: "Linkedin" },
+  { id: 13, day: 15, month: 3, year: 2026, platform: "X" },
+  { id: 14, day: 15, month: 3, year: 2026, platform: "Youtube" },
 ];
 
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];

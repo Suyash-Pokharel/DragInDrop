@@ -4,6 +4,71 @@ import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
 
 /**
+ * Convert a datetime string from a specific timezone to UTC
+ * Requirements: 10.1, 10.2, 10.3
+ * @param dateTimeStr - ISO datetime string representing local time in the user's timezone (e.g., "2025-01-15T15:00:00")
+ * @param timezone - IANA timezone identifier (e.g., 'America/New_York')
+ * @returns Date object in UTC
+ */
+function convertToUTC(dateTimeStr: string, timezone: string): Date {
+  // Parse the input to extract date/time components
+  // The input is a naive datetime that should be interpreted as being in the user's timezone
+  const match = dateTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!match) {
+    throw new Error('Invalid datetime format');
+  }
+  
+  const [, year, month, day, hour, minute, second] = match;
+  
+  // Create a date string in ISO format with explicit timezone
+  // We'll use a reference date to find the offset
+  const localDateStr = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+  
+  // Create two dates: one in UTC, one formatted in the target timezone
+  // This helps us calculate the offset
+  const utcDate = new Date(`${localDateStr}Z`);
+  
+  // Format this UTC date as it would appear in the target timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+  
+  const parts = formatter.formatToParts(utcDate);
+  const partsMap: Record<string, string> = {};
+  parts.forEach(part => {
+    if (part.type !== 'literal') {
+      partsMap[part.type] = part.value;
+    }
+  });
+  
+  // The formatted string shows what time it is in the target timezone when it's utcDate in UTC
+  const tzYear = parseInt(partsMap.year);
+  const tzMonth = parseInt(partsMap.month);
+  const tzDay = parseInt(partsMap.day);
+  const tzHour = parseInt(partsMap.hour);
+  const tzMinute = parseInt(partsMap.minute);
+  const tzSecond = parseInt(partsMap.second);
+  
+  // Calculate the difference in milliseconds
+  const utcMs = utcDate.getTime();
+  const tzDateMs = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMinute, tzSecond);
+  const offset = utcMs - tzDateMs;
+  
+  // Now apply this offset to our target local time
+  const targetLocalMs = Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute), parseInt(second));
+  const targetUtcMs = targetLocalMs + offset;
+  
+  return new Date(targetUtcMs);
+}
+
+/**
  * Zod schema for post creation request validation
  * Requirements: 2.7, 2.8, 2.9, 2.10, 2.11, 2.12
  */
@@ -92,6 +157,18 @@ export async function POST(request: NextRequest) {
 
     const prisma = getPrisma();
 
+    // Retrieve user's timezone from preferences
+    // Requirements: 10.1, 10.2, 10.3 - Apply user timezone to scheduled posts
+    const userPreferences = await prisma.userPreferences.findUnique({
+      where: { userId: user.id },
+      select: { timezone: true },
+    });
+
+    // Convert scheduled time from user's timezone to UTC for storage
+    // Use UTC as fallback if no timezone is set
+    const userTimezone = userPreferences?.timezone || 'UTC';
+    const scheduledForUTC = convertToUTC(scheduledFor, userTimezone);
+
     // Query SocialAccount records for user and selected platforms
     // Requirements: 2.2, 2.3
     const socialAccounts = await prisma.socialAccount.findMany({
@@ -147,7 +224,7 @@ export async function POST(request: NextRequest) {
           videoFileKey,
           videoFileName,
           videoFileSize,
-          scheduledFor: new Date(scheduledFor),
+          scheduledFor: scheduledForUTC,
           status: "SCHEDULED",
         },
       });
@@ -175,6 +252,8 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
       platformCount: result.platformPosts.length,
       platforms: selectedPlatforms,
+      userTimezone,
+      scheduledForUTC: scheduledForUTC.toISOString(),
     });
 
     // Return 201 with postId on success

@@ -70,11 +70,11 @@ export default function SubscriptionPage() {
             <div className="flex items-center justify-between bg-surface/40 backdrop-blur-md border border-border/60 p-5 rounded-2xl shadow-sm mt-2">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-8 bg-surface-highlight border border-border rounded-md flex items-center justify-center text-xs font-bold font-mono">
-                  VISA
+                  Khalti
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-text-main">Visa ending in 4242</h4>
-                  <p className="text-xs text-text-secondary mt-0.5">Expires 12/28</p>
+                  <h4 className="text-sm font-medium text-text-main">Renew on September 2026</h4>
+                  <p className="text-xs text-text-secondary mt-0.5">Expires 12/09</p>
                 </div>
               </div>
               <button className="text-sm text-primary hover:text-secondary font-medium transition-colors">

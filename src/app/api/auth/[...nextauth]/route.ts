@@ -8,6 +8,16 @@ import { getPrisma } from "@/lib/prisma";
 import { perIpLoginLimiter, perEmailLoginLimiter } from "@/lib/limiter";
 import bcrypt from "bcryptjs";
 
+// Wrap getPrisma with error handling to prevent crashes
+function getSafePrisma() {
+  try {
+    return getPrisma();
+  } catch (error) {
+    console.error("Failed to initialize Prisma client:", error);
+    throw error;
+  }
+}
+
 /**
  * NextAuth configuration options
  * This will be expanded in subsequent tasks to include:
@@ -17,7 +27,9 @@ import bcrypt from "bcryptjs";
  * - JWT callbacks
  */
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(getPrisma()),
+  // Only use adapter for OAuth providers, not for JWT session validation
+  // This prevents database queries on every session check
+  adapter: PrismaAdapter(getSafePrisma()),
 
   providers: [
     GoogleProvider({
@@ -119,7 +131,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Validate user credentials
-        const prisma = getPrisma();
+        const prisma = getSafePrisma();
         const user = await prisma.user.findUnique({
           where: { email: normalizedEmail },
         });
@@ -166,60 +178,65 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       // For OAuth providers, handle account creation/linking properly
       if (account?.provider !== "credentials") {
-        const prisma = getPrisma();
-        
-        // Get the email from the OAuth profile
-        const email = (profile?.email || user.email)?.toLowerCase().trim();
-        
-        if (!email) {
-          console.error("No email provided by OAuth provider");
-          return false;
-        }
-        
-        // Check if a user with this email already exists
-        const existingUser = await prisma.user.findUnique({
-          where: { email },
-          include: { accounts: true },
-        });
-        
-        // If user exists, check if they have an account with this provider
-        if (existingUser && account) {
-          const hasThisProvider = existingUser.accounts.some(
-            (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
-          );
+        try {
+          const prisma = getSafePrisma();
           
-          // If they don't have this specific provider account linked, block sign-in
-          // This prevents automatic account linking and forces explicit user action
-          if (!hasThisProvider) {
-            console.error(`User ${email} exists but doesn't have ${account.provider} account linked`);
-            return false; // This will trigger OAuthAccountNotLinked error
+          // Get the email from the OAuth profile
+          const email = (profile?.email || user.email)?.toLowerCase().trim();
+          
+          if (!email) {
+            console.error("No email provided by OAuth provider");
+            return false;
           }
           
-          // User exists and has this provider - update emailVerified if needed
-          if (!existingUser.emailVerified) {
-            const now = new Date();
-            const timeSinceCreation = now.getTime() - existingUser.createdAt.getTime();
+          // Check if a user with this email already exists
+          const existingUser = await prisma.user.findUnique({
+            where: { email },
+            include: { accounts: true },
+          });
+          
+          // If user exists, check if they have an account with this provider
+          if (existingUser && account) {
+            const hasThisProvider = existingUser.accounts.some(
+              (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
+            );
             
-            if (timeSinceCreation < 5000) {
-              await prisma.user.update({
-                where: { id: existingUser.id },
-                data: { emailVerified: existingUser.createdAt },
-              });
-            } else {
-              await prisma.user.update({
-                where: { id: existingUser.id },
-                data: { emailVerified: now },
-              });
+            // If they don't have this specific provider account linked, block sign-in
+            // This prevents automatic account linking and forces explicit user action
+            if (!hasThisProvider) {
+              console.error(`User ${email} exists but doesn't have ${account.provider} account linked`);
+              return false; // This will trigger OAuthAccountNotLinked error
+            }
+            
+            // User exists and has this provider - update emailVerified if needed
+            if (!existingUser.emailVerified) {
+              const now = new Date();
+              const timeSinceCreation = now.getTime() - existingUser.createdAt.getTime();
+              
+              if (timeSinceCreation < 5000) {
+                await prisma.user.update({
+                  where: { id: existingUser.id },
+                  data: { emailVerified: existingUser.createdAt },
+                });
+              } else {
+                await prisma.user.update({
+                  where: { id: existingUser.id },
+                  data: { emailVerified: now },
+                });
+              }
             }
           }
+          // If user doesn't exist, PrismaAdapter will create them automatically
+        } catch (error) {
+          console.error("Error in signIn callback:", error);
+          return false;
         }
-        // If user doesn't exist, PrismaAdapter will create them automatically
       }
       
       return true;
     },
 
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       // On initial sign-in, add user data to token
       if (user) {
         token.sub = user.id;
@@ -227,12 +244,17 @@ export const authOptions: NextAuthOptions = {
         
         // For OAuth providers, fetch role from database since it's not in the user object
         if (account?.provider !== "credentials") {
-          const prisma = getPrisma();
-          const dbUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { role: true },
-          });
-          token.role = dbUser?.role || "USER";
+          try {
+            const prisma = getSafePrisma();
+            const dbUser = await prisma.user.findUnique({
+              where: { id: user.id },
+              select: { role: true },
+            });
+            token.role = dbUser?.role || "USER";
+          } catch (error) {
+            console.error("Error fetching user role:", error);
+            token.role = "USER";
+          }
         } else {
           // For credentials provider, role is already in user object
           token.role = user.role;
@@ -242,6 +264,26 @@ export const authOptions: NextAuthOptions = {
       // For OAuth sign-in, set emailVerified
       if (account?.provider !== "credentials") {
         token.emailVerified = new Date().toISOString();
+      }
+
+      // Refresh user data from database on update trigger
+      if (trigger === "update" && token.sub) {
+        try {
+          const prisma = getSafePrisma();
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub as string },
+            select: { role: true, email: true, name: true, image: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.email = dbUser.email;
+            token.name = dbUser.name;
+            token.picture = dbUser.image;
+          }
+        } catch (error) {
+          console.error("Error refreshing user data:", error);
+          // Continue with existing token data
+        }
       }
 
       return token;

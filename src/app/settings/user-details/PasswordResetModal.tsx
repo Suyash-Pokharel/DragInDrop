@@ -1,24 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Mail, Loader2 } from "lucide-react";
-import { Reveal } from "../components/Reveal";
-import ResetSent from "./ResetSent";
+import { Reveal } from "../../components/Reveal";
+import ResetSent from "../../login/ResetSent";
 
-interface ForgetPasswordProps {
+interface PasswordResetModalProps {
+  userEmail: string;
   onClose: () => void;
 }
 
-export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
+export default function PasswordResetModal({ userEmail, onClose }: PasswordResetModalProps) {
   const [showResetSent, setShowResetSent] = useState(false);
-  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Validation State
-  const [touched, setTouched] = useState(false);
-  const isEmailError = touched && email.trim() === "";
-  const isFormValid = email.trim() !== "";
 
   // Animation & Mount State
   const [showModal, setShowModal] = useState(false);
@@ -47,21 +42,14 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
     setTimeout(onClose, 300);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email.trim()) {
-      setTouched(true);
-      return;
-    }
-
+  const handleSendResetEmail = async () => {
     setIsLoading(true);
 
     try {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: userEmail }),
       });
 
       const result = await res.json();
@@ -72,7 +60,7 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
         alert(result.error || "Failed to send password reset email. Please try again.");
       }
     } catch (error) {
-      console.error("Forgot password error:", error);
+      console.error("Password reset error:", error);
       alert("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -83,7 +71,7 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
 
   // If ResetSent modal is shown, render it instead
   if (showResetSent) {
-    return <ResetSent email={email} onClose={onClose} />;
+    return <ResetSent email={userEmail} onClose={onClose} />;
   }
 
   return createPortal(
@@ -106,49 +94,39 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
           <X size={20} />
         </button>
 
-        {/* --- INPUT FORM --- */}
+        {/* --- CONFIRMATION VIEW --- */}
         <div className="p-6 md:p-8">
           <Reveal width="100%" delay={0.05}>
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
-                  <Mail size={32} />
-                </div>
-                <h2 className="text-3xl font-bold text-text-main mb-2">Forgot password?</h2>
-                <p className="text-text-secondary text-sm">
-                  Enter your email address and we&apos;ll send you a link to reset your password.
-                </p>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                <Mail size={32} />
               </div>
-            </Reveal>
+              <h2 className="text-3xl font-bold text-text-main mb-2">Update Password?</h2>
+              <p className="text-text-secondary text-sm">
+                We&apos;ll send a password reset link to your email address.
+              </p>
+            </div>
+          </Reveal>
 
-            <Reveal width="100%" delay={0.1}>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-1.5 text-left">
-                  <label
-                    htmlFor="recoveryEmail"
-                    className="block text-sm font-medium text-text-main"
-                  >
-                    Email
-                    {isEmailError && <span className="inline-error">REQUIRED</span>}
-                  </label>
+          <Reveal width="100%" delay={0.1}>
+            <div className="space-y-6">
+              <div className="bg-surface-highlight/50 border border-border rounded-xl p-4">
+                <p className="text-sm text-text-secondary mb-2">Email address:</p>
+                <p className="text-base font-semibold text-text-main">{userEmail}</p>
+              </div>
 
-                  <input
-                    id="recoveryEmail"
-                    name="email"
-                    autoComplete="email"
-                    type="email"
-                    disabled={isLoading}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onBlur={() => setTouched(true)}
-                    placeholder="example@gmail.com"
-                    className={`input-base ${isEmailError ? "input-error" : "input-default"}`}
-                  />
-                </div>
-
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
                 <button
-                  type="submit"
-                  disabled={isLoading || !isFormValid}
-                  className="w-full py-3 px-4 rounded-lg bg-primary text-white font-semibold hover:bg-secondary active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  onClick={handleClose}
+                  disabled={isLoading}
+                  className="w-full sm:w-1/2 py-3 px-4 rounded-lg border border-border text-text-main font-semibold hover:bg-surface-highlight active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendResetEmail}
+                  disabled={isLoading}
+                  className="w-full sm:w-1/2 py-3 px-4 rounded-lg bg-primary text-white font-semibold hover:bg-secondary active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -156,12 +134,13 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
                       <span>Sending...</span>
                     </>
                   ) : (
-                    "Get Email"
+                    "Send Reset Link"
                   )}
                 </button>
-              </form>
-            </Reveal>
-          </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </div>,
     document.body,

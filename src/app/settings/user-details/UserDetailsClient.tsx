@@ -6,6 +6,7 @@ import { User, Shield, Trash2, KeyRound, Camera, CheckCircle2 } from "lucide-rea
 import { useUser } from "../../components/UserProvider";
 import { PublicUser } from "@/lib/getCurrentUser";
 import TwoFactorModal from "./TwoFactorModal";
+import PasswordResetModal from "./PasswordResetModal";
 
 interface UserDetailsClientProps {
   user: PublicUser;
@@ -24,6 +25,7 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
 
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -142,7 +144,10 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
                 </p>
               </div>
             </div>
-            <button className="px-5 py-2.5 border border-border/60 hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-semibold rounded-xl transition-all whitespace-nowrap shadow-sm hover:shadow-md active:scale-95">
+            <button 
+              onClick={() => setShowPasswordResetModal(true)}
+              className="px-5 py-2.5 border border-border/60 hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-semibold rounded-xl transition-all whitespace-nowrap shadow-sm hover:shadow-md active:scale-95"
+            >
               Update Password
             </button>
           </div>
@@ -202,6 +207,13 @@ export default function UserDetailsClient({ user }: UserDetailsClientProps) {
         <TwoFactorModal
           onClose={() => setShow2FAModal(false)}
           onSuccess={() => setIs2FAEnabled(true)}
+        />
+      )}
+
+      {showPasswordResetModal && (
+        <PasswordResetModal
+          userEmail={user.email}
+          onClose={() => setShowPasswordResetModal(false)}
         />
       )}
     </div>

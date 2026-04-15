@@ -22,6 +22,54 @@ export default function Upload({ onClose }: UploadProps) {
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
 
+  // Auto-detect and save timezone on component mount (first step of upload process)
+  useEffect(() => {
+    const autoDetectTimezone = async () => {
+      try {
+        const response = await fetch('/api/user/preferences');
+        if (response.ok) {
+          const preferences = await response.json();
+          
+          // If no timezone is set, auto-detect and save it
+          if (!preferences.timezone) {
+            try {
+              const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+              if (detectedTimezone) {
+                // Auto-save the detected timezone
+                const autoSavePreferences = {
+                  dateFormat: preferences.dateFormat || "DD/MM/YYYY",
+                  timeFormat: preferences.timeFormat || "12h", 
+                  firstDayOfWeek: preferences.firstDayOfWeek || "sunday",
+                  timezone: detectedTimezone
+                };
+
+                const saveResponse = await fetch("/api/user/preferences", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(autoSavePreferences),
+                });
+
+                if (saveResponse.ok) {
+                  console.log('Auto-saved detected timezone in Upload:', detectedTimezone);
+                } else {
+                  console.error('Failed to auto-save detected timezone in Upload');
+                }
+              }
+            } catch (error) {
+              console.error('Failed to detect timezone in Upload:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user timezone in Upload:', error);
+      }
+    };
+
+    autoDetectTimezone();
+  }, []);
+
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(t);

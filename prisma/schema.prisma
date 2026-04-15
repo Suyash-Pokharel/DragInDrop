@@ -4,102 +4,146 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Remember: these are handled by config, not here
 }
 
-enum TokenType {
-  VERIFY
-  RESET_PASSWORD
+model Account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
-enum Role {
-  USER
-  ADMIN
+model PlatformPost {
+  id              String             @id
+  postId          String
+  socialAccountId String
+  platformPostId  String?
+  platformUrl     String?
+  status          PlatformPostStatus @default(PENDING)
+  errorMessage    String?
+  retryCount      Int                @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime
+  Post            Post               @relation(fields: [postId], references: [id], onDelete: Cascade)
+  SocialAccount   SocialAccount      @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, socialAccountId])
+  @@index([postId])
+  @@index([socialAccountId])
+  @@index([status])
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String? // Optional (until set)
-  image         String?
-  emailVerified DateTime?
-  role          Role      @default(USER)
+model Post {
+  id            String         @id
+  userId        String
+  title         String         @db.VarChar(100)
+  description   String?        @db.VarChar(250)
+  videoFileKey  String
+  videoFileName String
+  videoFileSize Int
+  scheduledFor  DateTime
+  status        PostStatus     @default(SCHEDULED)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime
+  PlatformPost  PlatformPost[]
+  User          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  tokens         VerificationToken[]
-  accounts       Account[]
-  sessions       Session[]
-  socialAccounts SocialAccount[]
-  posts          Post[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// New Separate Model
-model VerificationToken {
-  id        String    @id @default(cuid())
-  // Store only a hashed token server-side for safety
-  tokenHash String    @unique
-  type      TokenType
-  createdAt DateTime  @default(now())
-  expiresAt DateTime
-
-  // Link to User
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([scheduledFor])
+  @@index([status])
+  @@index([userId])
 }
 
 model RegistrationAttempt {
-  id        String   @id @default(cuid())
+  id        String   @id
   ip        String
   createdAt DateTime @default(now())
 
   @@index([ip, createdAt])
 }
 
-// NextAuth Account model
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-}
-
-// NextAuth Session model
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// Post Creation Models
-enum PostStatus {
-  DRAFT
-  SCHEDULED
-  PUBLISHING
-  PUBLISHED
-  PARTIALLY_PUBLISHED
-  FAILED
+model SocialAccount {
+  id                String         @id
+  userId            String
+  platform          String
+  platformAccountId String
+  platformUsername  String?
+  accessToken       String
+  refreshToken      String?
+  expiresAt         DateTime?
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime
+  PlatformPost      PlatformPost[]
+  User              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, platformAccountId])
+  @@index([platform])
+  @@index([userId])
+}
+
+model User {
+  id                String              @id
+  email             String              @unique
+  password          String?
+  emailVerified     DateTime?
+  role              Role                @default(USER)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  name              String?
+  image             String?
+  Account           Account[]
+  Post              Post[]
+  Session           Session[]
+  SocialAccount     SocialAccount[]
+  UserPreferences   UserPreferences?
+  VerificationToken VerificationToken[]
+}
+
+model UserPreferences {
+  id             String   @id
+  userId         String   @unique
+  dateFormat     String   @default("DD/MM/YYYY")
+  timeFormat     String   @default("12h")
+  firstDayOfWeek String   @default("sunday")
+  timezone       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  id        String    @id
+  tokenHash String    @unique
+  type      TokenType
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  userId    String
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum PlatformPostStatus {
@@ -109,66 +153,21 @@ enum PlatformPostStatus {
   FAILED
 }
 
-model SocialAccount {
-  id                String   @id @default(cuid())
-  userId            String
-  platform          String
-  platformAccountId String
-  platformUsername  String?
-  accessToken       String   @db.Text
-  refreshToken      String?  @db.Text
-  expiresAt         DateTime?
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platformPosts PlatformPost[]
-
-  @@unique([userId, platform, platformAccountId])
-  @@index([userId])
-  @@index([platform])
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  PARTIALLY_PUBLISHED
+  FAILED
 }
 
-model Post {
-  id            String     @id @default(cuid())
-  userId        String
-  title         String     @db.VarChar(100)
-  description   String?    @db.VarChar(250)
-  videoFileKey  String
-  videoFileName String
-  videoFileSize Int
-  scheduledFor  DateTime
-  status        PostStatus @default(SCHEDULED)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platformPosts PlatformPost[]
-
-  @@index([userId])
-  @@index([status])
-  @@index([scheduledFor])
+enum Role {
+  USER
+  ADMIN
 }
 
-model PlatformPost {
-  id              String              @id @default(cuid())
-  postId          String
-  socialAccountId String
-  platformPostId  String?
-  platformUrl     String?
-  status          PlatformPostStatus  @default(PENDING)
-  errorMessage    String?             @db.Text
-  retryCount      Int                 @default(0)
-  publishedAt     DateTime?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-
-  post          Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
-
-  @@unique([postId, socialAccountId])
-  @@index([postId])
-  @@index([socialAccountId])
-  @@index([status])
+enum TokenType {
+  VERIFY
+  RESET_PASSWORD
 }

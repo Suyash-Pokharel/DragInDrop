@@ -76,7 +76,7 @@ export default function ReferralPage() {
             </div>
             <div className="flex items-center gap-1.5 mt-1 text-xs text-text-secondary/70">
               <Info className="w-3.5 h-3.5" />
-              <span>You cannot apply a code if you have already applied one.</span>
+              <span>Only one code can be applied per account. So if you have already applied a code, you cannot apply a second one.</span>
             </div>
           </div>
         </section>

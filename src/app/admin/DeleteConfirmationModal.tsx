@@ -133,7 +133,7 @@ export default function DeleteConfirmationModal({
                 <AlertTriangle className="w-6 h-6" aria-hidden="true" />
               </div>
               <h2 id="delete-confirmation-modal-title" className="text-xl font-bold text-text-main">
-                Remove User
+                Delete User Account
               </h2>
             </div>
             <button
@@ -152,7 +152,7 @@ export default function DeleteConfirmationModal({
             {/* User information */}
             <div className="space-y-3">
               <p className="text-sm font-medium text-text-secondary">
-                You are about to permanently delete the following account:
+                You are about to permanently delete the following user:
               </p>
               <div className="bg-surface/50 border border-border/60 rounded-2xl p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-error/10 to-error/20 border border-error/20 flex items-center justify-center text-error text-lg font-black shadow-sm shrink-0 uppercase">
@@ -171,7 +171,7 @@ export default function DeleteConfirmationModal({
             <div className="bg-error/5 border border-error/20 rounded-xl p-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-error shrink-0 mt-0.5" />
               <p className="text-sm text-error font-medium">
-                This process cannot be undone. All user data, linked integrations, and history will be instantly erased.
+                This process cannot be undone. All user data, linked accounts, and history will be deleted.
               </p>
             </div>
           </div>

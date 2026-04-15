@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Calendar, ChevronLeft, Loader2 } from "lucide-react";
+import { X, Calendar, ChevronLeft, Loader2, Globe2 } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
 
 interface EditPostProps {
@@ -40,6 +40,46 @@ export default function EditPost({ onClose }: EditPostProps) {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [showDraftSuccess, setShowDraftSuccess] = useState(false);
+
+  // User preferences for timezone display
+  const [userTimezone, setUserTimezone] = useState<string | null>(null);
+
+  /**
+   * Get UTC offset for a timezone
+   * Returns format like "UTC+5:45" or "UTC-8:00"
+   */
+  const getUTCOffset = (timezone: string): string => {
+    try {
+      const now = new Date();
+      const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+      const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const offsetMinutes = (tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
+      const hours = Math.floor(Math.abs(offsetMinutes) / 60);
+      const minutes = Math.abs(offsetMinutes) % 60;
+      const sign = offsetMinutes >= 0 ? '+' : '-';
+      return `UTC${sign}${hours}:${minutes.toString().padStart(2, '0')}`;
+    } catch {
+      return 'UTC';
+    }
+  };
+
+  // Fetch user timezone on component mount
+  useEffect(() => {
+    const fetchUserTimezone = async () => {
+      try {
+        const response = await fetch('/api/user/preferences');
+        if (response.ok) {
+          const preferences = await response.json();
+          // Simply use the timezone if it exists (should be auto-saved from Upload page)
+          setUserTimezone(preferences.timezone || null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user timezone:', error);
+      }
+    };
+
+    fetchUserTimezone();
+  }, []);
 
   // Helper to format Date for datetime-local (YYYY-MM-DDTHH:mm)
   const formatDateTimeLocal = (d: Date) => {
@@ -280,6 +320,27 @@ export default function EditPost({ onClose }: EditPostProps) {
                       </svg>
                       {dateError}
                     </p>
+                  )}
+                  
+                  {/* Timezone Information */}
+                  {userTimezone ? (
+                    <div className="mt-3 p-3 bg-surface/30 backdrop-blur-md border border-border/40 rounded-xl">
+                      <div className="flex items-center gap-2 text-xs text-text-secondary">
+                        <Globe2 className="w-4 h-4 text-primary" />
+                        <span className="font-medium">Upload Timezone:</span>
+                        <span className="font-semibold text-text-main">{userTimezone} ({getUTCOffset(userTimezone)})</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3 p-3 bg-warning/10 backdrop-blur-md border border-warning/30 rounded-xl">
+                      <div className="flex items-center gap-2 text-xs text-warning">
+                        <Globe2 className="w-4 h-4" />
+                        <span className="font-medium">Timezone not set</span>
+                      </div>
+                      <div className="mt-1.5 text-xs text-warning">
+                        Please set your timezone in preferences for accurate scheduling.
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

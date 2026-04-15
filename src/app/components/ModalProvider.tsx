@@ -139,8 +139,12 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
           // Parse upload response to extract fileKey
           try {
             const responseData = JSON.parse(responseText);
+            console.log("Upload response data:", responseData);
             if (responseData.fileKey) {
+              console.log("Setting fileKey in context:", responseData.fileKey);
               setFileKey(responseData.fileKey);
+            } else {
+              console.error("No fileKey in upload response!");
             }
           } catch (error) {
             console.error("Failed to parse upload response:", error);

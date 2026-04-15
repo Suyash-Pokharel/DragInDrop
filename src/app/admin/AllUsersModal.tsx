@@ -130,7 +130,7 @@ export default function AllUsersModal({
             <div>
               <h2 id="all-users-modal-title" className="text-2xl font-bold flex items-center gap-2 text-text-main">
                 <Users className="text-primary w-7 h-7" />
-                Platform Directory
+                List of All Users
               </h2>
               <p className="text-sm text-text-secondary mt-1">Total registered users: <span className="font-bold text-text-main">{users.length}</span></p>
             </div>

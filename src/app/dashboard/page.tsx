@@ -25,6 +25,21 @@ import FacebookLogo from "../assets/logo/Facebook.webp";
 import XLogo from "../assets/logo/X.webp";
 import ThreadsLogo from "../assets/logo/Threads.webp";
 
+// Helper for converting UTC time to user's timezone
+const formatScheduledTime = (utcDate: Date, timezone: string | null): string => {
+  const date = new Date(utcDate);
+  const userTimezone = timezone || 'UTC';
+  
+  return date.toLocaleString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: userTimezone
+  });
+};
+
 // Helper for platform icons
 const getPlatformIcon = (platform: string, className = "w-5 h-5") => {
   let src;
@@ -83,10 +98,18 @@ type DashboardData = {
   userName: string;
 };
 
+type UserPreferences = {
+  dateFormat: string;
+  timeFormat: string;
+  firstDayOfWeek: string;
+  timezone: string | null;
+};
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const modal = useModal();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -95,11 +118,14 @@ export default function DashboardPage() {
     }
 
     if (status === "authenticated" && session?.user) {
-      // Fetch dashboard data from API
-      fetch("/api/dashboard")
-        .then(res => res.json())
-        .then(data => {
-          setDashboardData(data);
+      // Fetch dashboard data and user preferences in parallel
+      Promise.all([
+        fetch("/api/dashboard").then(res => res.json()),
+        fetch("/api/user/preferences").then(res => res.json())
+      ])
+        .then(([dashboardData, preferences]) => {
+          setDashboardData(dashboardData);
+          setUserPreferences(preferences);
           setLoading(false);
         })
         .catch(error => {
@@ -135,7 +161,7 @@ export default function DashboardPage() {
   } = dashboardData;
 
   return (
-    <div className="space-y-10 pb-16 load-step-2 relative overflow-hidden">
+    <div className="space-y-10 pb-16 load-step-2 relative">
       
       {/* Ambient Background Glows - Enhanced for better visibility */}
       <div className="absolute top-0 left-1/4 w-full max-w-[100vw] h-[400px] bg-primary/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
@@ -438,9 +464,7 @@ export default function DashboardPage() {
                           
                           <div className="flex items-center text-xs font-semibold text-text-secondary mb-4 bg-surface-highlight/50 w-fit px-3 py-1.5 rounded-xl border border-border shadow-inner">
                             <Clock size={14} className="mr-2 text-primary" />
-                            {new Date(post.scheduledFor).toLocaleString("en-US", {
-                              weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
-                            })}
+                            {formatScheduledTime(post.scheduledFor, userPreferences?.timezone || null)}
                           </div>
                           
                           <div className="flex items-center justify-between pt-4 border-t border-border">

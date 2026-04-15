@@ -50,9 +50,37 @@ export default function NotificationsPage() {
             {/* Toggle Item */}
             <div className="flex items-start justify-between gap-4">
               <div>
+                <h4 className="font-medium text-text-main text-sm">Platform Connected</h4>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Receive an email when a new social platform is connected to your account.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer mt-1">
+                <input type="checkbox" className="sr-only peer" defaultChecked />
+                <div className="w-9 h-5 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            {/* Toggle Item */}
+            <div className="flex items-start justify-between gap-4">
+              <div>
                 <h4 className="font-medium text-text-main text-sm">Re-Authentication Required</h4>
                 <p className="text-xs text-text-secondary mt-0.5">
                   Alerts when a social account token expires and needs reconnecting.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer mt-1">
+                <input type="checkbox" className="sr-only peer" defaultChecked />
+                <div className="w-9 h-5 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            {/* Toggle Item */}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h4 className="font-medium text-text-main text-sm">Platform Disconnected</h4>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Receive an email when a platform is disconnected from your account.
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer mt-1">
