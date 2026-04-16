@@ -192,12 +192,12 @@ export const authOptions: NextAuthOptions = {
           // Check if a user with this email already exists
           const existingUser = await prisma.user.findUnique({
             where: { email },
-            include: { accounts: true },
+            include: { Account: true },
           });
           
           // If user exists, check if they have an account with this provider
           if (existingUser && account) {
-            const hasThisProvider = existingUser.accounts.some(
+            const hasThisProvider = existingUser.Account.some(
               (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
             );
             

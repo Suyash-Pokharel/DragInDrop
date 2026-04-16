@@ -24,13 +24,13 @@ export default async function AdminPage() {
       emailVerified: true,
       createdAt: true,
       role: true,
-      accounts: {
+      Account: {
         select: {
           provider: true,
           providerAccountId: true,
         },
       },
-      socialAccounts: {
+      SocialAccount: {
         select: {
           platform: true,
           platformAccountId: true,

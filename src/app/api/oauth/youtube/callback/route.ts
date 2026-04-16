@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { encryptToken } from "@/lib/encryption";
 import { getPrisma } from "@/lib/prisma";
@@ -609,6 +610,7 @@ export async function GET(request: NextRequest) {
           isActive: true,
         },
         create: {
+          id: crypto.randomUUID(),
           userId: user.id,
           platform: "YouTube",
           platformAccountId: googleUserId,
@@ -617,6 +619,8 @@ export async function GET(request: NextRequest) {
           refreshToken: encryptedRefreshToken,
           expiresAt,
           isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 

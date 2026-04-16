@@ -12,7 +12,8 @@ import {
   Plus, 
   AlertTriangle,
   ArrowRight,
-  FileEdit
+  FileEdit,
+  Trash2
 } from "lucide-react";
 import DashboardActivityChart from "./DashboardActivityChart";
 import Image from "next/image";
@@ -111,6 +112,7 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -124,18 +126,61 @@ export default function DashboardPage() {
         fetch("/api/user/preferences").then(res => res.json())
       ])
         .then(([dashboardData, preferences]) => {
+          console.log("Dashboard data received:", dashboardData);
+          console.log("Preferences received:", preferences);
+          
+          // Check if API returned an error
+          if (dashboardData.error) {
+            console.error("Dashboard API error:", dashboardData.error);
+            setError(dashboardData.error);
+            setLoading(false);
+            return;
+          }
+          
           setDashboardData(dashboardData);
           setUserPreferences(preferences);
           setLoading(false);
         })
         .catch(error => {
           console.error("Failed to fetch dashboard data:", error);
+          setError(error.message || "Failed to load dashboard");
           setLoading(false);
         });
     }
   }, [status, session]);
 
-  if (status === "loading" || loading || !dashboardData) {
+  if (status === "loading" || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-secondary">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-error" />
+          </div>
+          <h3 className="text-xl font-bold text-text-main mb-2">Failed to Load Dashboard</h3>
+          <p className="text-text-secondary mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -147,16 +192,16 @@ export default function DashboardPage() {
   }
 
   const {
-    totalScheduled,
-    totalPublished,
-    totalFailed,
-    totalDrafts,
-    connectedNetworks,
-    inactiveNetworks,
-    socialAccounts,
-    upcomingPosts,
-    draftPosts,
-    chartData,
+    totalScheduled = 0,
+    totalPublished = 0,
+    totalFailed = 0,
+    totalDrafts = 0,
+    connectedNetworks = 0,
+    inactiveNetworks = 0,
+    socialAccounts = [],
+    upcomingPosts = [],
+    draftPosts = [],
+    chartData = [],
     userName
   } = dashboardData;
 
@@ -198,21 +243,21 @@ export default function DashboardPage() {
       {/* High-Level Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 relative z-10">
         {/* Card 1 */}
-        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:shadow-glow transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
           <h3 className="text-4xl font-black text-text-main mb-1">{totalScheduled}</h3>
           <p className="text-text-secondary text-sm font-medium">Scheduled Posts</p>
         </div>
 
         {/* Card 2 */}
-        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:border-success/50 hover:shadow-[0_0_30px_-5px_var(--success)] transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:border-success/50 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-success/10 rounded-full blur-2xl group-hover:bg-success/20 transition-colors"></div>
           <h3 className="text-4xl font-black text-text-main mb-1">{totalPublished}</h3>
           <p className="text-text-secondary text-sm font-medium">Successfully Published</p>
         </div>
 
         {/* Card 3 */}
-        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:border-error/50 hover:shadow-[0_0_30px_-5px_var(--error)] transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:border-error/50 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-error/10 rounded-full blur-2xl group-hover:bg-error/20 transition-colors"></div>
           <div className="flex items-end gap-3 mb-1">
             <h3 className="text-4xl font-black text-text-main">{totalFailed}</h3>
@@ -222,7 +267,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Card 4 - Draft Posts */}
-        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:border-warning/50 hover:shadow-[0_0_30px_-5px_var(--warning)] transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+        <div className="group bg-surface/60 backdrop-blur-md border border-border p-6 rounded-3xl shadow-sm hover:border-warning/50 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-warning/10 rounded-full blur-2xl group-hover:bg-warning/20 transition-colors"></div>
           <h3 className="text-4xl font-black text-text-main mb-1">{totalDrafts}</h3>
           <p className="text-text-secondary text-sm font-medium">Draft Posts</p>
@@ -309,72 +354,11 @@ export default function DashboardPage() {
               </div>
             )}
           </section>
-
-          {/* Draft Posts Section */}
-          <section className="bg-surface/50 backdrop-blur-xl border border-border p-6 md:p-8 rounded-[2rem] shadow-sm relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-            <div className="flex justify-between items-center mb-6 relative z-10">
-              <div>
-                <h3 className="text-xl font-bold flex items-center gap-2 text-text-main">
-                  <FileEdit className="text-warning w-6 h-6" />
-                  Draft Posts
-                </h3>
-                <p className="text-sm text-text-secondary mt-1">Work in progress posts</p>
-              </div>
-              <span className="text-xs font-bold text-text-secondary bg-surface border border-border px-4 py-1.5 rounded-full shadow-sm">
-                {totalDrafts} {totalDrafts === 1 ? 'Draft' : 'Drafts'}
-              </span>
-            </div>
-            
-            {draftPosts.length === 0 ? (
-              <div className="bg-surface border border-dashed border-border rounded-xl p-8 text-center flex flex-col items-center justify-center gap-4">
-                <div className="w-16 h-16 bg-surface-highlight rounded-full flex items-center justify-center">
-                  <FileEdit className="w-8 h-8 text-text-secondary opacity-50" />
-                </div>
-                <div>
-                  <h4 className="text-base font-bold text-text-main">No drafts yet</h4>
-                  <p className="text-sm text-text-secondary mt-1 max-w-md">Start creating and save your work as drafts to continue later.</p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {draftPosts.map((draft) => (
-                  <div key={draft.id} className="bg-background border border-border rounded-xl p-5 hover:border-warning/50 hover:shadow-glow transition-all duration-300 group/draft">
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-bold text-sm text-text-main line-clamp-2 pr-2 leading-relaxed group-hover/draft:text-warning transition-colors">
-                        {draft.title}
-                      </h4>
-                      <span className="shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider bg-warning/10 text-warning border border-warning/20 shadow-sm">
-                        DRAFT
-                      </span>
-                    </div>
-                    {draft.description && (
-                      <p className="text-xs text-text-secondary line-clamp-2 mb-3 leading-relaxed">
-                        {draft.description}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                      <span className="text-xs text-text-secondary font-medium">
-                        {new Date(draft.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric"
-                        })}
-                      </span>
-                      <button className="text-xs font-bold text-primary hover:text-secondary flex items-center gap-1 transition-colors group-hover/draft:gap-2">
-                        Continue Editing <ArrowRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
         </div>
 
         {/* Side Column: Timeline */}
         <div className="xl:col-span-2">
-          <section className="bg-surface/80 backdrop-blur-xl border border-border p-6 md:p-8 rounded-[2rem] shadow-sm h-full max-h-[850px] flex flex-col">
+          <section className="bg-surface/80 backdrop-blur-xl border border-border p-6 md:p-8 rounded-[2rem] shadow-sm max-h-[720px] flex flex-col">
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h3 className="text-xl font-bold flex items-center gap-2 text-text-main">
@@ -403,21 +387,23 @@ export default function DashboardPage() {
                   </button>
                 </div>
               ) : (
-                <div className="relative pl-4 space-y-8 before:absolute before:inset-0 before:ml-[23px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-border before:via-border/50 before:to-transparent">
+                <div className="space-y-6">
                   {/* Render Draft Posts First */}
                   {draftPosts.map((draft) => (
                     <div key={draft.id} className="relative group">
-                      {/* Timeline Node */}
-                      <div className="absolute -left-[5px] top-1.5 z-10 flex items-center justify-center">
-                        <div className="w-4 h-4 rounded-full border-4 border-surface bg-warning shadow-[0_0_12px_var(--warning)]"></div>
-                      </div>
-
                       {/* Draft Card */}
-                      <div className="ml-6 p-5 rounded-xl border bg-warning/10 border-warning/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow">
+                      <div className="p-5 rounded-xl border bg-warning/10 border-warning/30 transition-all duration-300 hover:border-warning/50 hover:bg-warning/15">
                         <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-bold text-sm text-text-main line-clamp-2 pr-4 leading-relaxed">
-                            {draft.title || "Untitled Draft"}
-                          </h4>
+                          <div className="flex items-center gap-3 flex-1 pr-4">
+                            {/* Blinking Indicator for drafts - warning color with reduced opacity */}
+                            <div className="relative flex h-3 w-3 shrink-0">
+                              <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-warning opacity-30"></span>
+                              <span className="relative inline-flex rounded-full h-3 w-3 bg-warning"></span>
+                            </div>
+                            <h4 className="font-bold text-sm text-text-main line-clamp-2 leading-relaxed">
+                              {draft.title || "Untitled Draft"}
+                            </h4>
+                          </div>
                           <span className="shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider bg-warning text-white shadow-sm">
                             DRAFT
                           </span>
@@ -433,9 +419,40 @@ export default function DashboardPage() {
                           <span className="text-xs text-text-secondary font-medium">
                             Not Scheduled
                           </span>
-                          <button className="text-xs font-bold text-warning hover:text-warning/80 flex items-center gap-1 transition-colors">
-                            Edit Draft <FileEdit size={14} />
-                          </button>
+                          <div className="flex items-center gap-2 sm:flex-row flex-col sm:gap-2 gap-1">
+                            <button 
+                              className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-warning/10 hover:bg-warning hover:text-white flex items-center justify-center text-warning transition-colors cursor-pointer border border-warning/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
+                              aria-label="Edit draft post"
+                              onClick={() => {
+                                modal.openEditPost(draft.id);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  modal.openEditPost(draft.id);
+                                }
+                              }}
+                              tabIndex={0}
+                            >
+                              <FileEdit size={14} />
+                            </button>
+                            <button 
+                              className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-error/10 hover:bg-error hover:text-white flex items-center justify-center text-error transition-colors cursor-pointer border border-error/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
+                              aria-label="Delete draft post"
+                              onClick={() => {
+                                modal.openDeleteConfirmation(draft.id, draft.title || "Untitled Draft");
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  modal.openDeleteConfirmation(draft.id, draft.title || "Untitled Draft");
+                                }
+                              }}
+                              tabIndex={0}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -446,17 +463,21 @@ export default function DashboardPage() {
                     const isNext = i === 0; // Highlight the very next post
                     return (
                       <div key={post.id} className="relative group">
-                        {/* Timeline Node */}
-                        <div className="absolute -left-[5px] top-1.5 z-10 flex items-center justify-center">
-                          <div className={`w-4 h-4 rounded-full border-4 border-surface ${isNext ? 'bg-primary shadow-[0_0_12px_var(--primary)] animate-pulse' : 'bg-text-secondary/50 group-hover:bg-text-main transition-colors'}`}></div>
-                        </div>
-
                         {/* Content Card */}
-                        <div className={`ml-6 p-5 rounded-xl border transition-all duration-300 ${isNext ? 'bg-surface border-primary/40 shadow-glow' : 'bg-background border-border hover:border-primary/30 hover:-translate-y-1 hover:shadow-glow'}`}>
+                        <div className="p-5 rounded-xl border bg-background border-border transition-all duration-300 hover:border-primary/40 hover:bg-surface/50">
                           <div className="flex justify-between items-start mb-3">
-                            <h4 className="font-bold text-sm text-text-main line-clamp-2 pr-4 leading-relaxed group-hover:text-primary transition-colors">
-                              {post.title || "Untitled Video"}
-                            </h4>
+                            <div className="flex items-center gap-3 flex-1 pr-4">
+                              {/* Blinking Indicator - positioned to the left of title */}
+                              {isNext && (
+                                <div className="relative flex h-3 w-3 shrink-0">
+                                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-primary opacity-30"></span>
+                                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                                </div>
+                              )}
+                              <h4 className="font-bold text-sm text-text-main line-clamp-2 leading-relaxed group-hover:text-primary transition-colors">
+                                {post.title || "Untitled Video"}
+                              </h4>
+                            </div>
                             <div className={`shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider ${isNext ? 'bg-primary text-white' : 'bg-surface-highlight text-text-secondary border border-border'}`}>
                               {post.status.replace("_", " ")}
                             </div>
@@ -484,9 +505,40 @@ export default function DashboardPage() {
                               </div>
                             </div>
                             
-                            <Link href={`/calendar`} className="w-8 h-8 rounded-full bg-surface-highlight flex items-center justify-center text-text-secondary hover:bg-primary hover:text-white transition-colors cursor-pointer border border-border shadow-sm">
-                              <ArrowRight size={14} />
-                            </Link>
+                            <div className="flex items-center gap-2 sm:flex-row flex-col sm:gap-2 gap-1">
+                              <button 
+                                className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-primary/10 hover:bg-primary hover:text-white flex items-center justify-center text-primary transition-colors cursor-pointer border border-primary/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
+                                aria-label="Edit scheduled post"
+                                onClick={() => {
+                                  modal.openEditPost(post.id);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    modal.openEditPost(post.id);
+                                  }
+                                }}
+                                tabIndex={0}
+                              >
+                                <FileEdit size={14} />
+                              </button>
+                              <button 
+                                className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-error/10 hover:bg-error hover:text-white flex items-center justify-center text-error transition-colors cursor-pointer border border-error/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
+                                aria-label="Delete scheduled post"
+                                onClick={() => {
+                                  modal.openDeleteConfirmation(post.id, post.title || "Untitled Post");
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    modal.openDeleteConfirmation(post.id, post.title || "Untitled Post");
+                                  }
+                                }}
+                                tabIndex={0}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

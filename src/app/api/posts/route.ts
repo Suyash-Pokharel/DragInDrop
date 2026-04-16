@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
 
@@ -13,12 +14,13 @@ import { getPrisma } from "@/lib/prisma";
 function convertToUTC(dateTimeStr: string, timezone: string): Date {
   // Parse the input to extract date/time components
   // The input is a naive datetime that should be interpreted as being in the user's timezone
-  const match = dateTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  // Support both formats: with seconds (2026-04-16T09:20:00) and without (2026-04-16T09:20)
+  const match = dateTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
   if (!match) {
     throw new Error('Invalid datetime format');
   }
   
-  const [, year, month, day, hour, minute, second] = match;
+  const [, year, month, day, hour, minute, second = '00'] = match;
   
   // Create a date string in ISO format with explicit timezone
   // We'll use a reference date to find the offset
@@ -218,6 +220,7 @@ export async function POST(request: NextRequest) {
       // Create Post record with status SCHEDULED
       const post = await tx.post.create({
         data: {
+          id: crypto.randomUUID(),
           userId: user.id,
           title,
           description: description || null,
@@ -226,6 +229,8 @@ export async function POST(request: NextRequest) {
           videoFileSize,
           scheduledFor: scheduledForUTC,
           status: "SCHEDULED",
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 
@@ -234,9 +239,12 @@ export async function POST(request: NextRequest) {
         selectedPlatforms.map((platform) =>
           tx.platformPost.create({
             data: {
+              id: crypto.randomUUID(),
               postId: post.id,
               socialAccountId: platformToAccountMap.get(platform)!,
               status: "PENDING",
+              createdAt: new Date(),
+              updatedAt: new Date(),
             },
           })
         )

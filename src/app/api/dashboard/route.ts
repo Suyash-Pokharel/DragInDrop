@@ -6,7 +6,10 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     
+    console.log("[Dashboard API] User:", user ? `${user.id} (${user.email})` : "null");
+    
     if (!user) {
+      console.log("[Dashboard API] Unauthorized - no user found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -27,7 +30,12 @@ export async function GET() {
         where: { userId: user.id, status: { in: ["PUBLISHED", "PARTIALLY_PUBLISHED"] } }
       }),
       prisma.platformPost.count({
-        where: { socialAccount: { userId: user.id }, status: "FAILED" }
+        where: { 
+          SocialAccount: { 
+            userId: user.id 
+          }, 
+          status: "FAILED" 
+        }
       }),
       prisma.post.count({
         where: { userId: user.id, status: "DRAFT" }
@@ -36,6 +44,14 @@ export async function GET() {
         where: { userId: user.id }
       })
     ]);
+
+    console.log("[Dashboard API] Metrics:", {
+      totalScheduled,
+      totalPublished,
+      totalFailed,
+      totalDrafts,
+      socialAccountsCount: socialAccounts.length
+    });
 
     const connectedNetworks = socialAccounts.length;
     const inactiveNetworks = socialAccounts.filter(s => !s.isActive).length;
@@ -49,8 +65,14 @@ export async function GET() {
       orderBy: { scheduledFor: "asc" },
       take: 5,
       include: {
-        platformPosts: {
-          include: { socialAccount: true }
+        PlatformPost: {
+          include: { 
+            SocialAccount: {
+              select: {
+                platform: true
+              }
+            }
+          }
         }
       }
     });
@@ -97,7 +119,7 @@ export async function GET() {
       return { date: label, posts: count };
     });
 
-    return NextResponse.json({
+    const responseData = {
       totalScheduled,
       totalPublished,
       totalFailed,
@@ -109,11 +131,26 @@ export async function GET() {
         platform: acc.platform,
         isActive: acc.isActive
       })),
-      upcomingPosts,
+      upcomingPosts: upcomingPosts.map(post => ({
+        id: post.id,
+        title: post.title,
+        status: post.status,
+        scheduledFor: post.scheduledFor,
+        platformPosts: post.PlatformPost.map(pp => ({
+          id: pp.id,
+          socialAccount: {
+            platform: pp.SocialAccount.platform
+          }
+        }))
+      })),
       draftPosts,
       chartData,
       userName: user.name
-    });
+    };
+
+    console.log("[Dashboard API] Response data:", JSON.stringify(responseData, null, 2));
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Dashboard API error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

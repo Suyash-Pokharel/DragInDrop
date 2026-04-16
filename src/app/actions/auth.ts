@@ -114,7 +114,12 @@ export async function registerUser(
     // record registration attempt by IP if provided
     if (ip) {
       try {
-        await prisma.registrationAttempt.create({ data: { ip } });
+        await prisma.registrationAttempt.create({ 
+          data: { 
+            id: crypto.randomUUID(),
+            ip 
+          } 
+        });
       } catch (e) {
         console.warn("Failed to record registration attempt", e);
       }
@@ -123,17 +128,20 @@ export async function registerUser(
     if (!user) {
       user = await prisma.user.create({
         data: {
+          id: crypto.randomUUID(),
           name,
           email: normalizedEmail,
-          tokens: {
+          updatedAt: new Date(),
+          VerificationToken: {
             create: {
+              id: crypto.randomUUID(),
               tokenHash,
               expiresAt,
               type: TokenType.VERIFY,
             },
           },
         },
-        include: { tokens: true },
+        include: { VerificationToken: true },
       });
     } else {
       // Clean up any existing verification tokens for this user before creating a new one
@@ -147,10 +155,11 @@ export async function registerUser(
 
       await prisma.verificationToken.create({
         data: {
+          id: crypto.randomUUID(),
           tokenHash,
           expiresAt,
           type: TokenType.VERIFY,
-          user: { connect: { id: user.id } },
+          userId: user.id,
         },
       });
     }
@@ -302,7 +311,7 @@ export async function setPassword(
         tokenHash: incomingHash,
         type: TokenType.VERIFY,
       },
-      include: { user: true },
+      include: { User: true },
     });
 
     if (!storedToken) {
@@ -342,7 +351,7 @@ export async function setPassword(
     ]);
 
     // Return user email so client can call NextAuth signIn
-    return { success: true, email: storedToken.user.email };
+    return { success: true, email: storedToken.User.email };
   } catch (error: unknown) {
     console.error("Set Password Error:", error);
     return { success: false, error: "Failed to set password." };
@@ -500,10 +509,11 @@ export async function requestPasswordReset(email: string): Promise<Result> {
     // Create new reset token
     await prisma.verificationToken.create({
       data: {
+        id: crypto.randomUUID(),
         tokenHash,
         expiresAt,
         type: TokenType.RESET_PASSWORD,
-        user: { connect: { id: user.id } },
+        userId: user.id,
       },
     });
 
@@ -647,7 +657,7 @@ export async function resetPassword(
         tokenHash: incomingHash,
         type: TokenType.RESET_PASSWORD,
       },
-      include: { user: true },
+      include: { User: true },
     });
 
     if (!storedToken) {
@@ -684,7 +694,7 @@ export async function resetPassword(
       }),
     ]);
 
-    return { success: true, email: storedToken.user.email };
+    return { success: true, email: storedToken.User.email };
   } catch (error: unknown) {
     console.error("Reset Password Error:", error);
     return { success: false, error: "Failed to reset password." };

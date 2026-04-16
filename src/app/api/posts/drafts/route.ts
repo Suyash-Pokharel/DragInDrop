@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
 
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     // Requirements: 2.8, 2.9, 3.3, 3.4, 3.5, 9.1, 9.2, 9.3, 9.4
     const draft = await prisma.post.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.id,
         title,
         description: description || null,
@@ -91,6 +93,8 @@ export async function POST(request: NextRequest) {
         // Use sentinel value for scheduledFor since schema requires DateTime
         scheduledFor: new Date('2099-12-31T23:59:59Z'),
         status: "DRAFT",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 

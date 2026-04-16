@@ -1,5 +1,6 @@
 import { getPrisma } from "../src/lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 async function createAdmin() {
   const prisma = getPrisma();
@@ -33,11 +34,14 @@ async function createAdmin() {
       // Create new admin user
       const newAdmin = await prisma.user.create({
         data: {
+          id: crypto.randomUUID(),
           email: adminEmail,
           password: await bcrypt.hash(adminPassword, 12),
           name: adminName,
           role: "ADMIN",
           emailVerified: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 

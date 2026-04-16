@@ -66,16 +66,16 @@ export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
     };
 
     users.forEach((user) => {
-      // Count OAuth login providers (accounts table)
-      user.accounts.forEach((account) => {
+      // Count OAuth login providers (Account table)
+      user.Account.forEach((account) => {
         const provider = account.provider.toLowerCase();
         if (provider in counts) {
           counts[provider]++;
         }
       });
 
-      // Count social media connections (socialAccounts table)
-      user.socialAccounts.forEach((socialAccount) => {
+      // Count social media connections (SocialAccount table)
+      user.SocialAccount.forEach((socialAccount) => {
         const platform = socialAccount.platform;
         if (platform in counts && socialAccount.isActive) {
           counts[platform]++;

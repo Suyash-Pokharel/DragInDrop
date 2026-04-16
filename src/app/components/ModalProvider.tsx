@@ -7,8 +7,10 @@ import Upload from "../upload/Upload";
 import EditPost from "../upload/EditPost";
 import NoAccountModal from "../upload/NoAccountModal";
 import SelectPlatform from "../upload/SelectPlatform";
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { uploadService } from "@/lib/uploadService";
 import { useUser } from "./UserProvider";
+import { useToast } from "./ToastProvider";
 
 type ModalContextType = {
   isUploadOpen: boolean;
@@ -16,7 +18,7 @@ type ModalContextType = {
   closeUpload: () => void;
 
   isEditPostOpen: boolean;
-  openEditPost: () => void;
+  openEditPost: (postId?: string) => void; // Add optional postId parameter
   closeEditPost: () => void;
   goBackToUpload: () => void;
 
@@ -24,6 +26,15 @@ type ModalContextType = {
   openSelectPlatform: () => void;
   closeSelectPlatform: () => void;
   goBackToEditPost: () => void;
+
+  // Edit mode state
+  editingPostId: string | null;
+
+  // Delete confirmation modal state
+  isDeleteConfirmationOpen: boolean;
+  postToDelete: { postId: string; postTitle: string } | null;
+  openDeleteConfirmation: (postId: string, postTitle: string) => void;
+  closeDeleteConfirmation: () => void;
 
   // Global Upload State
   file: File | null;
@@ -69,11 +80,20 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const { status } = useSession();
   const router = useRouter();
   const { connectedPlatforms } = useUser();
+  const { showSuccess, showError } = useToast();
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isEditPostOpen, setIsEditPostOpen] = useState(false);
   const [isSelectPlatformOpen, setIsSelectPlatformOpen] = useState(false);
   const [isNoAccountModalOpen, setIsNoAccountModalOpen] = useState(false);
+
+  // Edit mode state
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+
+  // Delete confirmation modal state
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<{ postId: string; postTitle: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Background Upload States
   const [file, setFile] = useState<File | null>(null);
@@ -275,13 +295,15 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     setIsUploadOpen(false);
   }, []);
 
-  const openEditPost = useCallback(() => {
+  const openEditPost = useCallback((postId?: string) => {
     setIsUploadOpen(false);
+    setEditingPostId(postId || null);
     setIsEditPostOpen(true);
   }, []);
 
   const closeEditPost = useCallback(() => {
     setIsEditPostOpen(false);
+    setEditingPostId(null);
   }, []);
 
   const goBackToUpload = useCallback(() => {
@@ -307,6 +329,61 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     setIsNoAccountModalOpen(false);
   }, []);
 
+  const openDeleteConfirmation = useCallback((postId: string, postTitle: string) => {
+    setPostToDelete({ postId, postTitle });
+    setIsDeleteConfirmationOpen(true);
+  }, []);
+
+  const closeDeleteConfirmation = useCallback(() => {
+    setIsDeleteConfirmationOpen(false);
+    setPostToDelete(null);
+  }, []);
+
+  const handleDeletePost = useCallback(async () => {
+    if (!postToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/posts/${postToDelete.postId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete post");
+      }
+
+      // Close the modal
+      closeDeleteConfirmation();
+
+      // Show success toast notification
+      showSuccess("Post deleted successfully");
+
+      // Refresh dashboard data
+      try {
+        const dashboardResponse = await fetch("/api/dashboard");
+        if (!dashboardResponse.ok) {
+          showError("Failed to refresh dashboard");
+        }
+        // Trigger a page refresh to update the dashboard
+        router.refresh();
+      } catch (refreshError) {
+        console.error("Error refreshing dashboard:", refreshError);
+        showError("Failed to refresh dashboard");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      // Show error toast notification with API error message
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        showError("Network error. Please check your connection and try again.");
+      } else {
+        showError(error instanceof Error ? error.message : "Failed to delete post");
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [postToDelete, closeDeleteConfirmation, showSuccess, showError, router]);
+
   return (
     <ModalContext.Provider
       value={{
@@ -321,6 +398,11 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
         openSelectPlatform,
         closeSelectPlatform,
         goBackToEditPost,
+        editingPostId,
+        isDeleteConfirmationOpen,
+        postToDelete,
+        openDeleteConfirmation,
+        closeDeleteConfirmation,
         file,
         setFile: updateFileState,
         uploading,
@@ -347,9 +429,16 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     >
       {children}
       {isUploadOpen && <Upload onClose={closeUpload} />}
-      {isEditPostOpen && <EditPost onClose={closeEditPost} />}
+      {isEditPostOpen && <EditPost onClose={closeEditPost} postId={editingPostId || undefined} />}
       {isSelectPlatformOpen && <SelectPlatform onClose={closeSelectPlatform} />}
       {isNoAccountModalOpen && <NoAccountModal onClose={closeNoAccountModal} />}
+      <DeleteConfirmationModal
+        postTitle={postToDelete?.postTitle || null}
+        isOpen={isDeleteConfirmationOpen}
+        onClose={closeDeleteConfirmation}
+        onConfirm={handleDeletePost}
+        isDeleting={isDeleting}
+      />
     </ModalContext.Provider>
   );
 };

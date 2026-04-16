@@ -7,11 +7,13 @@ import { Users, ArrowRight } from "lucide-react";
 interface RecentUsersListProps {
   users: UserWithAccounts[];
   onViewAll: () => void;
+  onSelectUser?: (user: UserWithAccounts) => void;
 }
 
 export default function RecentUsersList({
   users,
   onViewAll,
+  onSelectUser,
 }: RecentUsersListProps) {
   // Get 5 most recent users (already sorted by createdAt desc)
   const recentUsers = useMemo(() => users.slice(0, 10), [users]);
@@ -41,12 +43,15 @@ export default function RecentUsersList({
           </div>
         ) : (
           recentUsers.map((user) => {
-            const oauthCount = user.socialAccounts.length;
+            const oauthCount = user.SocialAccount.length;
 
             return (
               <div
                 key={user.id}
-                className="flex items-center justify-between p-3.5 bg-surface/30 backdrop-blur-md border border-border/60 rounded-xl relative overflow-hidden"
+                onClick={onSelectUser ? () => onSelectUser(user) : undefined}
+                className={`flex items-center justify-between p-3.5 bg-surface/30 backdrop-blur-md border border-border/60 rounded-xl relative overflow-hidden ${
+                  onSelectUser ? "cursor-pointer hover:bg-surface/50 transition-colors hover:border-primary/30" : ""
+                }`}
               >
                 {/* Left side: Avatar + Info */}
                 <div className="flex items-center gap-3 min-w-0">

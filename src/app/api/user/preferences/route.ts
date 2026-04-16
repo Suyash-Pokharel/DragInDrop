@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
 
@@ -139,11 +140,14 @@ export async function POST(request: NextRequest) {
         timezone,
       },
       create: {
+        id: crypto.randomUUID(),
         userId: user.id,
         dateFormat,
         timeFormat,
         firstDayOfWeek,
         timezone,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 

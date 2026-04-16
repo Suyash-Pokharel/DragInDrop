@@ -88,8 +88,8 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
 
     try {
       // Requirement 4.4 - Include session token in request headers (handled by Next.js automatically)
-      // Requirement 4.5 - Convert scheduledFor to ISO 8601 format
-      const scheduledForISO = new Date(postScheduledFor).toISOString();
+      // Send raw datetime-local string to API - server will convert to UTC using user's timezone
+      const scheduledForISO = postScheduledFor;
 
       console.log("Submitting post with data:", {
         title: postTitle,
@@ -145,7 +145,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
       const data = await response.json();
 
       // Requirement 3.3 - Show success message
-      setSuccessMessage(`Post scheduled successfully! ID: ${data.postId}`);
+      setSuccessMessage("Video has been scheduled successfully");
 
       // Requirement 3.4, 3.5 - Close modals and clear state after showing success
       setTimeout(() => {

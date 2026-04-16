@@ -19,11 +19,11 @@ export interface UserWithAccounts {
   emailVerified: Date | null;
   createdAt: Date;
   role: "USER" | "ADMIN";
-  accounts: {
+  Account: {
     provider: string;
     providerAccountId: string;
   }[];
-  socialAccounts: {
+  SocialAccount: {
     platform: string;
     platformAccountId: string;
     platformUsername: string | null;
@@ -173,6 +173,7 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
               <RecentUsersList
                 users={users}
                 onViewAll={() => setShowAllUsersModal(true)}
+                onSelectUser={(user) => setSelectedUser(user)}
               />
             </div>
           </div>

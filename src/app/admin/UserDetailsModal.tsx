@@ -240,13 +240,13 @@ export default function UserDetailsModal({
                 Connected Social Media Accounts
               </h3>
 
-              {user.socialAccounts.length === 0 ? (
+              {user.SocialAccount.length === 0 ? (
                 <p className="text-sm text-text-secondary py-4">
                   No social media accounts connected
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {user.socialAccounts.map((socialAccount, index) => {
+                  {user.SocialAccount.map((socialAccount, index) => {
                     const platform = socialAccount.platform;
                     const providerLogo = PROVIDER_LOGOS[platform];
 
