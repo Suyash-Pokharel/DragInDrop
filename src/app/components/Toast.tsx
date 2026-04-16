@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
 
 export type ToastVariant = "success" | "error";
@@ -16,6 +16,13 @@ export interface ToastProps {
 export default function Toast({ id, message, variant, duration, onDismiss }: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [progress, setProgress] = useState(100);
+
+  const handleDismiss = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onDismiss(id);
+    }, 300);
+  }, [id, onDismiss]);
 
   useEffect(() => {
     // Auto-dismiss timer
@@ -35,14 +42,7 @@ export default function Toast({ id, message, variant, duration, onDismiss }: Toa
       clearTimeout(dismissTimer);
       clearInterval(progressInterval);
     };
-  }, [duration]);
-
-  const handleDismiss = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      onDismiss(id);
-    }, 300);
-  };
+  }, [duration, handleDismiss]);
 
   const variantStyles = {
     success: {

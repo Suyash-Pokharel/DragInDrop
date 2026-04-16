@@ -54,7 +54,6 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   const isEditMode = !!postId;
 
   // Edit mode states
-  const [isLoadingPost, setIsLoadingPost] = useState(false);
   const [loadPostError, setLoadPostError] = useState<string | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -75,7 +74,6 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   const fetchPostData = useCallback(async () => {
     if (!postId) return;
     
-    setIsLoadingPost(true);
     setLoadPostError(null);
     
     try {
@@ -136,8 +134,6 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
       } else {
         setLoadPostError("An error occurred while loading the post. Please try again.");
       }
-    } finally {
-      setIsLoadingPost(false);
     }
   }, [postId, userTimezone, setPostTitle, setPostDescription, setPostScheduledFor]);
 

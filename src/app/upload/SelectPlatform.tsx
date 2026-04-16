@@ -142,7 +142,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         return;
       }
 
-      const data = await response.json();
+      await response.json();
 
       // Requirement 3.3 - Show success message
       setSuccessMessage("Video has been scheduled successfully");

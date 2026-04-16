@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { SlidersHorizontal, Globe2, Clock, CalendarDays, AlertCircle } from "lucide-react";
 
 interface PreferencesState {
@@ -71,31 +71,10 @@ export default function PreferencesPage() {
   }, []);
 
   /**
-   * Auto-detect and save user's timezone on first load (when no timezone is saved)
-   */
-  useEffect(() => {
-    // Only auto-detect if preferences are loaded and timezone is empty
-    if (!isLoading && originalPreferences && !originalPreferences.timezone) {
-      try {
-        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (detectedTimezone) {
-          // Update UI state immediately
-          setPreferences(prev => ({ ...prev, timezone: detectedTimezone }));
-          
-          // Auto-save the detected timezone to database
-          autoSaveDetectedTimezone(detectedTimezone);
-        }
-      } catch (error) {
-        console.error('Failed to detect timezone:', error);
-      }
-    }
-  }, [isLoading, originalPreferences]);
-
-  /**
    * Auto-save detected timezone to database
    * This runs automatically when timezone is detected for first-time users
    */
-  const autoSaveDetectedTimezone = async (detectedTimezone: string) => {
+  const autoSaveDetectedTimezone = useCallback(async (detectedTimezone: string) => {
     try {
       // Create preferences object with detected timezone and current defaults
       const autoSavePreferences = {
@@ -131,7 +110,28 @@ export default function PreferencesPage() {
     } catch (error) {
       console.error('Error auto-saving detected timezone:', error);
     }
-  };
+  }, [originalPreferences]);
+
+  /**
+   * Auto-detect and save user's timezone on first load (when no timezone is saved)
+   */
+  useEffect(() => {
+    // Only auto-detect if preferences are loaded and timezone is empty
+    if (!isLoading && originalPreferences && !originalPreferences.timezone) {
+      try {
+        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (detectedTimezone) {
+          // Update UI state immediately
+          setPreferences(prev => ({ ...prev, timezone: detectedTimezone }));
+          
+          // Auto-save the detected timezone to database
+          autoSaveDetectedTimezone(detectedTimezone);
+        }
+      } catch (error) {
+        console.error('Failed to detect timezone:', error);
+      }
+    }
+  }, [isLoading, originalPreferences, autoSaveDetectedTimezone]);
 
   /**
    * Fetches user preferences from the API
