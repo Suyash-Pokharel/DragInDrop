@@ -9,7 +9,12 @@ const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 export function getRedis(): Redis {
   if (global.__ioredisClient) return global.__ioredisClient;
   // Use lazyConnect so creating the client doesn't immediately open sockets
-  const client = new Redis(redisUrl, { lazyConnect: true });
+  // Disable offline queue and limit retries to avoid hanging in serverless environments
+  const client = new Redis(redisUrl, { 
+    lazyConnect: true,
+    maxRetriesPerRequest: 1,
+    enableOfflineQueue: false 
+  });
   // Prevent unhandled error events during build-time operations
   client.on("error", () => {
     // swallow errors here; callers should handle connection/command errors
