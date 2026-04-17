@@ -94,7 +94,7 @@ export async function GET() {
       }
     });
 
-    // 3. Fetch Activity for the Chart (last 7 days published posts)
+    // 3. Fetch Activity for the Chart (last 7 days - all posts including scheduled)
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (6 - i));
@@ -105,7 +105,7 @@ export async function GET() {
     const recentPosts = await prisma.post.findMany({
       where: {
         userId: user.id,
-        status: { in: ["PUBLISHED", "PARTIALLY_PUBLISHED"] },
+        status: { in: ["PUBLISHED", "PARTIALLY_PUBLISHED", "SCHEDULED", "PUBLISHING"] },
         createdAt: { gte: last7Days[0] }
       },
       select: { createdAt: true }

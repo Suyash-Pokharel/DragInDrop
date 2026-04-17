@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -113,6 +113,24 @@ export default function DashboardPage() {
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Function to manually trigger a refresh
+  const refreshDashboard = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
+
+  // Expose refresh function globally for modals to call
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as Window & { refreshDashboard?: () => void }).refreshDashboard = refreshDashboard;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as Window & { refreshDashboard?: () => void }).refreshDashboard;
+      }
+    };
+  }, [refreshDashboard]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -147,7 +165,7 @@ export default function DashboardPage() {
           setLoading(false);
         });
     }
-  }, [status, session]);
+  }, [status, session, refreshTrigger]);
 
   if (status === "loading" || loading) {
     return (
@@ -302,7 +320,7 @@ export default function DashboardPage() {
                   <BarChart3 className="text-primary w-6 h-6" />
                   Publishing Activity
                 </h3>
-                <p className="text-sm text-text-secondary mt-1">Your automated pipeline success rate</p>
+                <p className="text-sm text-text-secondary mt-1">Your content creation and scheduling activity</p>
               </div>
               <span className="text-xs font-bold text-text-secondary bg-surface border border-border px-4 py-1.5 rounded-full shadow-sm">Last 7 Days</span>
             </div>
@@ -369,7 +387,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 relative">
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2   relative">
               {draftPosts.length === 0 && upcomingPosts.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-10 opacity-70">
                   <div className="w-20 h-20 bg-background border border-border rounded-full flex items-center justify-center shadow-sm">

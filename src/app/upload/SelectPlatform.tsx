@@ -144,6 +144,24 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
 
       await response.json();
 
+      // Refresh dashboard data to show the new scheduled post immediately
+      try {
+        const dashboardResponse = await fetch("/api/dashboard");
+        if (!dashboardResponse.ok) {
+          console.error("Failed to refresh dashboard");
+        }
+        // Trigger dashboard refresh if on dashboard page
+        if (typeof window !== 'undefined') {
+          const win = window as Window & { refreshDashboard?: () => void };
+          if (win.refreshDashboard) {
+            win.refreshDashboard();
+          }
+        }
+        router.refresh(); // Trigger Next.js to refetch server components
+      } catch (refreshError) {
+        console.error("Error refreshing dashboard:", refreshError);
+      }
+
       // Requirement 3.3 - Show success message
       setSuccessMessage("Video has been scheduled successfully");
 
@@ -216,6 +234,24 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
       }
 
       // Success
+      // Refresh dashboard data to show the new draft immediately
+      try {
+        const dashboardResponse = await fetch("/api/dashboard");
+        if (!dashboardResponse.ok) {
+          console.error("Failed to refresh dashboard");
+        }
+        // Trigger dashboard refresh if on dashboard page
+        if (typeof window !== 'undefined') {
+          const win = window as Window & { refreshDashboard?: () => void };
+          if (win.refreshDashboard) {
+            win.refreshDashboard();
+          }
+        }
+        router.refresh(); // Trigger Next.js to refetch server components
+      } catch (refreshError) {
+        console.error("Error refreshing dashboard:", refreshError);
+      }
+
       setShowDraftSuccess(true);
       setTimeout(() => {
         clearUpload();

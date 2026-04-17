@@ -79,7 +79,7 @@ export const useModal = () => {
 export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const { status } = useSession();
   const router = useRouter();
-  const { connectedPlatforms } = useUser();
+  const { connectedPlatforms, refetchConnectedPlatforms } = useUser();
   const { showSuccess, showError } = useToast();
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -264,7 +264,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const openUpload = useCallback(
-    (files?: File[] | null) => {
+    async (files?: File[] | null) => {
       // Check authentication status
       if (status === "unauthenticated") {
         router.push("/login");
@@ -275,6 +275,9 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       if (status === "loading") {
         return;
       }
+
+      // Refetch connected platforms to ensure we have fresh data
+      await refetchConnectedPlatforms();
 
       // Check if user has connected platforms
       if (connectedPlatforms.length === 0) {
@@ -288,7 +291,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setIsUploadOpen(true);
     },
-    [status, router, handleUpload, connectedPlatforms],
+    [status, router, handleUpload, connectedPlatforms, refetchConnectedPlatforms],
   );
 
   const closeUpload = useCallback(() => {
@@ -364,6 +367,13 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
         const dashboardResponse = await fetch("/api/dashboard");
         if (!dashboardResponse.ok) {
           showError("Failed to refresh dashboard");
+        }
+        // Trigger dashboard refresh if on dashboard page
+        if (typeof window !== 'undefined') {
+          const win = window as Window & { refreshDashboard?: () => void };
+          if (win.refreshDashboard) {
+            win.refreshDashboard();
+          }
         }
         // Trigger a page refresh to update the dashboard
         router.refresh();

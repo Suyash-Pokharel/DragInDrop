@@ -226,19 +226,32 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   const getDateError = (): string | null => {
     if (!isDateFilled) return null;
     
-    // Only validate future time if the date was changed by the user
-    if (postScheduledFor !== originalScheduledFor) {
-      const selected = new Date(postScheduledFor);
-      const tenMinsFromNow = new Date(Date.now() + 10 * 60 * 1000);
-      if (selected < tenMinsFromNow) {
+    const selected = new Date(postScheduledFor);
+    const tenMinsFromNow = new Date(Date.now() + 10 * 60 * 1000);
+    
+    // Always validate that the time is in the future, but only show error if:
+    // 1. User has touched the field, OR
+    // 2. The date was changed from original, OR  
+    // 3. The original date is now in the past (for existing posts)
+    if (selected < tenMinsFromNow) {
+      // For new posts or if user changed the date, always show error
+      if (!isEditMode || postScheduledFor !== originalScheduledFor) {
         return "Schedule must be at least 10 minutes in the future.";
+      }
+      
+      // For existing posts with unchanged date, only show if the original time has passed
+      if (isEditMode && originalScheduledFor) {
+        const originalDate = new Date(originalScheduledFor);
+        if (originalDate < tenMinsFromNow) {
+          return "This scheduled time has passed. Please select a new time.";
+        }
       }
     }
     
     return null;
   };
 
-  const dateError = dateTouched ? getDateError() : null;
+  const dateError = dateTouched ? getDateError() : (isEditMode ? getDateError() : null);
   const isDateValid = isDateFilled && getDateError() === null;
   
   // Platform validation
@@ -393,6 +406,13 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
           if (!dashboardResponse.ok) {
             showError("Failed to refresh dashboard");
           }
+          // Trigger dashboard refresh if on dashboard page
+          if (typeof window !== 'undefined') {
+            const win = window as Window & { refreshDashboard?: () => void };
+            if (win.refreshDashboard) {
+              win.refreshDashboard();
+            }
+          }
           router.refresh();
         } catch (refreshError) {
           console.error("Error refreshing dashboard:", refreshError);
@@ -452,6 +472,24 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         }
 
         // Success
+        // Refresh dashboard data to show the new draft immediately
+        try {
+          const dashboardResponse = await fetch("/api/dashboard");
+          if (!dashboardResponse.ok) {
+            console.error("Failed to refresh dashboard");
+          }
+          // Trigger dashboard refresh if on dashboard page
+          if (typeof window !== 'undefined') {
+            const win = window as Window & { refreshDashboard?: () => void };
+            if (win.refreshDashboard) {
+              win.refreshDashboard();
+            }
+          }
+          router.refresh(); // Trigger Next.js to refetch server components
+        } catch (refreshError) {
+          console.error("Error refreshing dashboard:", refreshError);
+        }
+
         setShowDraftSuccess(true);
         setTimeout(() => {
           clearUpload();
@@ -527,6 +565,13 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         const dashboardResponse = await fetch("/api/dashboard");
         if (!dashboardResponse.ok) {
           showError("Failed to refresh dashboard");
+        }
+        // Trigger dashboard refresh if on dashboard page
+        if (typeof window !== 'undefined') {
+          const win = window as Window & { refreshDashboard?: () => void };
+          if (win.refreshDashboard) {
+            win.refreshDashboard();
+          }
         }
         router.refresh();
       } catch (refreshError) {
