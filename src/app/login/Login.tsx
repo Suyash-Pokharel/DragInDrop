@@ -69,26 +69,37 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("[LOGIN] Attempting login for:", formData.email);
+      console.log("[LOGIN] Current URL:", window.location.href);
+      
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
         redirect: false,
       });
 
+      console.log("[LOGIN] SignIn result:", result);
+
       if (result?.error) {
+        console.error("[LOGIN] SignIn error:", result.error);
         setServerError(result.error);
         setIsLoading(false);
         // Clear URL error by replacing the URL without the error parameter
         window.history.replaceState({}, '', '/login');
       } else if (result?.ok) {
+        console.log("[LOGIN] SignIn successful, fetching session...");
         // Fetch session to get user role for redirect
         const response = await fetch("/api/auth/session");
         const session = await response.json();
         
+        console.log("[LOGIN] Session data:", session);
+        
         // Redirect based on role
         if (session?.user?.role === "ADMIN") {
+          console.log("[LOGIN] Redirecting to /admin");
           router.push("/admin");
         } else {
+          console.log("[LOGIN] Redirecting to /dashboard");
           router.push("/dashboard");
         }
       }
@@ -112,7 +123,11 @@ export default function Login() {
           {/* 2. Reveal Header */}
           <Reveal width="100%" delay={0.1}>
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-primary mb-2">DragInDrop</h1>
+              <Link href="/" className="inline-block">
+                <h1 className="text-4xl font-bold text-primary mb-2 hover:text-secondary transition-colors cursor-pointer">
+                  DragInDrop
+                </h1>
+              </Link>
               <h2 className="text-text-secondary text-sm font-medium">Login to your account</h2>
             </div>
           </Reveal>

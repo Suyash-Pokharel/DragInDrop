@@ -103,6 +103,10 @@ function CreatePasswordContent() {
       const result = await setPassword(token, formData.password);
 
       if (result.success) {
+        // Wait briefly for database transaction to fully commit and be visible
+        // This prevents race condition where NextAuth reads stale data
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Auto-login using NextAuth signIn with credentials
         const signInResult = await signIn("credentials", {
           email: result.email,
@@ -223,7 +227,7 @@ function CreatePasswordContent() {
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
-                    autoComplete="new-password"
+                    autoComplete="off"
                     type={showConfirmPassword ? "text" : "password"}
                     required
                     disabled={isLoading}

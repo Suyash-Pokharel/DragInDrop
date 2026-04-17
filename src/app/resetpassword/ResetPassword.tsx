@@ -216,7 +216,7 @@ function ResetPasswordContent() {
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
-                    autoComplete="new-password"
+                    autoComplete="off"
                     type={showConfirmPassword ? "text" : "password"}
                     required
                     disabled={isLoading}

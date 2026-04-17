@@ -148,7 +148,7 @@ export default function ContactUs() {
                     id="name"
                     name="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Full Name"
                     disabled={isLoading}
                     value={formData.name}
                     onChange={handleChange}

@@ -133,7 +133,11 @@ export default function Register() {
           {/* Header */}
           <Reveal width="100%" delay={0.1}>
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-primary mb-2">DragInDrop</h1>
+              <Link href="/" className="inline-block">
+                <h1 className="text-4xl font-bold text-primary mb-2 hover:text-secondary transition-colors cursor-pointer">
+                  DragInDrop
+                </h1>
+              </Link>
               <h2 className="text-text-secondary text-sm font-medium">Create Your New Account</h2>
             </div>
           </Reveal>
@@ -153,7 +157,7 @@ export default function Register() {
                   type="text"
                   required
                   disabled={isLoading}
-                  placeholder="John Doe"
+                  placeholder="Full Name"
                   value={formData.name}
                   onChange={handleChange}
                   onBlur={() => handleBlur("name")}
