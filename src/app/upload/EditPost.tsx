@@ -614,7 +614,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-post-modal-title"
-        className={`bg-surface/85 backdrop-blur-2xl w-full max-w-2xl max-h-[86dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/60 transition-all duration-300 ease-out transform ${
+        className={`bg-surface/85 backdrop-blur-2xl w-full ${isEditMode ? 'max-w-xl' : 'max-w-2xl'} max-h-[86dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/60 transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
