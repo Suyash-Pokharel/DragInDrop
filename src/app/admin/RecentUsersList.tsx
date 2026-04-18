@@ -93,7 +93,7 @@ export default function RecentUsersList({
             onClick={onViewAll}
             className="text-sm font-bold text-primary group-hover/btn:text-secondary flex items-center justify-center gap-2 hover:gap-3 transition-all cursor-pointer group"
           >
-             Show All Users<ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            Show All Users<ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       )}

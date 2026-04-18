@@ -8,7 +8,7 @@ import { PublicUser } from "@/lib/getCurrentUser";
 import TwoFactorModal from "./TwoFactorModal";
 import PasswordResetModal from "./PasswordResetModal";
 
-interface UserDetailsClientProps {
+interface UserDetailsProps {
   user: PublicUser;
 }
 
@@ -19,7 +19,7 @@ interface UserDetailsClientProps {
  *
  * @param user - User data fetched server-side from database
  */
-export default function UserDetailsClient({ user }: UserDetailsClientProps) {
+export default function UserDetails({ user }: UserDetailsProps) {
   const { tempImage, setTempImage } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
 

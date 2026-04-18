@@ -54,11 +54,11 @@ export default function RegistrationTrendChart({ users }: RegistrationTrendChart
 
   if (!chartData || chartData.length === 0) {
     return (
-      <div className="h-[300px] w-full flex flex-col items-center justify-center border border-dashed border-border/50 rounded-2xl text-text-secondary mt-4 bg-surface/30 backdrop-blur-sm relative overflow-hidden group">
+      <div className="h-full min-h-[300px] w-full flex flex-col items-center justify-center border border-dashed border-border/50 rounded-2xl text-text-secondary mt-4 bg-surface/30 backdrop-blur-sm relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
         <div className="w-16 h-16 bg-surface-highlight rounded-full flex items-center justify-center mb-4 shadow-sm relative z-10">
           <svg className="w-8 h-8 text-text-secondary/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </div>
         <span className="text-sm font-medium z-10">No registration activity yet.</span>
@@ -69,15 +69,15 @@ export default function RegistrationTrendChart({ users }: RegistrationTrendChart
 
   if (!mounted) {
     return (
-      <div className="h-[300px] w-full mt-6 relative z-10 flex items-center justify-center">
+      <div className="h-full min-h-[300px] w-full mt-6 relative z-10 flex items-center justify-center">
         <div className="animate-pulse text-text-secondary">Loading chart...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-[300px] w-full mt-6 relative z-10">
-      <ResponsiveContainer width="100%" height={300}>
+    <div className="h-full w-full mt-4 pb-6 relative z-10">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart 
           data={chartData} 
           margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
@@ -139,7 +139,7 @@ export default function RegistrationTrendChart({ users }: RegistrationTrendChart
             animationDuration={1500}
             animationEasing="ease-out"
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
                 fill={activeIndex === index ? "url(#registrationBarGradientHover)" : "url(#registrationBarGradient)"} 

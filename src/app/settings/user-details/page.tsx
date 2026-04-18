@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/getCurrentUser";
 import { redirect } from "next/navigation";
-import UserDetailsClient from "./UserDetailsClient";
+import UserDetails from "./UserDetails";
 
 /**
  * Server component for User Details page.
@@ -14,5 +14,5 @@ export default async function UserDetailsPage() {
     redirect("/login");
   }
 
-  return <UserDetailsClient user={user} />;
+  return <UserDetails user={user} />;
 }
