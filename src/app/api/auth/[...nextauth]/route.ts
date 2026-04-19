@@ -45,15 +45,15 @@ export const authOptions: NextAuthOptions = {
       name: "TikTok",
       type: "oauth",
       authorization: {
-        url: "https://www.tiktok.com/auth/authorize/",
+        url: "https://www.tiktok.com/v2/auth/authorize/",
         params: {
           client_key: process.env.TIKTOK_CLIENT_KEY,
-          scope: "user.info.basic",
+          scope: "user.info.basic,video.upload,video.publish",
           response_type: "code",
         },
       },
-      token: "https://open-api.tiktok.com/oauth/access_token/",
-      userinfo: "https://open-api.tiktok.com/oauth/userinfo/",
+      token: "https://open.tiktokapis.com/v2/oauth/token/",
+      userinfo: "https://open.tiktokapis.com/v2/user/info/",
       clientId: process.env.TIKTOK_CLIENT_KEY!,
       clientSecret: process.env.TIKTOK_CLIENT_SECRET!,
       profile(profile: { data: { user: { open_id: string; email: string; display_name: string; avatar_url: string } } }) {

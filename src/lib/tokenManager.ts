@@ -130,8 +130,8 @@ export async function refreshToken(
     clientSecret = process.env.TIKTOK_CLIENT_SECRET;
     tokenUrl = TIKTOK_TOKEN_URL;
   } else if (socialAccount.platform === 'YouTube') {
-    clientKey = process.env.GOOGLE_YOUTUBE_CLIENT_ID;
-    clientSecret = process.env.GOOGLE_YOUTUBE_CLIENT_SECRET;
+    clientKey = process.env.YOUTUBE_CLIENT_ID;
+    clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
     tokenUrl = GOOGLE_TOKEN_URL;
   } else {
     console.error('Unsupported platform for token refresh:', socialAccount.platform);

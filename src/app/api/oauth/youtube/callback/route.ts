@@ -647,7 +647,7 @@ export async function GET(request: NextRequest) {
     // Requirements: 10.3, 10.4 - Clear CSRF token after successful validation
     // Requirement: 3.12 - Redirect to social accounts page with success message
     const response = NextResponse.redirect(
-      `${appUrl}/settings/social-accounts?success=true`
+      `${appUrl}/settings/social-accounts?success=${encodeURIComponent("YouTube account connected successfully")}`
     );
     response.cookies.delete("youtube_oauth_state");
     response.cookies.delete("youtube_oauth_state_timestamp");

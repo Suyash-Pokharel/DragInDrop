@@ -20,6 +20,23 @@ interface SocialAccountsProps {
  */
 export default function SocialAccounts({ initialConnectedPlatforms }: SocialAccountsProps) {
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>(initialConnectedPlatforms);
+  
+  // Initialize mock connected platforms from session storage
+  const [mockConnectedPlatforms, setMockConnectedPlatforms] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedMockConnections = sessionStorage.getItem('mockConnectedPlatforms');
+      if (savedMockConnections) {
+        try {
+          const parsed = JSON.parse(savedMockConnections);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          console.error('Failed to parse mock connections from session storage:', error);
+        }
+      }
+    }
+    return [];
+  });
+  
   const [platformToDisconnect, setPlatformToDisconnect] = useState<string | null>(null);
   const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -43,6 +60,13 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
     }
   };
 
+  // Save mock connected platforms to session storage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('mockConnectedPlatforms', JSON.stringify(mockConnectedPlatforms));
+    }
+  }, [mockConnectedPlatforms]);
+
   // Handle OAuth callback success/error messages
   useEffect(() => {
     const success = searchParams.get("success");
@@ -50,7 +74,7 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
 
     if (success) {
       setTimeout(() => {
-        setToastMessage({ type: "success", message: "Account connected successfully!" });
+        setToastMessage({ type: "success", message: "Account Connected Successfully!" });
         refetchConnectedPlatforms();
       }, 0);
       // Clear the query parameter
@@ -87,8 +111,14 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
         window.location.href = "/api/oauth/youtube/authorize";
       }, 0);
     } else {
-      // Other platforms not yet implemented
-      setToastMessage({ type: "error", message: `${name} integration coming soon!` });
+      // For other platforms, create mock connection for testing
+      setMockConnectedPlatforms(prev => {
+        if (!prev.includes(name)) {
+          return [...prev, name];
+        }
+        return prev;
+      });
+      setToastMessage({ type: "success", message: `${name} Connected Successfully!` });
     }
   };
 
@@ -110,7 +140,7 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
           });
 
           if (response.ok) {
-            setToastMessage({ type: "success", message: "Account disconnected successfully!" });
+            setToastMessage({ type: "error", message: "Account disconnected successfully!" });
             await refetchConnectedPlatforms();
           } else {
             const data = await response.json();
@@ -120,7 +150,9 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
           setToastMessage({ type: "error", message: "Failed to disconnect account" });
         }
       } else {
-        setToastMessage({ type: "error", message: `${platformToDisconnect} disconnect not yet implemented` });
+        // For other platforms, remove from mock connections
+        setMockConnectedPlatforms(prev => prev.filter(platform => platform !== platformToDisconnect));
+        setToastMessage({ type: "error", message: `${platformToDisconnect} disconnected successfully!` });
       }
       setPlatformToDisconnect(null);
     }
@@ -154,7 +186,7 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {APP_PLATFORMS.map((platform) => {
-            const isConnected = connectedPlatforms.includes(platform.name);
+            const isConnected = connectedPlatforms.includes(platform.name) || mockConnectedPlatforms.includes(platform.name);
             return (
               <div
                 key={platform.name}
