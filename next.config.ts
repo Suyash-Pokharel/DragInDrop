@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    // Reduce memory usage during build
+    workerThreads: false,
+    cpus: 1,
+  },
 };
 
 export default nextConfig;

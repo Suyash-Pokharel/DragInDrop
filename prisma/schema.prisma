@@ -7,7 +7,7 @@ datasource db {
 }
 
 model Account {
-  id                String  @id
+  id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
@@ -26,7 +26,7 @@ model Account {
 }
 
 model PlatformPost {
-  id              String             @id
+  id              String             @id @default(cuid())
   postId          String
   socialAccountId String
   platformPostId  String?
@@ -36,7 +36,7 @@ model PlatformPost {
   retryCount      Int                @default(0)
   publishedAt     DateTime?
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime           @updatedAt
   Post            Post               @relation(fields: [postId], references: [id], onDelete: Cascade)
   SocialAccount   SocialAccount      @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
 
@@ -47,7 +47,7 @@ model PlatformPost {
 }
 
 model Post {
-  id            String         @id
+  id            String         @id @default(cuid())
   userId        String
   title         String         @db.VarChar(100)
   description   String?        @db.VarChar(250)
@@ -57,7 +57,7 @@ model Post {
   scheduledFor  DateTime
   status        PostStatus     @default(SCHEDULED)
   createdAt     DateTime       @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime       @updatedAt
   PlatformPost  PlatformPost[]
   User          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -67,7 +67,7 @@ model Post {
 }
 
 model RegistrationAttempt {
-  id        String   @id
+  id        String   @id @default(cuid())
   ip        String
   createdAt DateTime @default(now())
 
@@ -75,7 +75,7 @@ model RegistrationAttempt {
 }
 
 model Session {
-  id           String   @id
+  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -85,7 +85,7 @@ model Session {
 }
 
 model SocialAccount {
-  id                String         @id
+  id                String         @id @default(cuid())
   userId            String
   platform          String
   platformAccountId String
@@ -95,7 +95,7 @@ model SocialAccount {
   expiresAt         DateTime?
   isActive          Boolean        @default(true)
   createdAt         DateTime       @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime       @updatedAt
   PlatformPost      PlatformPost[]
   User              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -105,13 +105,13 @@ model SocialAccount {
 }
 
 model User {
-  id                String              @id
+  id                String              @id @default(cuid())
   email             String              @unique
   password          String?
   emailVerified     DateTime?
   role              Role                @default(USER)
   createdAt         DateTime            @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime            @updatedAt
   name              String?
   image             String?
   Account           Account[]
@@ -123,21 +123,21 @@ model User {
 }
 
 model UserPreferences {
-  id             String   @id
+  id             String   @id @default(cuid())
   userId         String   @unique
   dateFormat     String   @default("DD/MM/YYYY")
   timeFormat     String   @default("12h")
   firstDayOfWeek String   @default("sunday")
   timezone       String?
   createdAt      DateTime @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime @updatedAt
   User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model VerificationToken {
-  id        String    @id
+  id        String    @id @default(cuid())
   tokenHash String    @unique
   type      TokenType
   createdAt DateTime  @default(now())
