@@ -23,7 +23,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
   const [mockConnectedPlatforms, setMockConnectedPlatforms] = useState<string[]>([]);
 
-  // Load mock connected platforms from session storage
   useEffect(() => {
     const loadMockConnections = () => {
       if (typeof window !== 'undefined') {
@@ -43,7 +42,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     loadMockConnections();
 
-    // Listen for storage changes to sync across tabs/components
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'mockConnectedPlatforms') {
         loadMockConnections();

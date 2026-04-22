@@ -24,22 +24,16 @@ export default function ContactUs() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // --- VALIDATION LOGIC ---
-
-  // 1. Basic Fields
   const isNameError = touched.name && formData.name.trim() === "";
   const isEmailError = touched.email && formData.email.trim() === "";
   const isReasonError = touched.reason && formData.reason === "";
 
-  // 2. Message & Word Count Logic
   const words = formData.message.trim().split(/\s+/).filter(Boolean);
   const wordCount = words.length;
   const isOverLimit = wordCount > WORD_LIMIT;
 
-  // Message is error if empty OR if over limit
   const isMessageError = touched.message && (formData.message.trim() === "" || isOverLimit);
 
-  // 3. Form Validity (Button Enable/Disable)
   const isFormValid =
     formData.name.trim() !== "" &&
     formData.email.trim() !== "" &&
@@ -47,7 +41,6 @@ export default function ContactUs() {
     formData.message.trim() !== "" &&
     !isOverLimit;
 
-  // --- HANDLERS ---
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
@@ -73,7 +66,6 @@ export default function ContactUs() {
 
     setIsLoading(true);
 
-    // Simulate API Call
     setTimeout(() => {
       setIsLoading(false);
       setIsSuccess(true);
@@ -95,16 +87,13 @@ export default function ContactUs() {
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
-        {/* --- LEFT COLUMN: INFO --- */}
         <div className="w-full max-w-sm md:min-w-sm md:max-w-lg mx-auto lg:mx-0 text-center lg:text-left flex flex-col justify-center h-full p-4 lg:pt-0">
-          {/* 2. Reveal Title */}
           <Reveal delay={0.1}>
             <h1 className="text-5xl sm:text-6xl font-bold text-primary mb-6 tracking-tight">
               Contact Us
             </h1>
           </Reveal>
 
-          {/* 3. Reveal Text with Delay */}
           <Reveal delay={0.2}>
             <p className="text-lg sm:text-xl text-text-secondary leading-relaxed">
               Got a question about DragInDrop? Whether it&apos;s troubleshooting, feature requests
@@ -114,12 +103,9 @@ export default function ContactUs() {
           </Reveal>
         </div>
 
-        {/* --- RIGHT COLUMN: FORM --- */}
-        {/* 4. Reveal the Form Card with more Delay */}
         <Reveal width="100%" delay={0.3}>
           <div className="w-full max-w-sm md:min-w-sm md:max-w-lg mx-auto lg:mx-0 bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] shadow-lg p-6 md:p-10 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 transition-all duration-300">
             {isSuccess ? (
-              // Success State
               <div className="flex flex-col items-center justify-center py-12 text-center animate-in zoom-in-95 duration-300">
                 <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mb-6 text-success">
                   <CheckCircle size={32} />
@@ -136,9 +122,7 @@ export default function ContactUs() {
                 </button>
               </div>
             ) : (
-              // Form State
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Full Name */}
                 <div className="space-y-1.5">
                   <label htmlFor="name" className="block text-sm font-medium text-text-main">
                     Full Name
@@ -157,7 +141,6 @@ export default function ContactUs() {
                   />
                 </div>
 
-                {/* Email */}
                 <div className="space-y-1.5">
                   <label
                     htmlFor="contactEmail"
@@ -179,7 +162,6 @@ export default function ContactUs() {
                   />
                 </div>
 
-                {/* Reason Dropdown */}
                 <div className="space-y-1.5">
                   <label
                     htmlFor="contactReason"
@@ -216,7 +198,6 @@ export default function ContactUs() {
                   </div>
                 </div>
 
-                {/* Message Textarea */}
                 <div className="space-y-1.5">
                   <label
                     htmlFor="contactMessage"
@@ -242,7 +223,6 @@ export default function ContactUs() {
                     }`}
                   />
 
-                  {/* Word Counter */}
                   <div
                     className={`text-xs text-right transition-colors duration-200 ${
                       isOverLimit ? "text-error font-bold" : "text-text-secondary"
@@ -254,7 +234,6 @@ export default function ContactUs() {
                   </div>
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isLoading || !isFormValid}

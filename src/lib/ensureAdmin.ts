@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-/** Ensure the request belongs to an admin; returns the user or NextResponse.json 401/403 */
 export async function ensureAdmin() {
   const session = await getServerSession(authOptions);
 

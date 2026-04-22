@@ -5,7 +5,6 @@ import Image, { StaticImageData } from "next/image";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
 
-// --- IMPORTS --- //
 import facebookLogo from "../assets/logo/Facebook.webp";
 import googleLogo from "../assets/logo/Google.webp";
 import instagramLogo from "../assets/logo/Instagram.webp";
@@ -15,7 +14,6 @@ import tiktokLogo from "../assets/logo/TikTok.webp";
 import xLogo from "../assets/logo/X.webp";
 import youtubeLogo from "../assets/logo/Youtube.webp";
 
-// --- TYPES --- //
 type Platform =
   | "Facebook"
   | "Google"
@@ -34,7 +32,6 @@ interface ScheduledPost {
   platform: Platform;
 }
 
-// --- ICON MAPPING ---
 const LOGO_MAP: Record<Platform, StaticImageData> = {
   Facebook: facebookLogo,
   Google: googleLogo,
@@ -46,8 +43,6 @@ const LOGO_MAP: Record<Platform, StaticImageData> = {
   Youtube: youtubeLogo,
 };
 
-// --- MOCK DATA ---
-// Note: JavaScript months are 0-indexed (0 = January, 1 = February, 2 = March, 3 = April, etc.)
 const MOCK_POSTS: ScheduledPost[] = [
   { id: 1, day: 8, month: 3, year: 2026, platform: "Instagram" },
   { id: 2, day: 8, month: 3, year: 2026, platform: "TikTok" },
@@ -67,7 +62,6 @@ const MOCK_POSTS: ScheduledPost[] = [
 
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-// --- HELPER: Icon Group with Smart Overflow ---
 const IconGroup = ({
   posts,
   limit,
@@ -79,7 +73,6 @@ const IconGroup = ({
 }) => {
   if (posts.length === 0) return null;
 
-  // Mobile Case (limit 0): Show only a badge with the total count
   if (limit === 0) {
     return (
       <div className={`w-full ${className}`}>
@@ -185,7 +178,6 @@ const MonthCalendar = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto text-text-main select-none">
-      {/* --- HEADER --- */}
       <div className="flex items-center justify-between mb-4 px-2">
         <h2 className="text-xl md:text-2xl font-bold text-text-main uppercase tracking-tight">
           {currentDate.toLocaleString("default", {
@@ -216,9 +208,7 @@ const MonthCalendar = () => {
         </div>
       </div>
 
-      {/* --- CALENDAR GRID --- */}
       <div className="flex flex-col gap-2">
-        {/* Weekday Headers */}
         <div className="grid grid-cols-7 gap-2">
           {WEEKDAYS.map((day) => (
             <div
@@ -230,9 +220,7 @@ const MonthCalendar = () => {
           ))}
         </div>
 
-        {/* Days Grid */}
         <div className="grid grid-cols-7 auto-rows-fr gap-2">
-          {/* 1. Previous Month Padding */}
           {prevMonthPadding.map((day) => (
             <div
               key={`prev-${day}`}
@@ -242,7 +230,6 @@ const MonthCalendar = () => {
             </div>
           ))}
 
-          {/* 2. Current Month Days */}
           {currentMonthDays.map((day) => {
             const posts = getPostsForDay(day, month, year);
             const today = isToday(day);
@@ -255,7 +242,7 @@ const MonthCalendar = () => {
                   border
                   ${
                     today
-                      ? "border-primary bg-primary/5 backdrop-blur-md" 
+                      ? "border-primary bg-primary/5 backdrop-blur-md"
                       : "border-border/60 bg-surface/60 backdrop-blur-sm"
                   }
                   ${
@@ -265,15 +252,12 @@ const MonthCalendar = () => {
                   }
                 `}
               >
-                {/* Header: Date Number + Add Button */}
                 <div className="flex justify-between items-start h-5 md:h-6">
-                  {/* Date Number */}
                   <span
                     className={`text-xs sm:text-sm md:text-base font-semibold leading-none
                     ${
                       today
-                        ? "text-primary" // Today is colored with Primary Brand Color
-                        : "text-text-main"
+                        ? "text-primary"
                     }
                     ${past ? "text-text-secondary font-normal" : ""}
                   `}
@@ -281,14 +265,11 @@ const MonthCalendar = () => {
                     {day}
                   </span>
 
-                  {/* Plus Button */}
                   {!past && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Get current time
                         const now = new Date();
-                        // Create date with calendar day but current time
                         const d = new Date(year, month, day, now.getHours(), now.getMinutes());
                         setSelectedDate(d);
                         openUpload();
@@ -301,7 +282,6 @@ const MonthCalendar = () => {
                         bg-surface border border-border
                         text-text-secondary shadow-sm
                         hover:text-primary hover:border-primary
-                        /* Sizes strictly matched to date number size */
                         w-5 h-5 md:w-7 md:h-7
                       "
                       title="Schedule Post"
@@ -311,7 +291,6 @@ const MonthCalendar = () => {
                   )}
                 </div>
 
-                {/* --- RESPONSIVE ICON GROUPS --- */}
                 <IconGroup posts={posts} limit={0} className="flex sm:hidden" />
                 <IconGroup posts={posts} limit={3} className="hidden sm:flex md:hidden" />
                 <IconGroup posts={posts} limit={4} className="hidden md:flex lg:hidden" />
@@ -320,7 +299,6 @@ const MonthCalendar = () => {
             );
           })}
 
-          {/* 3. Next Month Padding */}
           {nextMonthPadding.map((day) => (
             <div
               key={`next-${day}`}

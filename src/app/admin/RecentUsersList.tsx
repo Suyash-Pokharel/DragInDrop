@@ -15,12 +15,10 @@ export default function RecentUsersList({
   onViewAll,
   onSelectUser,
 }: RecentUsersListProps) {
-  // Get 5 most recent users (already sorted by createdAt desc)
   const recentUsers = useMemo(() => users.slice(0, 10), [users]);
 
   return (
     <div className="flex flex-col h-full rounded-3xl p-1">
-      {/* Header with total user count */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-xl font-bold flex items-center gap-2 text-text-main">
@@ -34,7 +32,6 @@ export default function RecentUsersList({
         </span>
       </div>
 
-      {/* User List */}
       <div className="space-y-3 max-h-[350px] overflow-y-auto custom-scrollbar pr-2 mb-2">
         {recentUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 opacity-70 bg-surface/40 rounded-2xl border border-border/50">
@@ -53,7 +50,6 @@ export default function RecentUsersList({
                   onSelectUser ? "cursor-pointer hover:bg-surface/50 transition-colors hover:border-primary/30" : ""
                 }`}
               >
-                {/* Left side: Avatar + Info */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center justify-center text-primary font-bold shadow-sm shrink-0 uppercase">
                     {user.name ? user.name.charAt(0) : "U"}
@@ -68,7 +64,6 @@ export default function RecentUsersList({
                   </div>
                 </div>
 
-                {/* Right side: Badge */}
                 <div className="flex items-center gap-3 shrink-0 ml-2">
                   <div
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-colors ${
@@ -86,7 +81,6 @@ export default function RecentUsersList({
         )}
       </div>
 
-      {/* Footer Button */}
       {users.length > 0 && (
         <div className="mt-auto pt-4 border-t border-border flex justify-center">
           <button 

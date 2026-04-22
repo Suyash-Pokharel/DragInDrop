@@ -1,4 +1,3 @@
-// app/lib/uploadService.ts
 type ProgressDetail = { progress: number };
 type DoneDetail = { status: number; responseText: string };
 type ErrorDetail = { message: string; code?: string };
@@ -7,26 +6,21 @@ class UploadService extends EventTarget {
   private xhr: XMLHttpRequest | null = null;
 
   async start(file: File) {
-    // abort any existing upload
     if (this.xhr) this.abort();
 
     try {
       console.log("Starting upload for file:", { name: file.name, type: file.type, size: file.size });
       
-      // Create FormData with file and metadata
       const formData = new FormData();
       formData.append('file', file);
       formData.append('fileName', file.name);
       formData.append('fileType', file.type);
 
-      // Create new XMLHttpRequest
       const xhr = new XMLHttpRequest();
       this.xhr = xhr;
 
-      // Open XMLHttpRequest to backend upload endpoint
       xhr.open("POST", "/api/upload/presign");
 
-      // Implement upload progress handler
       xhr.upload.onprogress = (e) => {
         if (!e.lengthComputable) return;
         const pct = Math.round((e.loaded / e.total) * 100);
@@ -35,7 +29,6 @@ class UploadService extends EventTarget {
         );
       };
 
-      // Implement onload handler
       xhr.onload = () => {
         const status = xhr.status;
         console.log("Upload completed with status:", status);
@@ -60,7 +53,6 @@ class UploadService extends EventTarget {
             );
           }
         } else {
-          // Handle error response
           try {
             const errorResponse = JSON.parse(xhr.responseText);
             this.dispatchEvent(
@@ -79,7 +71,6 @@ class UploadService extends EventTarget {
         this.cleanup();
       };
 
-      // Implement onerror handler
       xhr.onerror = () => {
         console.error("XHR error occurred during upload");
         console.error("XHR readyState:", xhr.readyState);
@@ -98,16 +89,13 @@ class UploadService extends EventTarget {
         this.cleanup();
       };
 
-      // Implement onabort handler
       xhr.onabort = () => {
         this.dispatchEvent(new CustomEvent("aborted"));
         this.cleanup();
       };
 
-      // Dispatch "start" event when upload begins
       this.dispatchEvent(new CustomEvent("start"));
 
-      // Send FormData with file
       console.log("Sending file to backend...");
       xhr.send(formData);
     } catch (error) {
@@ -134,7 +122,6 @@ class UploadService extends EventTarget {
     this.xhr = null;
   }
 
-  // convenience subscriptions
   onProgress(fn: (pct: number) => void) {
     const handler = (e: Event) => fn((e as CustomEvent<ProgressDetail>).detail.progress);
     this.addEventListener("progress", handler as EventListener);

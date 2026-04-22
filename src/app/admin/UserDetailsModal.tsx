@@ -22,7 +22,6 @@ interface UserDetailsModalProps {
   onDelete: () => void;
 }
 
-// Map platform names to logos
 const PROVIDER_LOGOS: Record<string, StaticImageData> = {
   YouTube: YoutubeLogo,
   Instagram: InstagramLogo,
@@ -78,7 +77,6 @@ export default function UserDetailsModal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, isTopModal, handleClose]);
 
-  // Focus trap within modal
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
 
@@ -89,20 +87,17 @@ export default function UserDetailsModal({
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    // Focus the close button when modal opens
     closeButtonRef.current?.focus();
 
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
 
       if (e.shiftKey) {
-        // Shift + Tab
         if (document.activeElement === firstElement) {
           e.preventDefault();
           lastElement?.focus();
         }
       } else {
-        // Tab
         if (document.activeElement === lastElement) {
           e.preventDefault();
           firstElement?.focus();
@@ -124,7 +119,6 @@ export default function UserDetailsModal({
 
   return createPortal(
     <>
-      {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/60 z-[120] transition-opacity cursor-pointer ${
           isClosing ? "opacity-0 duration-200" : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
@@ -133,7 +127,6 @@ export default function UserDetailsModal({
         aria-hidden="true"
       />
 
-      {/* Modal */}
       <div 
         ref={modalRef}
         className={`fixed inset-0 z-[130] flex items-center justify-center p-4 pointer-events-none transition-all duration-200 ${
@@ -144,7 +137,6 @@ export default function UserDetailsModal({
         aria-labelledby="user-details-modal-title"
       >
         <div className={`bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl pointer-events-auto ${!isClosing && 'animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]'}`}>
-          {/* Header */}
           <div className="flex items-center justify-between p-6 md:p-8 border-b border-border/60 bg-surface/40 backdrop-blur-md rounded-t-[2rem]">
             <h2 id="user-details-modal-title" className="text-xl font-bold flex items-center gap-2 text-text-main">
               <User className="w-6 h-6 text-primary" />
@@ -160,17 +152,14 @@ export default function UserDetailsModal({
             </button>
           </div>
 
-          {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* User Information Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-text-main">
                 User Information
               </h3>
               
               <div className="space-y-3">
-                {/* Name & Avatar */}
-                <div className="flex items-center gap-4 bg-surface/30 p-4 rounded-2xl border border-border/50">
+                <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">Registration Date</p>
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center justify-center text-primary text-xl font-black shadow-sm shrink-0 uppercase">
                     {user.name ? user.name.charAt(0) : "U"}
                   </div>
@@ -185,7 +174,6 @@ export default function UserDetailsModal({
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  {/* Registration Date */}
                   <div className="bg-surface/30 p-4 rounded-2xl border border-border/50">
                     <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">Registration Date</p>
                     <p className="text-sm font-bold text-text-main">
@@ -193,7 +181,6 @@ export default function UserDetailsModal({
                     </p>
                   </div>
 
-                  {/* User Role */}
                   <div className="bg-surface/30 p-4 rounded-2xl border border-border/50">
                     <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">User Role</p>
                     <div
@@ -208,7 +195,6 @@ export default function UserDetailsModal({
                   </div>
                 </div>
 
-                {/* Email Verification Status */}
                 <div className="bg-surface/30 p-4 rounded-2xl border border-border/50 col-span-2">
                   <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">Email Verification</p>
                   <div
@@ -234,7 +220,6 @@ export default function UserDetailsModal({
               </div>
             </div>
 
-            {/* Social Media Connections Section */}
             <div className="space-y-4 pt-4 border-t border-border">
               <h3 className="text-lg font-semibold text-text-main">
                 Connected Social Media Accounts
@@ -255,7 +240,6 @@ export default function UserDetailsModal({
                         key={index}
                         className="flex items-center gap-3 p-3 bg-background border border-border rounded-2xl"
                       >
-                        {/* Provider Icon */}
                         {providerLogo && (
                           <div className="w-8 h-8 relative flex-shrink-0">
                             <Image
@@ -268,7 +252,6 @@ export default function UserDetailsModal({
                           </div>
                         )}
                         
-                        {/* Provider Name and Details */}
                         <div className="flex-1">
                           <p className="text-sm font-medium text-text-main">
                             {platform}
@@ -278,7 +261,6 @@ export default function UserDetailsModal({
                           </p>
                         </div>
 
-                        {/* Active Status Badge */}
                         <div className="flex-shrink-0">
                           {socialAccount.isActive ? (
                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
@@ -300,7 +282,6 @@ export default function UserDetailsModal({
             </div>
           </div>
 
-          {/* Footer - Delete Button */}
           <div className="p-6 border-t border-border/60 bg-surface/40 backdrop-blur-md">
             <button
               onClick={onDelete}

@@ -57,11 +57,7 @@ type UserPreferences = {
   timezone: string | null;
 };
 
-/**
- * Client component for Dashboard page.
- * Handles data fetching, state management, and rendering of dashboard UI.
- * Displays metrics, charts, connected platforms, and upcoming posts.
- */
+
 export default function Dashboard() {
   const modal = useModal();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -70,12 +66,10 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Function to manually trigger a refresh
   const refreshDashboard = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
-  // Expose refresh function globally for modals to call
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as Window & { refreshDashboard?: () => void }).refreshDashboard = refreshDashboard;
@@ -88,7 +82,6 @@ export default function Dashboard() {
   }, [refreshDashboard]);
 
   useEffect(() => {
-    // Fetch dashboard data and user preferences in parallel
     Promise.all([
       fetch("/api/dashboard").then(res => res.json()),
       fetch("/api/user/preferences").then(res => res.json())
@@ -97,7 +90,6 @@ export default function Dashboard() {
         console.log("Dashboard data received:", dashboardData);
         console.log("Preferences received:", preferences);
         
-        // Check if API returned an error
         if (dashboardData.error) {
           console.error("Dashboard API error:", dashboardData.error);
           setError(dashboardData.error);
@@ -175,12 +167,10 @@ export default function Dashboard() {
   return (
     <div className="space-y-10 pb-8 load-step-2 relative">
       
-      {/* Ambient Background Glows - Enhanced for better visibility */}
       <div className="absolute top-0 left-1/4 w-full max-w-[100vw] h-[400px] bg-primary/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[500px] right-0 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[200px] left-0 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
-      {/* Header & Quick Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-highlight border border-border rounded-full text-xs font-semibold text-text-secondary tracking-wider uppercase mb-4 shadow-sm">
@@ -207,7 +197,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* High-Level Metrics */}
       <DashboardMetrics
         totalScheduled={totalScheduled}
         totalPublished={totalPublished}
@@ -219,10 +208,8 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 relative z-10">
         
-        {/* Main Column: Activity Graph & Platform Health */}
         <div className="xl:col-span-3 space-y-8">
           
-          {/* Chart Section */}
           <section className="bg-surface/50 backdrop-blur-xl border border-border p-6 md:p-8 rounded-[2rem] shadow-sm relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             <div className="flex justify-between items-center mb-6 relative z-10">
@@ -239,11 +226,9 @@ export default function Dashboard() {
             <DashboardActivityChart data={chartData} />
           </section>
 
-          {/* Platform Connections Banner */}
           <ConnectedPlatforms socialAccounts={socialAccounts} />
         </div>
 
-        {/* Side Column: Timeline */}
         <div className="xl:col-span-2">
           <UpcomingQueue
             draftPosts={draftPosts}

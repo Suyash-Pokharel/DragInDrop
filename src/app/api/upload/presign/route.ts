@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import { ensureAuth } from "@/lib/ensureAuth";
 
-// Increase max duration for file uploads (60 seconds)
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  // Authenticate the user
   const authCheck = await ensureAuth();
   if (authCheck instanceof NextResponse) return authCheck;
   const user = authCheck;
 
   try {
-    // Parse the multipart form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const fileName = formData.get('fileName') as string;
@@ -24,7 +21,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate file type (video only)
     if (!fileType.startsWith("video/")) {
       return NextResponse.json(
         { error: "Only video files are allowed" },
@@ -32,7 +28,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate file size (max 250MB = 262,144,000 bytes)
     if (file.size > 262144000) {
       return NextResponse.json(
         { error: "File size exceeds 250MB limit" },
@@ -40,7 +35,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 1: Authorize with B2 API
     const authResponse = await fetch(`https://api.backblazeb2.com/b2api/v2/b2_authorize_account`, {
       method: 'GET',
       headers: {
@@ -59,7 +53,6 @@ export async function POST(request: Request) {
     const authData = await authResponse.json();
     const { authorizationToken, apiUrl } = authData;
 
-    // Step 2: Get upload URL from B2
     const uploadUrlResponse = await fetch(`${apiUrl}/b2api/v2/b2_get_upload_url`, {
       method: 'POST',
       headers: {
@@ -81,7 +74,6 @@ export async function POST(request: Request) {
 
     const uploadData = await uploadUrlResponse.json();
 
-    // Step 3: Upload file to B2
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
     const timestamp = Date.now();
     const fileKey = `uploads/${user.id}/${timestamp}-${sanitizedFileName}`;
@@ -117,7 +109,6 @@ export async function POST(request: Request) {
       fileKey
     });
 
-    // Return success response
     return NextResponse.json({
       success: true,
       fileKey,

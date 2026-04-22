@@ -82,6 +82,7 @@ export default function PublicNavbar() {
               alt="Google"
               width={18}
               height={18}
+              priority
               className="object-contain"
             />
             <span>Google</span>

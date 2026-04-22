@@ -131,7 +131,7 @@ export async function registerUser(
           id: crypto.randomUUID(),
           name,
           email: normalizedEmail,
-          updatedAt: new Date(),
+          // updatedAt is automatically set by Prisma @updatedAt directive
           VerificationToken: {
             create: {
               id: crypto.randomUUID(),

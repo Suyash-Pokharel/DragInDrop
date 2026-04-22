@@ -36,7 +36,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-text-main font-sans overflow-hidden">
       
-      {/* 1. HERO SECTION & INTEGRATION BAR */}
       <section className="relative pt-28 pb-12 px-4 max-w-7xl mx-auto flex flex-col items-center text-center">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
@@ -82,7 +81,6 @@ export default function Home() {
           </div>
         </Reveal>
 
-        {/* INLINE PLATFORMS BAR */}
         <Reveal width="100%" delay={0.5}>
           <div className="flex flex-col items-center opacity-70">
             <p className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-3">
@@ -106,7 +104,6 @@ export default function Home() {
         </Reveal>
       </section>
 
-      {/* 2. HOW IT WORKS */}
       <section className="py-24 bg-surface/30 border-y border-border">
         <div className="max-w-7xl mx-auto px-4">
           <Reveal width="100%">
@@ -117,7 +114,6 @@ export default function Home() {
           </Reveal>
 
           <div className="relative">
-            {/* Connecting line for desktop */}
             <div className="hidden md:block absolute top-[4.5rem] left-[10%] right-[10%] h-[3px] bg-border rounded-full -z-10">
                <div className="absolute top-0 left-0 h-full bg-primary/30 w-full animate-pulse rounded-full"></div>
             </div>
@@ -164,7 +160,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. USER REVIEWS - SLIDING MARQUEE (Left to Right) */}
       <section className="py-24 overflow-hidden relative">
         <div className="text-center mb-16">
           <Reveal width="100%">
@@ -173,15 +168,11 @@ export default function Home() {
           </Reveal>
         </div>
 
-        {/* Sliding Track */}
         <div className="relative w-full flex overflow-hidden group">
-           {/* Fading Edges */}
            <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
            <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
 
-           {/* The animated flex container - moving Left To Right */}
            <div className="flex shrink-0 gap-6 animate-slide-ltr w-max">
-             {/* Render reviews 3 times to ensure continuous seamless loop */}
              {[...REVIEWS, ...REVIEWS, ...REVIEWS].map((review, i) => (
                <div key={i} className="w-80 shrink-0 bg-surface border border-border p-6 rounded-2xl shadow-sm hover:border-primary cursor-default transition-all duration-300">
                  <div className="flex items-center gap-1 mb-4">
@@ -210,7 +201,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. FEATURES GRID */}
       <section className="py-24 bg-surface/50 border-y border-border">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
@@ -262,7 +252,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. FINAL CTA BANNER */}
       <section className="py-24 px-4 pt-10 mt-10">
         <Reveal width="100%">
           <div className="max-w-5xl mx-auto bg-surface border border-primary/20 rounded-[2.5rem] p-10 md:p-20 text-center relative overflow-hidden shadow-glow">
@@ -290,10 +279,8 @@ export default function Home() {
         </Reveal>
       </section>
 
-      {/* 6. FOOTER */}
       <Footer />
 
-      {/* MARQUEE STYLES */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slideLeftToRight {
           from { transform: translateX(-33.333333%); }

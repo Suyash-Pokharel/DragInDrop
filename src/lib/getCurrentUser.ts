@@ -13,10 +13,6 @@ export type PublicUser = {
   updatedAt?: Date;
 };
 
-/**
- * Get the current user from NextAuth session.
- * Returns user data from database or null if no session exists.
- */
 export async function getCurrentUser(): Promise<PublicUser | null> {
   const session = await getServerSession(authOptions);
 

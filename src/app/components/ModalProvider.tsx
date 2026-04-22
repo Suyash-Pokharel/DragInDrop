@@ -95,7 +95,6 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const [postToDelete, setPostToDelete] = useState<{ postId: string; postTitle: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Background Upload States
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -105,12 +104,10 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  // File metadata
   const [fileKey, setFileKey] = useState<string | null>(null);
   const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [videoFileSize, setVideoFileSize] = useState<number | null>(null);
 
-  // Post metadata
   const [postTitle, setPostTitle] = useState<string>("");
   const [postDescription, setPostDescription] = useState<string>("");
   const [postScheduledFor, setPostScheduledFor] = useState<string>("");
@@ -156,7 +153,6 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
           setUploaded(true);
           setUploadError(null);
           
-          // Parse upload response to extract fileKey
           try {
             const responseData = JSON.parse(responseText);
             console.log("Upload response data:", responseData);
@@ -183,14 +179,12 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       
       console.log("Error detail received:", detail);
       
-      // Handle authentication errors by redirecting to login
       if (detail.code === "AUTH_FAILED") {
         console.error("Authentication failed during upload");
         router.push("/login");
         return;
       }
       
-      // Set user-friendly error message with fallback
       const errorMessage = detail?.message || "An unexpected error occurred. Please try again.";
       setUploadError(errorMessage);
       console.error("Upload error occurred:", detail);
@@ -217,12 +211,10 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       updateFileState(fileToUpload);
       setUploaded(false);
       setProgress(0);
-      setUploadError(null); // Clear any previous errors
+      setUploadError(null);
       
-      // Clear previous fileKey when starting new upload
       setFileKey(null);
       
-      // Store videoFileName and videoFileSize from file
       setVideoFileName(fileToUpload.name);
       setVideoFileSize(fileToUpload.size);
       
@@ -248,12 +240,10 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     updateFileState(null);
     setSelectedDate(null);
     
-    // Reset all file metadata
     setFileKey(null);
     setVideoFileName(null);
     setVideoFileSize(null);
     
-    // Reset post metadata
     setPostTitle("");
     setPostDescription("");
     setPostScheduledFor("");
@@ -265,27 +255,22 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
 
   const openUpload = useCallback(
     async (files?: File[] | null) => {
-      // Check authentication status
       if (status === "unauthenticated") {
         router.push("/login");
         return;
       }
 
-      // Don't proceed if session is still loading
       if (status === "loading") {
         return;
       }
 
-      // Refetch connected platforms to ensure we have fresh data
       await refetchConnectedPlatforms();
 
-      // Check if user has connected platforms
       if (connectedPlatforms.length === 0) {
         setIsNoAccountModalOpen(true);
         return;
       }
 
-      // Process files and open upload modal
       if (files && files.length > 0) {
         handleUpload(files[0]);
       }
@@ -359,23 +344,19 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       // Close the modal
       closeDeleteConfirmation();
 
-      // Show success toast notification
       showSuccess("Post deleted successfully");
 
-      // Refresh dashboard data
       try {
         const dashboardResponse = await fetch("/api/dashboard");
         if (!dashboardResponse.ok) {
           showError("Failed to refresh dashboard");
         }
-        // Trigger dashboard refresh if on dashboard page
         if (typeof window !== 'undefined') {
           const win = window as Window & { refreshDashboard?: () => void };
           if (win.refreshDashboard) {
             win.refreshDashboard();
           }
         }
-        // Trigger a page refresh to update the dashboard
         router.refresh();
       } catch (refreshError) {
         console.error("Error refreshing dashboard:", refreshError);
@@ -383,7 +364,6 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error("Error deleting post:", error);
-      // Show error toast notification with API error message
       if (error instanceof TypeError && error.message.includes('fetch')) {
         showError("Network error. Please check your connection and try again.");
       } else {

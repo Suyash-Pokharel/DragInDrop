@@ -29,7 +29,6 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [mounted, setMounted] = useState(false);
 
-  // Set mounted state after initial render
   React.useEffect(() => {
     setMounted(true);
   }, []);

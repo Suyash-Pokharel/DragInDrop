@@ -2,20 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
 
-/**
- * PUT /api/posts/[id]/draft
- * Converts a scheduled post back to draft status by updating the Post status to DRAFT
- * and deleting all associated PlatformPost records while preserving the video file
- * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10
- */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   
-  // Authenticate user
-  // Requirement: 6.7 - Handle authentication errors (401)
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[PUT /api/posts/[id]/draft] Authentication failed:", {
@@ -29,7 +21,6 @@ export async function PUT(
   try {
     const prisma = getPrisma();
 
-    // Check if post exists and user owns it
     const existingPost = await prisma.post.findUnique({
       where: { id },
       select: {
@@ -41,8 +32,6 @@ export async function PUT(
       },
     });
 
-    // Handle post not found
-    // Requirement: 6.9 - Handle 404 error cases
     if (!existingPost) {
       console.error("[PUT /api/posts/[id]/draft] Post not found:", {
         userId: user.id,
@@ -57,8 +46,6 @@ export async function PUT(
       );
     }
 
-    // Check authorization - user must own the post
-    // Requirement: 6.8 - Handle authorization errors (403)
     if (existingPost.userId !== user.id) {
       console.error("[PUT /api/posts/[id]/draft] Authorization failed:", {
         userId: user.id,
@@ -74,11 +61,7 @@ export async function PUT(
       );
     }
 
-    // Use database transaction for atomicity
-    // Requirements: 6.5, 6.2, 6.3 - Use transaction to update Post status and delete PlatformPost records
     const result = await prisma.$transaction(async (tx) => {
-      // Update the Post status to DRAFT
-      // Requirement: 6.2 - Update Post status to DRAFT
       const updatedPost = await tx.post.update({
         where: { id },
         data: {
@@ -87,8 +70,6 @@ export async function PUT(
         },
       });
 
-      // Delete all associated PlatformPost records
-      // Requirement: 6.3 - Delete all associated PlatformPost records
       await tx.platformPost.deleteMany({
         where: {
           postId: id,
@@ -98,8 +79,6 @@ export async function PUT(
       return updatedPost;
     });
 
-    // Log successful conversion
-    // Note: Video file is preserved in B2 storage as per Requirement: 6.4
     console.log("[PUT /api/posts/[id]/draft] Post converted to draft successfully:", {
       userId: user.id,
       postId: id,
@@ -111,14 +90,12 @@ export async function PUT(
       videoFilePreserved: true,
     });
 
-    // Requirement: 6.6 - Return success response
     return NextResponse.json(
       { message: "Post saved as draft successfully" },
       { status: 200 }
     );
 
   } catch (error) {
-    // Requirement: 6.10 - Handle database errors (500) with proper logging
     console.error("[PUT /api/posts/[id]/draft] Database error:", {
       userId: user.id,
       postId: id,

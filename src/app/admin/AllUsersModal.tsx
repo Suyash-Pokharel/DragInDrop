@@ -45,13 +45,11 @@ export default function AllUsersModal({
     }, 250);
   }, [onClose]);
 
-  // Sort users by registration date (newest first)
   const sortedUsers = useMemo(
     () => [...users].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [users]
   );
 
-  // Handle Escape key to close modal
   useEffect(() => {
     if (!isOpen || !isTopModal) return;
 
@@ -65,7 +63,6 @@ export default function AllUsersModal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, isTopModal, handleClose]);
 
-  // Focus trap within modal
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
 
@@ -76,20 +73,17 @@ export default function AllUsersModal({
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    // Focus the close button when modal opens
     closeButtonRef.current?.focus();
 
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
 
       if (e.shiftKey) {
-        // Shift + Tab
         if (document.activeElement === firstElement) {
           e.preventDefault();
           lastElement?.focus();
         }
       } else {
-        // Tab
         if (document.activeElement === lastElement) {
           e.preventDefault();
           firstElement?.focus();
@@ -105,7 +99,6 @@ export default function AllUsersModal({
 
   return createPortal(
     <>
-      {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/60 z-[100] ${
           isClosing ? "opacity-0 duration-200" : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
@@ -114,7 +107,6 @@ export default function AllUsersModal({
         aria-hidden="true"
       />
 
-      {/* Modal */}
       <div 
         ref={modalRef}
         className={`fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none transition-all duration-200 ${
@@ -125,7 +117,6 @@ export default function AllUsersModal({
         aria-labelledby="all-users-modal-title"
       >
         <div className={`bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl pointer-events-auto ${!isClosing && 'animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]'}`}>
-          {/* Header */}
           <div className="flex items-center justify-between p-6 md:p-8 border-b border-border/60 bg-surface/40 backdrop-blur-md rounded-t-[2rem]">
             <div>
               <h2 id="all-users-modal-title" className="text-2xl font-bold flex items-center gap-2 text-text-main">
@@ -144,7 +135,6 @@ export default function AllUsersModal({
             </button>
           </div>
 
-          {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto p-2 sm:p-6 custom-scrollbar">
             {sortedUsers.length === 0 ? (
               <p className="text-text-secondary text-center py-8">
@@ -152,7 +142,6 @@ export default function AllUsersModal({
               </p>
             ) : (
               <>
-                {/* Desktop Table View */}
                 <div className="hidden md:block bg-surface/20 rounded-2xl border border-border/50 overflow-hidden">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-surface/50 border-b border-border/50 backdrop-blur-sm">
@@ -216,7 +205,6 @@ export default function AllUsersModal({
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
                 <div className="md:hidden space-y-3">
                   {sortedUsers.map((user) => {
                     const oauthCount = user.SocialAccount.length;

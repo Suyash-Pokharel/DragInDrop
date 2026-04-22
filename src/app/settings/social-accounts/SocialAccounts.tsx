@@ -11,17 +11,9 @@ interface SocialAccountsProps {
   initialConnectedPlatforms: string[];
 }
 
-/**
- * Client component for Social Accounts page.
- * Handles interactive features: OAuth connections, disconnections, toast notifications.
- * Receives connected platforms data as props from parent Server Component.
- *
- * @param initialConnectedPlatforms - Array of connected platform names fetched server-side
- */
 export default function SocialAccounts({ initialConnectedPlatforms }: SocialAccountsProps) {
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>(initialConnectedPlatforms);
   
-  // Initialize mock connected platforms from session storage
   const [mockConnectedPlatforms, setMockConnectedPlatforms] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       const savedMockConnections = sessionStorage.getItem('mockConnectedPlatforms');
@@ -42,10 +34,6 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const searchParams = useSearchParams();
 
-  /**
-   * Refetch connected platforms from API
-   * Used after connecting or disconnecting a platform
-   */
   const refetchConnectedPlatforms = async () => {
     try {
       const response = await fetch("/api/user/connected-platforms");
@@ -60,14 +48,12 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
     }
   };
 
-  // Save mock connected platforms to session storage whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('mockConnectedPlatforms', JSON.stringify(mockConnectedPlatforms));
     }
   }, [mockConnectedPlatforms]);
 
-  // Handle OAuth callback success/error messages
   useEffect(() => {
     const success = searchParams.get("success");
     const error = searchParams.get("error");
@@ -77,18 +63,15 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
         setToastMessage({ type: "success", message: "Account Connected Successfully!" });
         refetchConnectedPlatforms();
       }, 0);
-      // Clear the query parameter
       window.history.replaceState({}, "", "/settings/social-accounts");
     } else if (error) {
       setTimeout(() => {
         setToastMessage({ type: "error", message: error });
       }, 0);
-      // Clear the query parameter
       window.history.replaceState({}, "", "/settings/social-accounts");
     }
   }, [searchParams]);
 
-  // Auto-hide toast after 5 seconds
   useEffect(() => {
     if (toastMessage) {
       const timer = setTimeout(() => setToastMessage(null), 5000);
@@ -97,21 +80,17 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
   }, [toastMessage]);
 
   const handleConnect = async (name: string) => {
-    // For TikTok, redirect to OAuth authorization endpoint
     if (name === "TikTok") {
       setConnectingPlatform(name);
-      // Use useEffect or router for navigation to avoid direct window modification
       setTimeout(() => {
         window.location.href = "/api/oauth/tiktok/authorize";
       }, 0);
     } else if (name === "YouTube") {
-      // For YouTube, redirect to OAuth authorization endpoint
       setConnectingPlatform(name);
       setTimeout(() => {
         window.location.href = "/api/oauth/youtube/authorize";
       }, 0);
     } else {
-      // For other platforms, create mock connection for testing
       setMockConnectedPlatforms(prev => {
         if (!prev.includes(name)) {
           return [...prev, name];
@@ -128,7 +107,6 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
 
   const confirmDisconnect = async () => {
     if (platformToDisconnect) {
-      // Call disconnect API endpoint for TikTok and YouTube
       if (platformToDisconnect === "TikTok" || platformToDisconnect === "YouTube") {
         try {
           const endpoint = platformToDisconnect === "TikTok" 
@@ -150,7 +128,6 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
           setToastMessage({ type: "error", message: "Failed to disconnect account" });
         }
       } else {
-        // For other platforms, remove from mock connections
         setMockConnectedPlatforms(prev => prev.filter(platform => platform !== platformToDisconnect));
         setToastMessage({ type: "error", message: `${platformToDisconnect} disconnected successfully!` });
       }
@@ -243,7 +220,6 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
         </div>
       </div>
 
-      {/* Secondary Box to balance page height and fill vertical space */}
       <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
         <div>
           <h3 className="text-lg font-medium text-text-main">Missing a Platform?</h3>
@@ -257,7 +233,6 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
         </button>
       </div>
 
-      {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-2 duration-300">
           <div
@@ -272,7 +247,6 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
         </div>
       )}
 
-      {/* Disconnect Confirmation Modal */}
       {platformToDisconnect && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
           <div

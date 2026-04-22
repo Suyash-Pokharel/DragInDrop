@@ -10,7 +10,6 @@ import AllUsersModal from "./AllUsersModal";
 import UserDetailsModal from "./UserDetailsModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
-// Interface matching Prisma query shape from the API
 export interface UserWithAccounts {
   id: string;
   name: string | null;
@@ -36,10 +35,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
-  // Modal hook
   const modal = useModal();
-  
-  // State management
   const [users, setUsers] = useState<UserWithAccounts[]>(initialUsers);
   const [showAllUsersModal, setShowAllUsersModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithAccounts | null>(null);
@@ -47,7 +43,6 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Delete user functionality
   const deleteUser = async () => {
     if (!selectedUser) return;
 
@@ -64,11 +59,9 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
         throw new Error(data.error || "Failed to delete user");
       }
 
-      // Success: filter deleted user from users array
       const updatedUsers = users.filter((u) => u.id !== selectedUser.id);
       setUsers(updatedUsers);
 
-      // Close modals and reset selectedUser
       setShowDeleteConfirm(false);
       setSelectedUser(null);
     } catch (err) {
@@ -80,12 +73,10 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
 
   return (
     <div className="space-y-10 pb-8 relative z-0">
-      {/* Ambient Background Glows - Enhanced for better visibility */}
       <div className="absolute top-0 left-1/4 w-full max-w-[100vw] h-[400px] bg-primary/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[500px] right-0 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[200px] left-0 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
       
-      {/* Error Display Component */}
       {error && (
         <div className="mb-6 bg-error/10 border border-error/40 text-error px-5 py-4 rounded-xl flex items-start gap-3 backdrop-blur-sm">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -96,7 +87,6 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
         </div>
       )}
 
-      {/* Empty State - No users registered yet */}
       {users.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh] bg-surface/60 backdrop-blur-xl border border-border rounded-[2rem] p-8">
           <div className="text-center space-y-3">
@@ -111,10 +101,8 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
         </div>
       ) : (
         <>
-          {/* Header & Quick Actions */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10 mb-10">
             <div>
-              {/* Status Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-highlight border border-border rounded-full text-xs font-semibold text-text-secondary tracking-wider uppercase mb-4 shadow-sm">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
@@ -123,14 +111,12 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
                 System Online
               </div>
               
-              {/* Gradient Title */}
               <h2 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-secondary">
                 Welcome back, Admin.
               </h2>
               <p className="text-text-secondary mt-2 text-lg">Manage users and monitor platform activity</p>
             </div>
             
-            {/* Create New Post Button */}
             <div className="flex w-full md:w-auto">
               <button 
                 onClick={() => modal.openUpload()}
@@ -147,9 +133,7 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
             <OAuthProviderStats users={users} />
           </div>
 
-          {/* Main Grid Layout - 3:2 ratio (60% Registration / 40% Recent Users) */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mt-6 relative z-10">
-            {/* Left Column - Registration Trend Chart (3/5 = 60%) */}
             <div className="md:col-span-3 bg-surface/50 backdrop-blur-xl border border-border rounded-[2rem] p-6 md:p-8 flex flex-col hover:border-primary/30 transition-colors">
               <div className="flex justify-between items-center mb-6">
                 <div>
@@ -168,7 +152,6 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
               </div>
             </div>
 
-            {/* Right Column - Recent Users List (2/5 = 40%) */}
             <div className="md:col-span-2 bg-surface/50 backdrop-blur-xl border border-border rounded-[2rem] p-6 md:p-8 flex flex-col hover:border-primary/30 transition-colors">
               <RecentUsersList
                 users={users}
@@ -180,7 +163,6 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
         </>
       )}
 
-      {/* Modals */}
       <AllUsersModal
         users={users}
         isOpen={showAllUsersModal}

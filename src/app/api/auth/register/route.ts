@@ -9,7 +9,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
     }
 
-    // Try to extract IP from forwarded headers (Vercel / proxies)
     const ipHeader =
       (req.headers?.get && req.headers.get("x-forwarded-for")) ||
       (req.headers?.get && req.headers.get("x-real-ip"));

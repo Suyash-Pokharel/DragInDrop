@@ -6,7 +6,6 @@ export type PasswordCriteria = {
   hasSymbol: boolean;
 };
 
-/** Return per-criterion booleans (pure, safe for client & server). */
 export function passwordCriteria(pw: string): PasswordCriteria {
   const len = pw?.length ?? 0;
   return {
@@ -18,7 +17,6 @@ export function passwordCriteria(pw: string): PasswordCriteria {
   };
 }
 
-/** Validate password and return structured result for server-side use. */
 export function validatePassword(pw: string): { valid: boolean; errors: string[] } {
   const c = passwordCriteria(pw);
   const errors: string[] = [];

@@ -1,28 +1,13 @@
-/**
- * Sanitizes user input from external APIs to prevent XSS and injection attacks
- * Removes potentially dangerous characters while preserving valid content
- */
-
-/**
- * Sanitizes a string by removing or escaping potentially dangerous characters
- * @param input - The string to sanitize
- * @param maxLength - Maximum allowed length (default: 500)
- * @returns Sanitized string
- */
 export function sanitizeString(input: string | null | undefined, maxLength = 500): string {
   if (!input) return "";
   
-  // Trim and limit length
   let sanitized = input.trim().slice(0, maxLength);
   
-  // Remove control characters except newlines and tabs
   sanitized = sanitized.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, "");
   
-  // Remove potential script tags and HTML
   sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gi, "");
   sanitized = sanitized.replace(/<[^>]+>/g, "");
   
-  // Escape special characters that could be used for injection
   sanitized = sanitized
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -34,11 +19,6 @@ export function sanitizeString(input: string | null | undefined, maxLength = 500
   return sanitized;
 }
 
-/**
- * Sanitizes TikTok user profile data
- * @param profile - TikTok user profile object
- * @returns Sanitized profile data
- */
 export function sanitizeTikTokProfile(profile: {
   open_id?: string;
   union_id?: string;
@@ -55,11 +35,6 @@ export function sanitizeTikTokProfile(profile: {
   };
 }
 
-/**
- * Sanitizes Google user profile data from YouTube OAuth
- * @param profile - Google user profile object
- * @returns Sanitized profile data
- */
 export function sanitizeGoogleProfile(profile: {
   id?: string;
   email?: string;
@@ -76,17 +51,11 @@ export function sanitizeGoogleProfile(profile: {
   };
 }
 
-/**
- * Validates and sanitizes a URL
- * @param url - The URL to validate
- * @returns Sanitized URL or empty string if invalid
- */
 export function sanitizeUrl(url: string | null | undefined): string {
   if (!url) return "";
   
   try {
     const parsed = new URL(url);
-    // Only allow http and https protocols
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
       return "";
     }
@@ -96,18 +65,11 @@ export function sanitizeUrl(url: string | null | undefined): string {
   }
 }
 
-/**
- * Validates that a redirect URI matches the expected value
- * @param redirectUri - The redirect URI to validate
- * @param expectedUri - The expected redirect URI
- * @returns true if valid, false otherwise
- */
 export function validateRedirectUri(redirectUri: string, expectedUri: string): boolean {
   try {
     const provided = new URL(redirectUri);
     const expected = new URL(expectedUri);
     
-    // Must match protocol, host, and pathname exactly
     return (
       provided.protocol === expected.protocol &&
       provided.host === expected.host &&
@@ -118,14 +80,8 @@ export function validateRedirectUri(redirectUri: string, expectedUri: string): b
   }
 }
 
-/**
- * Validates that HTTPS is used in production
- * @param url - The URL to validate
- * @param isProduction - Whether running in production
- * @returns true if valid, false otherwise
- */
 export function validateHttps(url: string, isProduction: boolean): boolean {
-  if (!isProduction) return true; // Allow HTTP in development
+  if (!isProduction) return true;
   
   try {
     const parsed = new URL(url);

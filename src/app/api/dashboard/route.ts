@@ -15,7 +15,6 @@ export async function GET() {
 
     const prisma = getPrisma();
 
-    // 1. Fetch Metrics
     const [
       totalScheduled,
       totalPublished,
@@ -56,7 +55,6 @@ export async function GET() {
     const connectedNetworks = socialAccounts.length;
     const inactiveNetworks = socialAccounts.filter(s => !s.isActive).length;
 
-    // 2. Fetch Upcoming Posts
     const upcomingPosts = await prisma.post.findMany({
       where: {
         userId: user.id,
@@ -77,7 +75,6 @@ export async function GET() {
       }
     });
 
-    // 2.1. Fetch Draft Posts
     const draftPosts = await prisma.post.findMany({
       where: {
         userId: user.id,
@@ -94,7 +91,6 @@ export async function GET() {
       }
     });
 
-    // 3. Fetch Activity for the Chart (last 7 days - all posts including scheduled)
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (6 - i));
