@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
+/** Ensure the request belongs to an authenticated user; returns the user or NextResponse.json 401 */
 export async function ensureAuth() {
   const session = await getServerSession(authOptions);
 

@@ -62,6 +62,7 @@ export default function DeleteConfirmationModal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, isDeleting, isTopModal, handleClose]);
 
+  // Focus trap within modal
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
 
@@ -72,17 +73,20 @@ export default function DeleteConfirmationModal({
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
+    // Focus the close button when modal opens
     closeButtonRef.current?.focus();
 
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
 
       if (e.shiftKey) {
+        // Shift + Tab
         if (document.activeElement === firstElement) {
           e.preventDefault();
           lastElement?.focus();
         }
       } else {
+        // Tab
         if (document.activeElement === lastElement) {
           e.preventDefault();
           firstElement?.focus();
@@ -98,6 +102,7 @@ export default function DeleteConfirmationModal({
 
   return createPortal(
     <>
+      {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/60 z-[140] transition-opacity cursor-pointer ${
           isClosing ? "opacity-0 duration-200" : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
@@ -106,6 +111,7 @@ export default function DeleteConfirmationModal({
         aria-hidden="true"
       />
 
+      {/* Modal - Smaller centered modal */}
       <div 
         ref={modalRef}
         className={`fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none transition-all duration-200 ${
@@ -117,8 +123,10 @@ export default function DeleteConfirmationModal({
         aria-describedby="delete-confirmation-modal-description"
       >
         <div className={`bg-surface/80 backdrop-blur-xl border border-error/50 rounded-[2rem] w-full max-w-md shadow-2xl relative overflow-hidden pointer-events-auto ${!isClosing && 'animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]'}`}>
+          {/* Subtle error background glow */}
           <div className="absolute top-0 left-0 right-0 h-32 bg-error/10 blur-3xl rounded-full translate-y-[100%] pointer-events-none" />
 
+          {/* Header with warning styling */}
           <div className="flex items-center justify-between p-6 md:p-8 border-b border-error/20 bg-error/5 rounded-t-[2rem]">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-error/10 rounded-2xl border border-error/20 text-error shadow-[0_0_15px_-3px_rgba(var(--error),0.3)]">
@@ -139,7 +147,9 @@ export default function DeleteConfirmationModal({
             </button>
           </div>
 
+          {/* Content */}
           <div id="delete-confirmation-modal-description" className="p-6 md:p-8 space-y-6 relative z-10">
+            {/* User information */}
             <div className="space-y-3">
               <p className="text-sm font-medium text-text-secondary">
                 You are about to permanently delete the following user:
@@ -157,6 +167,7 @@ export default function DeleteConfirmationModal({
               </div>
             </div>
 
+            {/* Warning message */}
             <div className="bg-error/5 border border-error/20 rounded-xl p-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-error shrink-0 mt-0.5" />
               <p className="text-sm text-error font-medium">
@@ -165,6 +176,7 @@ export default function DeleteConfirmationModal({
             </div>
           </div>
 
+          {/* Footer - Action buttons */}
           <div className="p-6 pt-0 flex gap-4 relative z-10">
             <button
               onClick={handleClose}

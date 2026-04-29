@@ -21,6 +21,7 @@ export async function DELETE(
   try {
     const prisma = getPrisma();
 
+    // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id },
       select: { id: true, email: true, role: true },
@@ -33,6 +34,7 @@ export async function DELETE(
       );
     }
 
+    // Prevent deleting ADMIN users
     if (user.role === "ADMIN") {
       return NextResponse.json(
         { error: "Cannot delete admin users" },
@@ -40,6 +42,7 @@ export async function DELETE(
       );
     }
 
+    // Delete user (CASCADE will handle related records: accounts, sessions, tokens)
     await prisma.user.delete({
       where: { id },
     });

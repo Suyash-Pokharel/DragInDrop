@@ -15,14 +15,17 @@ export default function PasswordResetModal({ userEmail, onClose }: PasswordReset
   const [showResetSent, setShowResetSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Animation & Mount State
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // 1. Handle Mounting (Solves Hydration Mismatch)
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
+  // 2. Handle Animation & Scroll Lock
   useEffect(() => {
     if (!mounted) return;
 
@@ -66,6 +69,7 @@ export default function PasswordResetModal({ userEmail, onClose }: PasswordReset
 
   if (!mounted) return null;
 
+  // If ResetSent modal is shown, render it instead
   if (showResetSent) {
     return <ResetSent email={userEmail} onClose={onClose} />;
   }
@@ -76,11 +80,13 @@ export default function PasswordResetModal({ userEmail, onClose }: PasswordReset
         showModal ? "opacity-100" : "opacity-0"
       }`}
     >
+      {/* Modal Container */}
       <div
         className={`w-full max-w-md bg-surface rounded-2xl shadow-2xl relative border border-border transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100 translate-y-0" : "scale-95 opacity-0 translate-y-4"
         }`}
       >
+        {/* Close Button */}
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 z-20 p-2 rounded-full text-text-secondary hover:bg-surface-highlight hover:text-text-main transition-colors"
@@ -88,6 +94,7 @@ export default function PasswordResetModal({ userEmail, onClose }: PasswordReset
           <X size={20} />
         </button>
 
+        {/* --- CONFIRMATION VIEW --- */}
         <div className="p-6 md:p-8">
           <Reveal width="100%" delay={0.05}>
             <div className="text-center mb-8">

@@ -81,6 +81,7 @@ export default function TwoFactorModal({ onClose, onSuccess }: TwoFactorModalPro
 
         <div className="p-6 md:p-8 flex flex-col items-center">
           {step === 1 ? (
+            // --- STEP 1: QR CODE ---
             <div className="flex flex-col items-center text-center w-full animate-in fade-in zoom-in-95 duration-300">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <ShieldCheck className="w-8 h-8 text-primary" />
@@ -111,6 +112,7 @@ export default function TwoFactorModal({ onClose, onSuccess }: TwoFactorModalPro
               </div>
             </div>
           ) : (
+            // --- STEP 2: VERIFICATION ---
             <div className="flex flex-col items-center text-center w-full animate-in fade-in slide-in-from-right-4 duration-300">
               <h2 className="text-2xl font-bold text-text-main mb-2">Verify Authenticator</h2>
               <p className="text-sm text-text-secondary mb-8">

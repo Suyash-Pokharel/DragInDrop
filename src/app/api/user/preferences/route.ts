@@ -4,6 +4,10 @@ import crypto from "crypto";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
 
+/**
+ * Zod schema for preferences validation
+ * Requirements: 9.5, 7.1
+ */
 const preferencesSchema = z.object({
   dateFormat: z.enum(["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"], {
     message: "Invalid date format",
@@ -19,6 +23,10 @@ const preferencesSchema = z.object({
     .min(1, "Timezone is required"),
 });
 
+/**
+ * Validates if a timezone is a valid IANA identifier
+ * Requirements: 9.5
+ */
 function isValidTimezone(tz: string): boolean {
   try {
     Intl.DateTimeFormat(undefined, { timeZone: tz });
@@ -28,13 +36,20 @@ function isValidTimezone(tz: string): boolean {
   }
 }
 
+/**
+ * GET /api/user/preferences
+ * Retrieves the authenticated user's preferences or returns default values if none exist
+ * Requirements: 9.1, 9.3, 6.1
+ */
 export async function GET() {
   try {
+    // Authenticate user
     const user = await ensureAuth();
     if (user instanceof NextResponse) {
       return user;
     }
 
+    // Query UserPreferences by userId
     const prisma = getPrisma();
     const preferences = await prisma.userPreferences.findUnique({
       where: {
@@ -48,12 +63,13 @@ export async function GET() {
       },
     });
 
+    // Return preferences or default values if no record exists
     if (!preferences) {
       return NextResponse.json({
         dateFormat: "DD/MM/YYYY",
         timeFormat: "12h",
         firstDayOfWeek: "sunday",
-        timezone: null,
+        timezone: null, // Explicitly null to trigger auto-detection
       });
     }
 
@@ -70,13 +86,20 @@ export async function GET() {
   }
 }
 
+/**
+ * POST /api/user/preferences
+ * Creates or updates the authenticated user's preferences
+ * Requirements: 9.2, 9.4, 9.5, 7.1, 7.3, 7.5
+ */
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
     const user = await ensureAuth();
     if (user instanceof NextResponse) {
       return user;
     }
 
+    // Parse and validate request body
     const body = await request.json();
     const validationResult = preferencesSchema.safeParse(body);
 
@@ -93,6 +116,7 @@ export async function POST(request: NextRequest) {
     const { dateFormat, timeFormat, firstDayOfWeek, timezone } =
       validationResult.data;
 
+    // Validate timezone is a valid IANA identifier
     if (!isValidTimezone(timezone)) {
       return NextResponse.json(
         {
@@ -103,6 +127,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Upsert UserPreferences record
     const prisma = getPrisma();
     await prisma.userPreferences.upsert({
       where: {

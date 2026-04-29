@@ -6,6 +6,7 @@ export async function GET() {
   const adminCheck = await ensureAdmin();
   if (adminCheck instanceof NextResponse) return adminCheck;
 
+  // At this point, adminCheck is the user
   const prisma = getPrisma();
   const users = await prisma.user.findMany({
     select: {

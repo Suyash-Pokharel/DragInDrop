@@ -12,7 +12,7 @@ import { APP_PLATFORMS } from "@/lib/platforms";
 
 interface EditPostProps {
   onClose: () => void;
-  postId?: string;
+  postId?: string; // Optional postId for edit mode
 }
 
 export default function EditPost({ onClose, postId }: EditPostProps) {
@@ -45,23 +45,29 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   const [showModal, setShowModal] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
+  // Refs for focus management
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
+  // Mode detection
   const isEditMode = !!postId;
 
+  // Edit mode states
   const [loadPostError, setLoadPostError] = useState<string | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
 
+  // Draft save operation states
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [showDraftSuccess, setShowDraftSuccess] = useState(false);
 
+  // User preferences for timezone display
   const [userTimezone, setUserTimezone] = useState<string | null>(null);
 
+  // Track original scheduled date for validation (Bug 3 fix)
   const [originalScheduledFor, setOriginalScheduledFor] = useState<string>("");
 
   // Fetch post data for edit mode
@@ -96,10 +102,12 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
       
       const postData = await response.json();
       
+      // Pre-populate form fields
       setPostTitle(postData.title);
       setPostDescription(postData.description || "");
       setSelectedPlatforms(postData.selectedPlatforms || []);
       
+      // Convert scheduledFor from UTC to user timezone for display
       if (postData.scheduledFor && userTimezone) {
         const utcDate = new Date(postData.scheduledFor);
         const localDateStr = utcDate.toLocaleString('sv-SE', { 
@@ -111,12 +119,13 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
           minute: '2-digit'
         }).replace(' ', 'T');
         setPostScheduledFor(localDateStr);
-        setOriginalScheduledFor(localDateStr);
+        setOriginalScheduledFor(localDateStr); // Track original date for validation
       } else if (postData.scheduledFor) {
+        // Fallback to UTC if no timezone set
         const utcDate = new Date(postData.scheduledFor);
         const formattedDate = formatDateTimeLocal(utcDate);
         setPostScheduledFor(formattedDate);
-        setOriginalScheduledFor(formattedDate);
+        setOriginalScheduledFor(formattedDate); // Track original date for validation
       }
       
     } catch (error) {
@@ -128,6 +137,10 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
     }
   }, [postId, userTimezone, setPostTitle, setPostDescription, setPostScheduledFor]);
 
+  /**
+   * Get UTC offset for a timezone
+   * Returns format like "UTC+5:45" or "UTC-8:00"
+   */
   const getUTCOffset = (timezone: string): string => {
     try {
       const now = new Date();
@@ -143,12 +156,14 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
     }
   };
 
+  // Fetch user timezone on component mount
   useEffect(() => {
     const fetchUserTimezone = async () => {
       try {
         const response = await fetch('/api/user/preferences');
         if (response.ok) {
           const preferences = await response.json();
+          // Simply use the timezone if it exists (should be auto-saved from Upload page)
           setUserTimezone(preferences.timezone || null);
         }
       } catch (error) {
@@ -159,29 +174,34 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
     fetchUserTimezone();
   }, []);
 
+  // Fetch post data when in edit mode and timezone is loaded
   useEffect(() => {
     if (isEditMode && userTimezone !== null) {
       fetchPostData();
     }
   }, [isEditMode, userTimezone, fetchPostData]);
 
+  // Helper to format Date for datetime-local (YYYY-MM-DDTHH:mm)
   const formatDateTimeLocal = (d: Date) => {
     const pad = (n: number) => n.toString().padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
+  // Initialize scheduleDate from selectedDate if available
   useEffect(() => {
     if (selectedDate && !postScheduledFor) {
       setPostScheduledFor(formatDateTimeLocal(selectedDate));
     }
   }, [selectedDate, postScheduledFor, setPostScheduledFor]);
 
+  // Validation states
   const [titleTouched, setTitleTouched] = useState(false);
   const [dateTouched, setDateTouched] = useState(false);
 
   const isTitleValid = postTitle.trim() !== "" && postTitle.length <= 100;
   const isDateFilled = postScheduledFor.trim() !== "";
   
+  // Title validation error
   const getTitleError = (): string | null => {
     if (!titleTouched) return null;
     if (postTitle.trim() === "") return "Title is required";
@@ -191,6 +211,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   
   const titleError = getTitleError();
   
+  // Description validation
   const [descriptionTouched, setDescriptionTouched] = useState(false);
   
   const getDescriptionError = (): string | null => {
@@ -201,17 +222,24 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   
   const descriptionError = getDescriptionError();
 
+  // Must be at least 10 minutes in the future
   const getDateError = (): string | null => {
     if (!isDateFilled) return null;
     
     const selected = new Date(postScheduledFor);
     const tenMinsFromNow = new Date(Date.now() + 10 * 60 * 1000);
     
+    // Always validate that the time is in the future, but only show error if:
+    // 1. User has touched the field, OR
+    // 2. The date was changed from original, OR  
+    // 3. The original date is now in the past (for existing posts)
     if (selected < tenMinsFromNow) {
+      // For new posts or if user changed the date, always show error
       if (!isEditMode || postScheduledFor !== originalScheduledFor) {
         return "Schedule must be at least 10 minutes in the future.";
       }
       
+      // For existing posts with unchanged date, only show if the original time has passed
       if (isEditMode && originalScheduledFor) {
         const originalDate = new Date(originalScheduledFor);
         if (originalDate < tenMinsFromNow) {
@@ -226,6 +254,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   const dateError = dateTouched ? getDateError() : (isEditMode ? getDateError() : null);
   const isDateValid = isDateFilled && getDateError() === null;
   
+  // Platform validation
   const validatePlatformSelection = (): string | null => {
     if (!isEditMode) return null;
     if (selectedPlatforms.length === 0) return "At least one platform must be selected";
@@ -259,8 +288,10 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
     };
   }, [mounted]);
 
+  // Focus management: Focus the title input when modal opens
   useEffect(() => {
     if (showModal && titleInputRef.current) {
+      // Small delay to ensure modal is fully rendered
       const timer = setTimeout(() => {
         titleInputRef.current?.focus();
       }, 100);
@@ -268,6 +299,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
     }
   }, [showModal]);
 
+  // Focus trap within modal
   useEffect(() => {
     if (!showModal || !modalRef.current) return;
 

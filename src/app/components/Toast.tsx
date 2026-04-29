@@ -25,10 +25,12 @@ export default function Toast({ id, message, variant, duration, onDismiss }: Toa
   }, [id, onDismiss]);
 
   useEffect(() => {
+    // Auto-dismiss timer
     const dismissTimer = setTimeout(() => {
       handleDismiss();
     }, duration);
 
+    // Progress bar animation
     const startTime = Date.now();
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -79,6 +81,7 @@ export default function Toast({ id, message, variant, duration, onDismiss }: Toa
         }
       `}
     >
+      {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-border/20">
         <div
           className={`h-full transition-all duration-50 linear ${styles.progress}`}
@@ -87,13 +90,17 @@ export default function Toast({ id, message, variant, duration, onDismiss }: Toa
         />
       </div>
 
+      {/* Content */}
       <div className="flex items-start gap-3 p-4 pt-5">
+        {/* Icon */}
         <div className={`p-2 rounded-xl border ${styles.iconBg} shrink-0`}>
           <Icon className={`w-5 h-5 ${styles.icon}`} aria-hidden="true" />
         </div>
 
+        {/* Message */}
         <p className="flex-1 text-sm font-medium text-text-main pt-1.5">{message}</p>
 
+        {/* Dismiss button */}
         <button
           onClick={handleDismiss}
           className="p-1.5 hover:bg-surface-highlight rounded-lg transition-colors shrink-0"

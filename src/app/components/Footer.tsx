@@ -11,6 +11,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
           
+          {/* Column 1: Brand & Description (Takes up more space) */}
           <div className="col-span-1 lg:col-span-4 flex flex-col">
             <Link href="/" className="font-bold text-2xl tracking-tight text-primary mb-6 inline-block">
               DragInDrop
@@ -20,6 +21,7 @@ export default function Footer() {
             </p>
           </div>
 
+          {/* Column 2: Quick Links */}
           <div className="col-span-1 lg:col-span-2 flex flex-col">
             <h4 className="font-bold text-text-main mb-6 text-lg">Quick Links</h4>
             <div className="flex flex-col gap-4 text-text-secondary font-medium">
@@ -31,6 +33,7 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Column 3: Legal */}
           <div className="col-span-1 lg:col-span-2 flex flex-col">
             <h4 className="font-bold text-text-main mb-6 text-lg">Legal</h4>
             <div className="flex flex-col gap-4 text-text-secondary font-medium">
@@ -39,6 +42,7 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Column 4: Newsletter / Stay Updated */}
           <div className="col-span-1 lg:col-span-4 flex flex-col">
             <h4 className="font-bold text-text-main mb-6 text-lg">Stay Updated</h4>
             <p className="text-text-secondary mb-6 leading-relaxed">
@@ -63,11 +67,14 @@ export default function Footer() {
 
         </div>
 
+        {/* Bottom Banner */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-center md:justify-between items-center gap-4">
           <p className="text-sm font-medium text-text-secondary text-center">
             © {currentYear} DragInDrop. All Rights Reserved.
           </p>
+          {/* Optional social icons could go here */}
           <div className="flex items-center gap-4 text-text-secondary">
+             {/* Placeholders for future usage */}
           </div>
         </div>
       </div>

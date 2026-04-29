@@ -104,11 +104,14 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Render Draft Posts First */}
             {draftPosts.map((draft) => (
               <div key={draft.id} className="relative group">
+                {/* Draft Card */}
                 <div className="p-5 rounded-xl border bg-warning/10 border-warning/30 transition-all duration-300 hover:border-warning/50 hover:bg-warning/15">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3 flex-1 pr-4">
+                      {/* Blinking Indicator for drafts - warning color with reduced opacity */}
                       <div className="relative flex h-3 w-3 shrink-0">
                         <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-warning opacity-30"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-warning"></span>
@@ -171,13 +174,16 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
               </div>
             ))}
             
+            {/* Render Scheduled Posts Below */}
             {upcomingPosts.map((post, i) => {
               const isNext = i === 0;
               return (
                 <div key={post.id} className="relative group">
+                  {/* Content Card */}
                   <div className="p-5 rounded-xl border bg-background border-border transition-all duration-300 hover:border-primary/40 hover:bg-surface/50">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3 flex-1 pr-4">
+                        {/* Blinking Indicator - positioned to the left of title */}
                         {isNext && (
                           <div className="relative flex h-3 w-3 shrink-0">
                             <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-primary opacity-30"></span>

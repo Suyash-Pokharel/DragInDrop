@@ -12,6 +12,13 @@ interface UserDetailsProps {
   user: PublicUser;
 }
 
+/**
+ * Client component for User Details page.
+ * Handles interactive features: image upload, 2FA modal, form interactions.
+ * Receives user data as props from parent Server Component.
+ *
+ * @param user - User data fetched server-side from database
+ */
 export default function UserDetails({ user }: UserDetailsProps) {
   const { tempImage, setTempImage } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +53,7 @@ export default function UserDetails({ user }: UserDetailsProps) {
           </div>
 
           <div className="flex flex-col md:flex-row gap-6 mt-2">
+            {/* Avatar Upload */}
             <div className="flex flex-col items-center gap-3 md:pr-4 md:border-r border-border shrink-0">
               <div
                 className="relative w-24 h-24 rounded-full overflow-hidden border border-border group cursor-pointer bg-surface-highlight flex items-center justify-center shadow-sm"
@@ -85,6 +93,7 @@ export default function UserDetails({ user }: UserDetailsProps) {
               )}
             </div>
 
+            {/* Input Fields */}
             <div className="grid grid-cols-1 gap-4 flex-1">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-text-main">Full Name</label>
@@ -116,6 +125,7 @@ export default function UserDetails({ user }: UserDetailsProps) {
           </div>
         </section>
 
+        {/* Security & Authentication */}
         <section className="flex flex-col gap-4 mt-4">
           <div className="flex items-center gap-2 border-b border-border pb-2 mb-2">
             <Shield className="w-5 h-5 text-primary" />
@@ -174,6 +184,7 @@ export default function UserDetails({ user }: UserDetailsProps) {
           </div>
         </section>
 
+        {/* Danger Zone */}
         <section className="flex flex-col gap-4 mt-4">
           <div className="flex items-center gap-2 border-b border-error/20 pb-2 mb-2">
             <Trash2 className="w-5 h-5 text-error" />

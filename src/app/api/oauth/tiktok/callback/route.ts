@@ -6,7 +6,14 @@ import { getPrisma } from "@/lib/prisma";
 import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
 import { validateHttps } from "@/lib/sanitize";
 
+/**
+ * GET /api/oauth/tiktok/callback
+ * Handles OAuth 2.0 callback from TikTok
+ * Requirements: 2.1, 8.3, 10.13
+ */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  // Requirement: 10.13 - Apply rate limiting to OAuth endpoints
   const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   
   try {
@@ -24,6 +31,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Authenticate user
+  // Requirement: 8.3 - Return 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[GET /api/oauth/tiktok/callback] Authentication failed:", {
@@ -33,6 +42,7 @@ export async function GET(request: NextRequest) {
     return user;
   }
 
+  // Per-user rate limiting
   try {
     await perUserOAuthLimiter.consume(user.id);
   } catch {
@@ -50,11 +60,14 @@ export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   try {
+    // Extract query parameters
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const error = searchParams.get("error");
 
+    // Handle user authorization denial
+    // Requirement: 8.1 - Handle authorization denial
     if (error) {
       console.log("[GET /api/oauth/tiktok/callback] Authorization denied:", {
         userId: user.id,
@@ -66,6 +79,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate authorization code is present
+    // Requirement: 8.2 - Return 400 if code is missing
     if (!code) {
       console.error("[GET /api/oauth/tiktok/callback] Missing authorization code:", {
         userId: user.id,
@@ -77,6 +92,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Verify CSRF token (state parameter)
+    // Requirements: 2.2, 2.3, 2.4, 10.3, 10.4 - Verify state matches CSRF token
     const storedState = request.cookies.get("tiktok_oauth_state")?.value;
     if (!state || !storedState || state !== storedState) {
       console.error("[GET /api/oauth/tiktok/callback] Invalid state parameter:", {
@@ -92,6 +109,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Retrieve PKCE code_verifier from cookie
     const codeVerifier = request.cookies.get("tiktok_code_verifier")?.value;
     if (!codeVerifier) {
       console.error("[GET /api/oauth/tiktok/callback] Missing code_verifier:", {
@@ -104,6 +122,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate redirect URI
+    // Requirements: 10.10, 10.11 - Validate redirect_uri matches configured value
     const redirectUri = `${appUrl}/api/oauth/tiktok/callback`;
     const isProduction = process.env.NODE_ENV === "production";
     
@@ -120,6 +140,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate OAuth configuration
+    // Requirement: 8.4 - Return 500 if credentials missing
     const clientKey = process.env.TIKTOK_CLIENT_KEY;
     const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
 
@@ -135,6 +157,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Exchange authorization code for tokens
+    // Requirements: 2.5, 2.6, 2.7, 2.8 - Token exchange with TikTok API
     const tokenUrl = "https://open.tiktokapis.com/v2/oauth/token/";
 
     const tokenParams = new URLSearchParams({
@@ -143,7 +167,7 @@ export async function GET(request: NextRequest) {
       code,
       grant_type: "authorization_code",
       redirect_uri: redirectUri,
-      code_verifier: codeVerifier,
+      code_verifier: codeVerifier, // PKCE code_verifier for token exchange
     });
 
     console.log("[GET /api/oauth/tiktok/callback] Exchanging authorization code:", {
@@ -156,8 +180,9 @@ export async function GET(request: NextRequest) {
       tokenParamsString: tokenParams.toString(),
     });
 
+    // Requirement: 8.7 - Handle network timeouts with 504 response
     const tokenController = new AbortController();
-    const tokenTimeout = setTimeout(() => tokenController.abort(), 10000);
+    const tokenTimeout = setTimeout(() => tokenController.abort(), 10000); // 10 second timeout
 
     let tokenResponse: Response;
     try {
@@ -172,6 +197,7 @@ export async function GET(request: NextRequest) {
     } catch (fetchError) {
       clearTimeout(tokenTimeout);
       
+      // Check if error is due to timeout/abort
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/tiktok/callback] Token exchange timeout:", {
           userId: user.id,
@@ -199,6 +225,7 @@ export async function GET(request: NextRequest) {
         error: errorData,
       });
       
+      // Requirement: 8.6 - Handle rate limit errors from TikTok API
       if (tokenResponse.status === 429) {
         const retryAfter = tokenResponse.headers.get("retry-after") || "60";
         return NextResponse.json(
@@ -212,6 +239,8 @@ export async function GET(request: NextRequest) {
         );
       }
       
+      // Requirement: 8.5 - Handle redirect URI mismatch
+      // TikTok returns error codes like "redirect_uri_mismatch" or error descriptions
       const errorCode = errorData.error || errorData.error_code;
       const errorDescription = errorData.error_description || errorData.message;
       
@@ -222,6 +251,7 @@ export async function GET(request: NextRequest) {
         );
       }
       
+      // Requirement: 2.11 - Return 500 if token exchange fails
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
         { status: 500 }
@@ -250,13 +280,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch TikTok user profile
+    // Requirements: 2.9, 2.10 - Fetch user profile
+    console.log("[GET /api/oauth/tiktok/callback] Fetching TikTok profile:", {
+      userId: user.id,
+      timestamp: new Date().toISOString(),
+      openId: open_id,
+      hasAccessToken: !!access_token,
+    });
+
     const profileUrl = "https://open.tiktokapis.com/v2/user/info/";
+    // Only request fields available with user.info.basic scope
+    // username requires user.info.profile scope which we don't have
     const profileParams = new URLSearchParams({
       fields: "open_id,union_id,avatar_url,display_name",
     });
 
+    // Requirement: 8.7 - Handle network timeouts with 504 response
     const profileController = new AbortController();
-    const profileTimeout = setTimeout(() => profileController.abort(), 10000);
+    const profileTimeout = setTimeout(() => profileController.abort(), 10000); // 10 second timeout
 
     let profileResponse: Response;
     try {
@@ -271,6 +313,7 @@ export async function GET(request: NextRequest) {
     } catch (fetchError) {
       clearTimeout(profileTimeout);
       
+      // Check if error is due to timeout/abort
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/tiktok/callback] Profile fetch timeout:", {
           userId: user.id,
@@ -299,6 +342,7 @@ export async function GET(request: NextRequest) {
         responseHeaders: Object.fromEntries(profileResponse.headers.entries()),
       });
       
+      // Requirement: 8.6 - Handle rate limit errors from TikTok API
       if (profileResponse.status === 429) {
         const retryAfter = profileResponse.headers.get("retry-after") || "60";
         return NextResponse.json(
@@ -312,14 +356,18 @@ export async function GET(request: NextRequest) {
         );
       }
       
+      // If profile fetch fails due to scope issues, we can still save the account
+      // We'll use open_id as the username fallback
       console.warn("[GET /api/oauth/tiktok/callback] Profile fetch failed, using open_id as fallback:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
         openId: open_id,
       });
       
+      // Use open_id as platformUsername fallback
       const platformUsername = open_id;
       
+      // Continue with account save using minimal data
       const expiresAt = new Date(Date.now() + expires_in * 1000);
       
       let encryptedAccessToken: string;
@@ -407,10 +455,15 @@ export async function GET(request: NextRequest) {
       profileData: profileData,
     });
 
+    // Use display_name or open_id as fallback (username requires user.info.profile scope)
     const platformUsername = tiktokUser?.display_name || open_id;
 
+    // Calculate token expiration timestamp
+    // Requirement: 3.1 - Calculate expiration timestamp
     const expiresAt = new Date(Date.now() + expires_in * 1000);
 
+    // Encrypt tokens before storage
+    // Requirements: 10.5, 10.6 - Encrypt tokens
     console.log("[GET /api/oauth/tiktok/callback] Encrypting tokens:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
@@ -423,6 +476,7 @@ export async function GET(request: NextRequest) {
       encryptedAccessToken = encryptToken(access_token);
       encryptedRefreshToken = encryptToken(refresh_token);
     } catch (encryptionError) {
+      // Requirement: 10.14 - Log encryption errors without plaintext tokens
       console.error("[GET /api/oauth/tiktok/callback] Token encryption failed:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
@@ -434,6 +488,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Create or update SocialAccount record
+    // Requirements: 3.2-3.11 - Upsert SocialAccount
     console.log("[GET /api/oauth/tiktok/callback] Saving SocialAccount:", {
       userId: user.id,
       platform: "TikTok",
@@ -478,6 +534,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       });
     } catch (dbError) {
+      // Requirement: 3.13 - Handle database errors
       console.error("[GET /api/oauth/tiktok/callback] Database error:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
@@ -490,6 +547,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Clear CSRF token and code_verifier after successful validation
+    // Requirement: 10.4 - Clear CSRF token
     const response = NextResponse.redirect(
       `${appUrl}/settings/social-accounts?success=${encodeURIComponent("TikTok account connected successfully")}`
     );
@@ -498,6 +557,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
+    // Requirement: 8.8 - Log errors with user context
     console.error("[GET /api/oauth/tiktok/callback] Unexpected error:", {
       userId: user.id,
       timestamp: new Date().toISOString(),

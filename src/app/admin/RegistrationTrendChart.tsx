@@ -17,7 +17,9 @@ export default function RegistrationTrendChart({ users }: RegistrationTrendChart
     return () => clearTimeout(timer);
   }, []);
 
+  // Calculate last 7 days registration data (rolling week)
   const chartData = useMemo(() => {
+    // Generate array of last 7 days (including today)
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));

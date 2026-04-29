@@ -2,14 +2,47 @@ import { SocialAccount } from '@prisma/client';
 import { decryptToken, encryptToken } from './encryption';
 import { getPrisma } from './prisma';
 
+/**
+ * TikTok OAuth token endpoint
+ */
 const TIKTOK_TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
+
+/**
+ * Google OAuth token endpoint
+ */
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+
+/**
+ * Token refresh buffer time in milliseconds (5 minutes)
+ * Tokens will be refreshed if they expire within this window
+ */
 const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
+
+/**
+ * Maximum number of retry attempts for token refresh
+ */
 const MAX_RETRY_ATTEMPTS = 3;
+
+/**
+ * Initial retry delay in milliseconds
+ */
 const INITIAL_RETRY_DELAY_MS = 1000;
 
+/**
+ * Checks if a token is expired or will expire soon
+ * 
+ * @param socialAccount - The SocialAccount record to check
+ * @returns True if the token needs to be refreshed, false otherwise
+ * 
+ * @example
+ * const needsRefresh = isTokenExpired(socialAccount);
+ * if (needsRefresh) {
+ *   await refreshToken(socialAccount);
+ * }
+ */
 export function isTokenExpired(socialAccount: SocialAccount): boolean {
   if (!socialAccount.expiresAt) {
+    // If no expiration time is set, assume token is valid
     return false;
   }
 
@@ -17,19 +50,40 @@ export function isTokenExpired(socialAccount: SocialAccount): boolean {
   const expiresAt = new Date(socialAccount.expiresAt);
   const timeUntilExpiry = expiresAt.getTime() - now.getTime();
 
+  // Return true if token is expired or expires within 5 minutes
   return timeUntilExpiry <= TOKEN_REFRESH_BUFFER_MS;
 }
 
+/**
+ * Result of a token refresh operation
+ */
 export interface TokenRefreshResult {
   success: boolean;
   error?: string;
   updatedAccount?: SocialAccount;
 }
 
+/**
+ * Refreshes an expired or expiring OAuth token
+ * 
+ * @param socialAccount - The SocialAccount record with the token to refresh
+ * @param userId - The ID of the user requesting the refresh (for authorization check)
+ * @returns TokenRefreshResult indicating success or failure
+ * 
+ * @example
+ * const result = await refreshToken(socialAccount, user.id);
+ * if (result.success) {
+ *   console.log('Token refreshed successfully');
+ * } else {
+ *   console.error('Token refresh failed:', result.error);
+ * }
+ */
 export async function refreshToken(
   socialAccount: SocialAccount,
   userId?: string
 ): Promise<TokenRefreshResult> {
+  // Authorization check: Validate user owns SocialAccount
+  // Requirement: 10.12 - Validate user owns SocialAccount before token refresh
   if (userId && socialAccount.userId !== userId) {
     console.error('Authorization failed: User does not own SocialAccount:', {
       requestingUserId: userId,
@@ -42,6 +96,7 @@ export async function refreshToken(
     };
   }
 
+  // Validate that we have a refresh token
   if (!socialAccount.refreshToken) {
     return {
       success: false,
@@ -49,6 +104,7 @@ export async function refreshToken(
     };
   }
 
+  // Decrypt the refresh token
   let decryptedRefreshToken: string;
   try {
     decryptedRefreshToken = decryptToken(socialAccount.refreshToken);
@@ -64,6 +120,7 @@ export async function refreshToken(
     };
   }
 
+  // Get environment variables based on platform
   let clientKey: string | undefined;
   let clientSecret: string | undefined;
   let tokenUrl: string;
@@ -92,6 +149,7 @@ export async function refreshToken(
     };
   }
 
+  // Attempt token refresh with retry logic
   let lastError: string = '';
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
@@ -104,6 +162,9 @@ export async function refreshToken(
       );
 
       if (result.success && result.tokens) {
+        // Update the SocialAccount with new tokens
+        // For YouTube, Google doesn't return a new refresh_token on refresh
+        // so we keep the existing one
         const newRefreshToken = result.tokens.refreshToken || decryptedRefreshToken;
         return await updateSocialAccountTokens(
           socialAccount,
@@ -113,6 +174,8 @@ export async function refreshToken(
         );
       }
 
+      // If rate limited, don't retry immediately
+      // Requirement: 8.6 - Handle rate limit errors
       if (result.isRateLimited) {
         console.error(`Token refresh rate limited by ${socialAccount.platform} API:`, {
           userId: socialAccount.userId,
@@ -125,6 +188,7 @@ export async function refreshToken(
         };
       }
 
+      // If invalid_grant error, don't retry
       if (result.error === 'invalid_grant') {
         await deactivateSocialAccount(socialAccount);
         return {
@@ -133,6 +197,7 @@ export async function refreshToken(
         };
       }
 
+      // If timeout error, allow retry with backoff
       if (result.isTimeout) {
         lastError = result.error || 'Request timeout';
         console.warn(`Token refresh timeout on attempt ${attempt}:`, {
@@ -152,6 +217,7 @@ export async function refreshToken(
         error: lastError,
       });
 
+      // If this isn't the last attempt, wait before retrying with exponential backoff
       if (attempt < MAX_RETRY_ATTEMPTS) {
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
         await sleep(delay);
@@ -159,6 +225,7 @@ export async function refreshToken(
     }
   }
 
+  // All retries failed
   console.error('Token refresh failed after all retries:', {
     userId: socialAccount.userId,
     platform: socialAccount.platform,
@@ -172,6 +239,9 @@ export async function refreshToken(
   };
 }
 
+/**
+ * Internal function to attempt a single token refresh request
+ */
 async function attemptTokenRefresh(
   platform: string,
   clientKey: string,
@@ -192,6 +262,7 @@ async function attemptTokenRefresh(
 }> {
   let params: URLSearchParams;
 
+  // Build request parameters based on platform
   if (platform === 'TikTok') {
     params = new URLSearchParams({
       client_key: clientKey,
@@ -213,8 +284,9 @@ async function attemptTokenRefresh(
     };
   }
 
+  // Requirement: 8.7 - Handle network timeouts
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
   let response: Response;
   try {
@@ -229,6 +301,7 @@ async function attemptTokenRefresh(
   } catch (fetchError) {
     clearTimeout(timeout);
     
+    // Check if error is due to timeout/abort
     if (fetchError instanceof Error && fetchError.name === 'AbortError') {
       return {
         success: false,
@@ -237,11 +310,13 @@ async function attemptTokenRefresh(
       };
     }
     
+    // Re-throw other fetch errors to be caught by retry logic
     throw fetchError;
   } finally {
     clearTimeout(timeout);
   }
 
+  // Requirement: 8.6 - Handle rate limit errors from TikTok API
   if (response.status === 429) {
     const retryAfter = parseInt(response.headers.get("retry-after") || "60", 10);
     return {
@@ -261,16 +336,22 @@ async function attemptTokenRefresh(
     };
   }
 
+  // Parse response based on platform
+  // TikTok returns: access_token, refresh_token, expires_in
+  // Google returns: access_token, expires_in (no new refresh_token)
   return {
     success: true,
     tokens: {
       accessToken: data.access_token,
-      refreshToken: data.refresh_token,
+      refreshToken: data.refresh_token, // Will be undefined for YouTube
       expiresIn: data.expires_in,
     },
   };
 }
 
+/**
+ * Updates a SocialAccount record with new tokens
+ */
 async function updateSocialAccountTokens(
   socialAccount: SocialAccount,
   accessToken: string,
@@ -278,6 +359,7 @@ async function updateSocialAccountTokens(
   expiresIn: number
 ): Promise<TokenRefreshResult> {
   try {
+    // Encrypt the new tokens
     let encryptedAccessToken: string;
     let encryptedRefreshToken: string;
 
@@ -285,6 +367,8 @@ async function updateSocialAccountTokens(
       encryptedAccessToken = encryptToken(accessToken);
       encryptedRefreshToken = encryptToken(refreshToken);
     } catch (encryptionError) {
+      // Requirement: 10.14 - Log encryption errors without logging plaintext tokens
+      // Requirement: 10.15 - Never log plaintext tokens
       console.error('[updateSocialAccountTokens] Token encryption failed:', {
         userId: socialAccount.userId,
         platform: socialAccount.platform,
@@ -297,8 +381,10 @@ async function updateSocialAccountTokens(
       };
     }
 
+    // Calculate new expiration timestamp
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
+    // Update the database
     const prisma = getPrisma();
     const updatedAccount = await prisma.socialAccount.update({
       where: { id: socialAccount.id },
@@ -334,6 +420,9 @@ async function updateSocialAccountTokens(
   }
 }
 
+/**
+ * Deactivates a SocialAccount when refresh token is invalid
+ */
 async function deactivateSocialAccount(
   socialAccount: SocialAccount
 ): Promise<void> {
@@ -360,14 +449,34 @@ async function deactivateSocialAccount(
   }
 }
 
+/**
+ * Utility function to sleep for a specified duration
+ */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Gets a valid access token for a SocialAccount, refreshing if necessary
+ * 
+ * @param socialAccount - The SocialAccount record
+ * @param userId - The ID of the user requesting the token (for authorization check)
+ * @returns The decrypted access token, or null if refresh failed
+ * 
+ * @example
+ * const accessToken = await getValidAccessToken(socialAccount, user.id);
+ * if (accessToken) {
+ *   // Use the token for API requests
+ * } else {
+ *   // Handle token refresh failure
+ * }
+ */
 export async function getValidAccessToken(
   socialAccount: SocialAccount,
   userId?: string
 ): Promise<string | null> {
+  // Authorization check: Validate user owns SocialAccount
+  // Requirement: 10.12 - Validate user owns SocialAccount before token access
   if (userId && socialAccount.userId !== userId) {
     console.error('Authorization failed: User does not own SocialAccount:', {
       requestingUserId: userId,
@@ -377,14 +486,17 @@ export async function getValidAccessToken(
     return null;
   }
 
+  // Check if token needs refresh
   if (isTokenExpired(socialAccount)) {
     const result = await refreshToken(socialAccount, userId);
     if (!result.success || !result.updatedAccount) {
       return null;
     }
+    // Use the updated account with new tokens
     socialAccount = result.updatedAccount;
   }
 
+  // Decrypt and return the access token
   try {
     return decryptToken(socialAccount.accessToken);
   } catch (error) {
