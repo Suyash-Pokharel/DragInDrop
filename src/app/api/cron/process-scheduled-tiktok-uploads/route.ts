@@ -51,10 +51,11 @@ interface StatusResult {
 }
 
 /**
- * Verify the CRON_SECRET from the Authorization header
+ * Verify the CRON_SECRET from the Authorization header or Vercel Cron header
  * 
  * This function checks if the request includes a valid Authorization header
  * with the correct CRON_SECRET to prevent unauthorized access.
+ * Also supports Vercel Cron's built-in authentication.
  * 
  * @param {NextRequest} request - The incoming request
  * @returns {boolean} True if the secret is valid, false otherwise
@@ -67,6 +68,16 @@ interface StatusResult {
  * }
  */
 function verifyCronSecret(request: NextRequest): boolean {
+  // Check for Vercel Cron authentication (when using vercel.json crons)
+  const vercelCronHeader = request.headers.get('x-vercel-cron-secret');
+  if (vercelCronHeader) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret && vercelCronHeader === cronSecret) {
+      return true;
+    }
+  }
+
+  // Check for Authorization header (GitHub Actions or external services)
   const authHeader = request.headers.get('Authorization');
   
   if (!authHeader) {
@@ -740,10 +751,16 @@ async function uploadToTikTok(
     timestamp: new Date().toISOString(),
   });
 
+  // Combine title and description for TikTok
+  // TikTok API uses 'title' field for the video caption
+  const caption = post.description 
+    ? `${post.title}\n\n${post.description}`
+    : post.title;
+
   const uploadResult = await uploadVideo({
     accessToken,
     videoUrl: signedUrl,
-    title: post.title,
+    title: caption,
     privacyLevel: 'PUBLIC_TO_EVERYONE',
     disableComment: false,
     disableDuet: false,
