@@ -10,14 +10,14 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:generate": "dotenv -e .env.local -- prisma generate",
     "db:studio": "dotenv -e .env.local -- prisma studio",
     "create-admin": "dotenv -e .env.local -- tsx scripts/create-admin.ts",
-    "postinstall": "prisma generate",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "postinstall": "prisma generate"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -54,11 +54,9 @@
   "devDependencies": {
     "@prisma/config": "^7.6.0",
     "@tailwindcss/postcss": "^4.2.2",
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitest/coverage-v8": "^2.1.9",
     "baseline-browser-mapping": "^2.10.16",
     "dotenv": "^17.4.1",
     "dotenv-cli": "^11.0.0",
@@ -68,7 +66,6 @@
     "prisma": "^7.7.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.2",
-    "vitest": "^2.1.9"
+    "typescript": "^6.0.2"
   }
 }

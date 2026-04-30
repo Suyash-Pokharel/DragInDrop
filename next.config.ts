@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
     // Reduce memory usage during build
     workerThreads: false,
     cpus: 1,
+    // Enable instrumentation for environment validation at startup
+    instrumentationHook: true,
   },
 };
 
