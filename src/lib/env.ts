@@ -9,34 +9,6 @@
  */
 
 /**
- * Environment variable configuration
- */
-interface EnvConfig {
-  // Cron authentication
-  CRON_SECRET?: string;
-  
-  // TikTok API credentials
-  TIKTOK_CLIENT_KEY?: string;
-  TIKTOK_CLIENT_SECRET?: string;
-  
-  // Backblaze B2 configuration
-  B2_ACCOUNT_ID?: string;
-  B2_APPLICATION_KEY?: string;
-  B2_BUCKET_ID?: string;
-  B2_BUCKET_NAME?: string;
-  B2_ENDPOINT_URL?: string;
-  
-  // OAuth encryption
-  OAUTH_ENCRYPTION_KEY?: string;
-  
-  // Redis configuration
-  REDIS_URL?: string;
-  
-  // Database configuration
-  DATABASE_URL?: string;
-}
-
-/**
  * Validation result for a single environment variable
  */
 interface ValidationResult {
