@@ -1,7 +1,7 @@
 /**
  * Scheduled TikTok Upload Processing API Endpoint
  * 
- * This endpoint is triggered by GitHub Actions every 5 minutes to process scheduled
+ * This endpoint is triggered by cron-job.org every 5 minutes to process scheduled
  * TikTok uploads. It handles:
  * - Querying scheduled posts within the scheduling window
  * - Uploading videos to TikTok (implemented in Task 6.2)
@@ -51,11 +51,10 @@ interface StatusResult {
 }
 
 /**
- * Verify the CRON_SECRET from the Authorization header or Vercel Cron header
+ * Verify the CRON_SECRET from the Authorization header
  * 
  * This function checks if the request includes a valid Authorization header
  * with the correct CRON_SECRET to prevent unauthorized access.
- * Also supports Vercel Cron's built-in authentication.
  * 
  * @param {NextRequest} request - The incoming request
  * @returns {boolean} True if the secret is valid, false otherwise
@@ -68,19 +67,10 @@ interface StatusResult {
  * }
  */
 function verifyCronSecret(request: NextRequest): boolean {
-  // Check for Vercel Cron authentication (when using vercel.json crons)
-  const vercelCronHeader = request.headers.get('x-vercel-cron-secret');
-  if (vercelCronHeader) {
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && vercelCronHeader === cronSecret) {
-      return true;
-    }
-  }
-
-  // Check for Authorization header (GitHub Actions or external services)
   const authHeader = request.headers.get('Authorization');
   
   if (!authHeader) {
+    console.error('[process-scheduled-tiktok-uploads] No Authorization header');
     return false;
   }
 
@@ -95,6 +85,17 @@ function verifyCronSecret(request: NextRequest): boolean {
     console.error('[process-scheduled-tiktok-uploads] CRON_SECRET not configured');
     return false;
   }
+
+  // Debug logging (safe - only logs lengths and first/last 4 chars)
+  console.log('[process-scheduled-tiktok-uploads] Auth debug:', {
+    receivedTokenLength: token.length,
+    receivedTokenStart: token.substring(0, 4),
+    receivedTokenEnd: token.substring(token.length - 4),
+    expectedSecretLength: cronSecret.length,
+    expectedSecretStart: cronSecret.substring(0, 4),
+    expectedSecretEnd: cronSecret.substring(cronSecret.length - 4),
+    match: token === cronSecret,
+  });
 
   return token === cronSecret;
 }
@@ -136,7 +137,7 @@ function getSchedulingWindow(): { start: Date; end: Date } {
  * 
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4
  * 
- * @param {NextRequest} request - The incoming request from GitHub Actions
+ * @param {NextRequest} request - The incoming request from cron-job.org
  * @returns {Promise<NextResponse>} Response with processing summary or error
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -610,8 +611,6 @@ async function uploadToTikTok(
   platformPost: PlatformPost,
   socialAccount: SocialAccount
 ): Promise<UploadResult> {
-  const prisma = getPrisma();
-
   // Step 1: Check if access token is expired and refresh if needed
   // Requirements: 5.3, 5.4, 5.5, 5.6, 5.7
   let currentSocialAccount = socialAccount;
@@ -1257,8 +1256,6 @@ async function pollUploadStatus(
   platformPost: PlatformPost & { Post: Post },
   socialAccount: SocialAccount
 ): Promise<StatusResult> {
-  const prisma = getPrisma();
-
   // Step 1: Check if access token is expired and refresh if needed
   let currentSocialAccount = socialAccount;
   
