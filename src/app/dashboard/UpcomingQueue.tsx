@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, Clock, Link2, ArrowRight, FileEdit, Trash2 } from "lucide-react";
+import { Calendar, Clock, Link2, ArrowRight, FileEdit, Trash2, RotateCw } from "lucide-react";
 import { useModal } from "@/app/components/ModalProvider";
+import { useToast } from "@/app/components/ToastProvider";
+import { useState } from "react";
 
 import YoutubeLogo from "../assets/logo/Youtube.webp";
 import InstagramLogo from "../assets/logo/Instagram.webp";
@@ -72,6 +74,37 @@ const getPlatformIcon = (platform: string, className = "w-5 h-5") => {
 
 export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone }: UpcomingQueueProps) {
   const modal = useModal();
+  const { showSuccess, showError } = useToast();
+  const [retryingPostId, setRetryingPostId] = useState<string | null>(null);
+
+  const handleRetry = async (postId: string, postTitle: string) => {
+    setRetryingPostId(postId);
+    try {
+      const response = await fetch(`/api/posts/${postId}/retry`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to retry post");
+      }
+
+      showSuccess(`"${postTitle}" has been queued for retry`);
+
+      // Refresh dashboard data
+      if (typeof window !== 'undefined') {
+        const win = window as Window & { refreshDashboard?: () => void };
+        if (win.refreshDashboard) {
+          win.refreshDashboard();
+        }
+      }
+    } catch (error) {
+      console.error("Error retrying post:", error);
+      showError(error instanceof Error ? error.message : "Failed to retry post");
+    } finally {
+      setRetryingPostId(null);
+    }
+  };
 
   return (
     <section className="bg-surface/80 backdrop-blur-xl border border-border p-6 md:p-8 rounded-[2rem] shadow-sm max-h-[720px] flex flex-col">
@@ -176,31 +209,56 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
             
             {/* Render Scheduled Posts Below */}
             {upcomingPosts.map((post, i) => {
-              const isNext = i === 0;
+              const isNext = i === 0 && (post.status === "SCHEDULED" || post.status === "PUBLISHING");
+              const isFailed = post.status === "FAILED" || post.status === "PARTIALLY_PUBLISHED";
+              const isRetrying = retryingPostId === post.id;
+              
               return (
                 <div key={post.id} className="relative group">
                   {/* Content Card */}
-                  <div className="p-5 rounded-xl border bg-background border-border transition-all duration-300 hover:border-primary/40 hover:bg-surface/50">
+                  <div className={`p-5 rounded-xl border transition-all duration-300 ${
+                    isFailed 
+                      ? 'bg-error/10 border-error/30 hover:border-error/50 hover:bg-error/15' 
+                      : 'bg-background border-border hover:border-primary/40 hover:bg-surface/50'
+                  }`}>
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3 flex-1 pr-4">
                         {/* Blinking Indicator - positioned to the left of title */}
-                        {isNext && (
+                        {isNext && !isFailed && (
                           <div className="relative flex h-3 w-3 shrink-0">
                             <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-primary opacity-30"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                           </div>
                         )}
-                        <h4 className="font-bold text-sm text-text-main line-clamp-2 leading-relaxed group-hover:text-primary transition-colors">
+                        {isFailed && (
+                          <div className="relative flex h-3 w-3 shrink-0">
+                            <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-error opacity-30"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+                          </div>
+                        )}
+                        <h4 className={`font-bold text-sm line-clamp-2 leading-relaxed transition-colors ${
+                          isFailed ? 'text-text-main' : 'text-text-main group-hover:text-primary'
+                        }`}>
                           {post.title || "Untitled Video"}
                         </h4>
                       </div>
-                      <div className={`shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider ${isNext ? 'bg-primary text-white' : 'bg-surface-highlight text-text-secondary border border-border'}`}>
+                      <div className={`shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider ${
+                        isFailed 
+                          ? 'bg-error text-white' 
+                          : isNext 
+                            ? 'bg-primary text-white' 
+                            : 'bg-surface-highlight text-text-secondary border border-border'
+                      }`}>
                         {post.status.replace("_", " ")}
                       </div>
                     </div>
                     
-                    <div className="flex items-center text-xs font-semibold text-text-secondary mb-4 bg-surface-highlight/50 w-fit px-3 py-1.5 rounded-xl border border-border shadow-inner">
-                      <Clock size={14} className="mr-2 text-primary" />
+                    <div className={`flex items-center text-xs font-semibold mb-4 w-fit px-3 py-1.5 rounded-xl border shadow-inner ${
+                      isFailed 
+                        ? 'text-error bg-error/10 border-error/20' 
+                        : 'text-text-secondary bg-surface-highlight/50 border-border'
+                    }`}>
+                      <Clock size={14} className={`mr-2 ${isFailed ? 'text-error' : 'text-primary'}`} />
                       {formatScheduledTime(post.scheduledFor, userTimezone)}
                     </div>
                     
@@ -222,22 +280,34 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
                       </div>
                       
                       <div className="flex items-center gap-2 sm:flex-row flex-col sm:gap-2 gap-1">
-                        <button 
-                          className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-primary/10 hover:bg-primary hover:text-white flex items-center justify-center text-primary transition-colors cursor-pointer border border-primary/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
-                          aria-label="Edit scheduled post"
-                          onClick={() => {
-                            modal.openEditPost(post.id);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
+                        {isFailed ? (
+                          <button 
+                            className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-error/10 hover:bg-error hover:text-white flex items-center justify-center text-error transition-colors cursor-pointer border border-error/20 shadow-sm min-h-[44px] sm:min-h-[32px] disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Retry failed post"
+                            onClick={() => handleRetry(post.id, post.title || "Untitled Post")}
+                            disabled={isRetrying}
+                            title="Retry publishing this post"
+                          >
+                            <RotateCw size={14} className={isRetrying ? 'animate-spin' : ''} />
+                          </button>
+                        ) : (
+                          <button 
+                            className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-primary/10 hover:bg-primary hover:text-white flex items-center justify-center text-primary transition-colors cursor-pointer border border-primary/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
+                            aria-label="Edit scheduled post"
+                            onClick={() => {
                               modal.openEditPost(post.id);
-                            }
-                          }}
-                          tabIndex={0}
-                        >
-                          <FileEdit size={14} />
-                        </button>
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                modal.openEditPost(post.id);
+                              }
+                            }}
+                            tabIndex={0}
+                          >
+                            <FileEdit size={14} />
+                          </button>
+                        )}
                         <button 
                           className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-error/10 hover:bg-error hover:text-white flex items-center justify-center text-error transition-colors cursor-pointer border border-error/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
                           aria-label="Delete scheduled post"

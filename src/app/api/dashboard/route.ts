@@ -56,11 +56,11 @@ export async function GET() {
     const connectedNetworks = socialAccounts.length;
     const inactiveNetworks = socialAccounts.filter(s => !s.isActive).length;
 
-    // 2. Fetch Upcoming Posts
+    // 2. Fetch Upcoming Posts (including failed posts)
     const upcomingPosts = await prisma.post.findMany({
       where: {
         userId: user.id,
-        status: { in: ["SCHEDULED", "PUBLISHING"] }
+        status: { in: ["SCHEDULED", "PUBLISHING", "FAILED", "PARTIALLY_PUBLISHED"] }
       },
       orderBy: { scheduledFor: "asc" },
       take: 5,
