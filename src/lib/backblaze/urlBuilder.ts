@@ -177,21 +177,22 @@ export async function getDownloadAuthorization(params: {
 }
 
 /**
- * Build a signed video URL for secure access from private Backblaze B2 bucket
+ * Build a video URL using Cloudflare Worker proxy
  * 
- * This function generates a temporary signed URL with a 1-hour expiration that allows
- * TikTok to download videos from a private bucket without requiring domain verification.
+ * This function generates a URL that points to the Cloudflare Worker,
+ * which handles authentication with Backblaze B2 automatically.
+ * The Worker fetches from the private bucket and serves the video.
  * 
  * @param {string} videoFileKey - The file key/path in the bucket (e.g., "uploads/user123/video.mp4")
- * @returns {Promise<SignedUrlResult>} Signed URL and expiration timestamp
- * @throws {Error} If videoFileKey is empty or URL generation fails
+ * @returns {Promise<SignedUrlResult>} URL and expiration timestamp
+ * @throws {Error} If videoFileKey is empty
  * 
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9
  * 
  * @example
  * const result = await buildSignedVideoUrl("uploads/user123/video.mp4");
  * console.log(result.signedUrl);
- * // https://s3.eu-central-003.backblazeb2.com/file/DragInDrop/uploads/user123/video.mp4?Authorization=4_abc123...
+ * // https://upload.suyash-pokharel.com.np/uploads/user123/video.mp4
  */
 export async function buildSignedVideoUrl(videoFileKey: string): Promise<SignedUrlResult> {
   // Validate videoFileKey is not empty
@@ -203,23 +204,6 @@ export async function buildSignedVideoUrl(videoFileKey: string): Promise<SignedU
   // Get Backblaze configuration
   const config = getBackblazeConfig();
 
-  // Step 1: Authorize with B2 API
-  // Requirement: 13.1
-  const authData = await authorizeB2Account(config.accountId, config.applicationKey);
-
-  // Step 2: Get download authorization token
-  // Requirements: 13.1, 13.2
-  const authToken = await getDownloadAuthorization({
-    authorizationToken: authData.authorizationToken,
-    apiUrl: authData.apiUrl,
-    bucketId: config.bucketId,
-    fileNamePrefix: videoFileKey,
-    validDurationInSeconds: 3600, // 1 hour - Requirement: 1.5, 13.8
-  });
-
-  // Step 3: Construct signed URL
-  // Requirements: 13.3, 13.4, 13.5, 13.7
-  
   // URL-encode the videoFileKey if it contains special characters
   // Requirement: 13.7
   // We need to encode each path segment separately to preserve forward slashes
@@ -228,15 +212,12 @@ export async function buildSignedVideoUrl(videoFileKey: string): Promise<SignedU
     .map(segment => encodeURIComponent(segment))
     .join('/');
   
-  // Construct base URL with HTTPS protocol
+  // Construct URL using Cloudflare Worker endpoint
+  // The Worker handles all B2 authentication automatically
   // Requirements: 13.3, 13.5
-  const baseUrl = `https://${config.endpoint}/file/${config.bucketName}/${encodedKey}`;
-  
-  // Append authorization token as query parameter
-  // Requirement: 13.4
-  const signedUrl = `${baseUrl}?Authorization=${authToken}`;
+  const signedUrl = `https://${config.endpoint}/${encodedKey}`;
 
-  // Calculate expiration timestamp (1 hour from now)
+  // Cloudflare Worker caches for 1 hour, so we set expiration accordingly
   // Requirement: 13.8
   const expiresAt = new Date(Date.now() + 3600 * 1000);
 
