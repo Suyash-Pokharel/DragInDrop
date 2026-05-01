@@ -18,6 +18,20 @@ const nextConfig: NextConfig = {
     workerThreads: false,
     cpus: 1,
   },
+  async redirects() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/icon',
+        permanent: true,
+      },
+      {
+        source: '/favicon.png',
+        destination: '/icon',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
