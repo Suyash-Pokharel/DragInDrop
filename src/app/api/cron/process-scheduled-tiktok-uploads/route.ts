@@ -760,7 +760,7 @@ async function uploadToTikTok(
     accessToken,
     videoUrl: signedUrl,
     title: caption,
-    privacyLevel: 'PUBLIC_TO_EVERYONE',
+    privacyLevel: 'SELF_ONLY', // Required for unaudited TikTok apps
     disableComment: false,
     disableDuet: false,
     disableStitch: false,
