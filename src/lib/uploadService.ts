@@ -13,18 +13,42 @@ class UploadService extends EventTarget {
     try {
       console.log("Starting upload for file:", { name: file.name, type: file.type, size: file.size });
       
-      // Create FormData with file and metadata
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileName', file.name);
-      formData.append('fileType', file.type);
+      // Step 1: Get presigned URL from backend (NO file sent)
+      const presignResponse = await fetch("/api/upload/presign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+        }),
+      });
 
-      // Create new XMLHttpRequest
+      if (!presignResponse.ok) {
+        const errorData = await presignResponse.json();
+        throw new Error(errorData.error || "Failed to get upload URL");
+      }
+
+      const presignData = await presignResponse.json();
+      const { uploadUrl, authorizationToken, fileKey, fileType } = presignData;
+
+      console.log("Got presigned URL, uploading directly to B2...");
+
+      // Step 2: Upload file directly to Backblaze B2
       const xhr = new XMLHttpRequest();
       this.xhr = xhr;
 
-      // Open XMLHttpRequest to backend upload endpoint
-      xhr.open("POST", "/api/upload/presign");
+      // Open XMLHttpRequest to Backblaze upload URL
+      xhr.open("POST", uploadUrl);
+
+      // Set B2-specific headers
+      xhr.setRequestHeader("Authorization", authorizationToken);
+      xhr.setRequestHeader("X-Bz-File-Name", encodeURIComponent(fileKey));
+      xhr.setRequestHeader("Content-Type", fileType);
+      xhr.setRequestHeader("Content-Length", file.size.toString());
+      xhr.setRequestHeader("X-Bz-Content-Sha1", "do_not_verify");
 
       // Implement upload progress handler
       xhr.upload.onprogress = (e) => {
@@ -43,16 +67,15 @@ class UploadService extends EventTarget {
         if (status >= 200 && status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
-            if (response.fileKey) {
-              const responseText = JSON.stringify({ fileKey: response.fileKey, success: true });
-              this.dispatchEvent(
-                new CustomEvent<DoneDetail>("done", { detail: { status, responseText } }),
-              );
-            } else {
-              throw new Error("No fileKey in response");
-            }
+            console.log("B2 upload response:", response);
+            
+            // Return the fileKey from presign step
+            const responseText = JSON.stringify({ fileKey, success: true });
+            this.dispatchEvent(
+              new CustomEvent<DoneDetail>("done", { detail: { status, responseText } }),
+            );
           } catch (error) {
-            console.error("Failed to parse upload response:", error);
+            console.error("Failed to parse B2 response:", error);
             this.dispatchEvent(
               new CustomEvent<ErrorDetail>("error", {
                 detail: { message: "Upload completed but response was invalid", code: "INVALID_RESPONSE" },
@@ -65,13 +88,13 @@ class UploadService extends EventTarget {
             const errorResponse = JSON.parse(xhr.responseText);
             this.dispatchEvent(
               new CustomEvent<ErrorDetail>("error", {
-                detail: { message: errorResponse.error || "Upload failed", code: "UPLOAD_FAILED" },
+                detail: { message: errorResponse.message || "Upload failed", code: "UPLOAD_FAILED" },
               })
             );
           } catch {
             this.dispatchEvent(
               new CustomEvent<ErrorDetail>("error", {
-                detail: { message: "Upload failed. Please try again.", code: "UPLOAD_FAILED" },
+                detail: { message: `Upload failed with status ${status}. Please try again.`, code: "UPLOAD_FAILED" },
               })
             );
           }
@@ -107,14 +130,17 @@ class UploadService extends EventTarget {
       // Dispatch "start" event when upload begins
       this.dispatchEvent(new CustomEvent("start"));
 
-      // Send FormData with file
-      console.log("Sending file to backend...");
-      xhr.send(formData);
+      // Send file directly to B2
+      console.log("Sending file directly to Backblaze B2...");
+      xhr.send(file);
     } catch (error) {
       console.error("Upload error:", error);
       this.dispatchEvent(
         new CustomEvent<ErrorDetail>("error", {
-          detail: { message: "An unexpected error occurred. Please try again.", code: "UNKNOWN_ERROR" },
+          detail: { 
+            message: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.", 
+            code: "UNKNOWN_ERROR" 
+          },
         })
       );
     }

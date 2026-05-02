@@ -11,15 +11,13 @@ export async function POST(request: Request) {
   const user = authCheck;
 
   try {
-    // Parse the multipart form data
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const fileName = formData.get('fileName') as string;
-    const fileType = formData.get('fileType') as string;
+    // Parse JSON body (NOT multipart - we're not receiving the file)
+    const body = await request.json();
+    const { fileName, fileType, fileSize } = body;
 
-    if (!file || !fileName || !fileType) {
+    if (!fileName || !fileType || !fileSize) {
       return NextResponse.json(
-        { error: "Missing file or metadata" },
+        { error: "Missing file metadata (fileName, fileType, fileSize)" },
         { status: 400 }
       );
     }
@@ -33,7 +31,7 @@ export async function POST(request: Request) {
     }
 
     // Validate file size (max 250MB = 262,144,000 bytes)
-    if (file.size > 262144000) {
+    if (fileSize > 262144000) {
       return NextResponse.json(
         { error: "File size exceeds 250MB limit" },
         { status: 400 }
@@ -81,53 +79,30 @@ export async function POST(request: Request) {
 
     const uploadData = await uploadUrlResponse.json();
 
-    // Step 3: Upload file to B2
+    // Step 3: Generate file key
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
     const timestamp = Date.now();
     const fileKey = `uploads/${user.id}/${timestamp}-${sanitizedFileName}`;
 
-    const fileBuffer = await file.arrayBuffer();
-    
-    const uploadResponse = await fetch(uploadData.uploadUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': uploadData.authorizationToken,
-        'X-Bz-File-Name': encodeURIComponent(fileKey),
-        'Content-Type': fileType,
-        'Content-Length': file.size.toString(),
-        'X-Bz-Content-Sha1': 'do_not_verify',
-      },
-      body: fileBuffer
+    console.log("Generated presigned upload URL for:", {
+      fileKey,
+      fileSize,
+      fileType
     });
 
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      console.error("B2 upload failed:", errorText);
-      return NextResponse.json(
-        { error: "Failed to upload file to storage" },
-        { status: 500 }
-      );
-    }
-
-    const uploadResult = await uploadResponse.json();
-
-    console.log("File uploaded successfully to B2:", {
-      fileId: uploadResult.fileId,
-      fileName: uploadResult.fileName,
-      fileKey
-    });
-
-    // Return success response
+    // Return presigned URL and metadata for client-side upload
     return NextResponse.json({
       success: true,
+      uploadUrl: uploadData.uploadUrl,
+      authorizationToken: uploadData.authorizationToken,
       fileKey,
-      fileId: uploadResult.fileId,
-      fileName: uploadResult.fileName,
+      fileType,
+      fileSize,
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("Presign error:", error);
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: "Failed to generate presigned URL" },
       { status: 500 }
     );
   }
