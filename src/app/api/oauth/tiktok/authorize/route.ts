@@ -12,8 +12,9 @@ import { validateHttps } from "@/lib/sanitize";
 export async function GET(request: NextRequest) {
   // Rate limiting
   // Requirement: 10.13 - Apply rate limiting to OAuth endpoints
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
-  
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+
   try {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -67,10 +68,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: "Missing TIKTOK_CLIENT_KEY or TIKTOK_CLIENT_SECRET",
       });
-      return NextResponse.json(
-        { error: "OAuth configuration error" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "OAuth configuration error" }, { status: 500 });
     }
 
     // Generate cryptographically secure CSRF token
@@ -80,14 +78,12 @@ export async function GET(request: NextRequest) {
     // Generate PKCE code_verifier and code_challenge
     // TikTok requires PKCE for OAuth 2.0 authorization
     const codeVerifier = randomBytes(32).toString("base64url");
-    const codeChallenge = createHash("sha256")
-      .update(codeVerifier)
-      .digest("base64url");
+    const codeChallenge = createHash("sha256").update(codeVerifier).digest("base64url");
 
     // Construct TikTok authorization URL
     // Requirements: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 10.9
     const redirectUri = `${appUrl}/api/oauth/tiktok/callback`;
-    
+
     // Validate HTTPS in production
     // Requirement: 10.9 - Ensure HTTPS in production
     const isProduction = process.env.NODE_ENV === "production";
@@ -100,10 +96,10 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "OAuth configuration error: HTTPS required in production" },
-        { status: 500 }
+        { status: 500 },
       );
     }
-    
+
     const scope = "user.info.basic,video.upload,video.publish";
     const responseType = "code";
 
@@ -160,9 +156,6 @@ export async function GET(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to initiate authorization" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to initiate authorization" }, { status: 500 });
   }
 }

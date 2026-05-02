@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { 
-  BarChart3, 
-  Plus, 
-  AlertTriangle
-} from "lucide-react";
+import { BarChart3, Plus, AlertTriangle } from "lucide-react";
 import DashboardActivityChart from "./DashboardActivityChart";
 import DashboardMetrics from "./DashboardMetrics";
 import ConnectedPlatforms from "./ConnectedPlatforms";
@@ -72,16 +68,16 @@ export default function Dashboard() {
 
   // Function to manually trigger a refresh
   const refreshDashboard = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   }, []);
 
   // Expose refresh function globally for modals to call
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       (window as Window & { refreshDashboard?: () => void }).refreshDashboard = refreshDashboard;
     }
     return () => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         delete (window as Window & { refreshDashboard?: () => void }).refreshDashboard;
       }
     };
@@ -90,13 +86,13 @@ export default function Dashboard() {
   useEffect(() => {
     // Fetch dashboard data and user preferences in parallel
     Promise.all([
-      fetch("/api/dashboard").then(res => res.json()),
-      fetch("/api/user/preferences").then(res => res.json())
+      fetch("/api/dashboard").then((res) => res.json()),
+      fetch("/api/user/preferences").then((res) => res.json()),
     ])
       .then(([dashboardData, preferences]) => {
         console.log("Dashboard data received:", dashboardData);
         console.log("Preferences received:", preferences);
-        
+
         // Check if API returned an error
         if (dashboardData.error) {
           console.error("Dashboard API error:", dashboardData.error);
@@ -104,12 +100,12 @@ export default function Dashboard() {
           setLoading(false);
           return;
         }
-        
+
         setDashboardData(dashboardData);
         setUserPreferences(preferences);
         setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Failed to fetch dashboard data:", error);
         setError(error.message || "Failed to load dashboard");
         setLoading(false);
@@ -136,7 +132,7 @@ export default function Dashboard() {
           </div>
           <h3 className="text-xl font-bold text-text-main mb-2">Failed to Load Dashboard</h3>
           <p className="text-text-secondary mb-4">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
           >
@@ -169,12 +165,11 @@ export default function Dashboard() {
     upcomingPosts = [],
     draftPosts = [],
     chartData = [],
-    userName
+    userName,
   } = dashboardData;
 
   return (
     <div className="space-y-10 pb-8 load-step-2 relative">
-      
       {/* Ambient Background Glows - Enhanced for better visibility */}
       <div className="absolute top-0 left-1/4 w-full max-w-[100vw] h-[400px] bg-primary/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[500px] right-0 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
@@ -193,10 +188,12 @@ export default function Dashboard() {
           <h2 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-secondary">
             Welcome back, {userName?.split(" ")[0] || "Creator"}.
           </h2>
-          <p className="text-text-secondary mt-2 text-lg">Here&apos;s your command center overview for today.</p>
+          <p className="text-text-secondary mt-2 text-lg">
+            Here&apos;s your command center overview for today.
+          </p>
         </div>
         <div className="flex w-full md:w-auto">
-          <button 
+          <button
             onClick={() => modal.openUpload()}
             className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-8 py-3.5 rounded-xl font-bold hover:shadow-glow hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative"
           >
@@ -218,10 +215,8 @@ export default function Dashboard() {
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 relative z-10">
-        
         {/* Main Column: Activity Graph & Platform Health */}
         <div className="xl:col-span-3 space-y-8">
-          
           {/* Chart Section */}
           <section className="bg-surface/50 backdrop-blur-xl border border-border p-6 md:p-8 rounded-[2rem] shadow-sm relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -231,11 +226,15 @@ export default function Dashboard() {
                   <BarChart3 className="text-primary w-6 h-6" />
                   Publishing Activity
                 </h3>
-                <p className="text-sm text-text-secondary mt-1">Your content creation and scheduling activity</p>
+                <p className="text-sm text-text-secondary mt-1">
+                  Your content creation and scheduling activity
+                </p>
               </div>
-              <span className="text-xs font-bold text-text-secondary bg-surface border border-border px-4 py-1.5 rounded-full shadow-sm">Last 7 Days</span>
+              <span className="text-xs font-bold text-text-secondary bg-surface border border-border px-4 py-1.5 rounded-full shadow-sm">
+                Last 7 Days
+              </span>
             </div>
-            
+
             <DashboardActivityChart data={chartData} />
           </section>
 

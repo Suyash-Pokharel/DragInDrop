@@ -37,9 +37,6 @@ export async function GET() {
     });
 
     // Handle database errors gracefully
-    return NextResponse.json(
-      { error: "Failed to fetch connected platforms" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch connected platforms" }, { status: 500 });
   }
 }

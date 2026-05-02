@@ -68,7 +68,7 @@ export default function DeleteConfirmationModal({
 
     const modal = modalRef.current;
     const focusableElements = modal.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
@@ -105,14 +105,16 @@ export default function DeleteConfirmationModal({
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/60 z-[140] transition-opacity cursor-pointer ${
-          isClosing ? "opacity-0 duration-200" : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
+          isClosing
+            ? "opacity-0 duration-200"
+            : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
         }`}
         onClick={isDeleting ? undefined : handleClose}
         aria-hidden="true"
       />
 
       {/* Modal - Smaller centered modal */}
-      <div 
+      <div
         ref={modalRef}
         className={`fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none transition-all duration-200 ${
           isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
@@ -122,7 +124,9 @@ export default function DeleteConfirmationModal({
         aria-labelledby="delete-confirmation-modal-title"
         aria-describedby="delete-confirmation-modal-description"
       >
-        <div className={`bg-surface/80 backdrop-blur-xl border border-error/50 rounded-[2rem] w-full max-w-md shadow-2xl relative overflow-hidden pointer-events-auto ${!isClosing && 'animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]'}`}>
+        <div
+          className={`bg-surface/80 backdrop-blur-xl border border-error/50 rounded-[2rem] w-full max-w-md shadow-2xl relative overflow-hidden pointer-events-auto ${!isClosing && "animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]"}`}
+        >
           {/* Subtle error background glow */}
           <div className="absolute top-0 left-0 right-0 h-32 bg-error/10 blur-3xl rounded-full translate-y-[100%] pointer-events-none" />
 
@@ -148,7 +152,10 @@ export default function DeleteConfirmationModal({
           </div>
 
           {/* Content */}
-          <div id="delete-confirmation-modal-description" className="p-6 md:p-8 space-y-6 relative z-10">
+          <div
+            id="delete-confirmation-modal-description"
+            className="p-6 md:p-8 space-y-6 relative z-10"
+          >
             {/* User information */}
             <div className="space-y-3">
               <p className="text-sm font-medium text-text-secondary">
@@ -171,7 +178,8 @@ export default function DeleteConfirmationModal({
             <div className="bg-error/5 border border-error/20 rounded-xl p-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-error shrink-0 mt-0.5" />
               <p className="text-sm text-error font-medium">
-                This process cannot be undone. All user data, linked accounts, and history will be deleted.
+                This process cannot be undone. All user data, linked accounts, and history will be
+                deleted.
               </p>
             </div>
           </div>
@@ -194,7 +202,10 @@ export default function DeleteConfirmationModal({
             >
               {isDeleting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
+                  <div
+                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                    aria-hidden="true"
+                  />
                   Terminating...
                 </>
               ) : (
@@ -208,6 +219,6 @@ export default function DeleteConfirmationModal({
         </div>
       </div>
     </>,
-    document.body
+    document.body,
   );
 }

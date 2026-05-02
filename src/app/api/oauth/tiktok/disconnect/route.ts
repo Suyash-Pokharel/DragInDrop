@@ -11,8 +11,9 @@ import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
 export async function DELETE(request: NextRequest) {
   // Rate limiting
   // Requirement: 10.13 - Apply rate limiting to OAuth endpoints
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
-  
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+
   try {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
@@ -24,7 +25,7 @@ export async function DELETE(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -49,7 +50,7 @@ export async function DELETE(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -79,10 +80,7 @@ export async function DELETE(request: NextRequest) {
         userId: user.id,
         timestamp: new Date().toISOString(),
       });
-      return NextResponse.json(
-        { error: "No connected account found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "No connected account found" }, { status: 404 });
     }
 
     // Note: Token revocation with TikTok is skipped for performance reasons.
@@ -113,10 +111,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     // Requirement: 7.4 - Return 200 with success message
-    return NextResponse.json(
-      { message: "Account disconnected" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Account disconnected" }, { status: 200 });
   } catch (error) {
     // Requirement: 7.6 - Return 500 if database error occurs
     console.error("[DELETE /api/oauth/tiktok/disconnect] Database error:", {
@@ -126,9 +121,6 @@ export async function DELETE(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to disconnect account" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to disconnect account" }, { status: 500 });
   }
 }

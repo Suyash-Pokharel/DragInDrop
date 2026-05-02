@@ -31,7 +31,8 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
   const [preferences, setPreferences] = useState<PreferencesState>(initialPreferences);
 
   // Track original preferences for change detection
-  const [originalPreferences, setOriginalPreferences] = useState<PreferencesState>(initialPreferences);
+  const [originalPreferences, setOriginalPreferences] =
+    useState<PreferencesState>(initialPreferences);
 
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -45,15 +46,15 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
   const getUTCOffset = (timezone: string): string => {
     try {
       const now = new Date();
-      const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
-      const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const tzDate = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+      const utcDate = new Date(now.toLocaleString("en-US", { timeZone: "UTC" }));
       const offsetMinutes = (tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
       const hours = Math.floor(Math.abs(offsetMinutes) / 60);
       const minutes = Math.abs(offsetMinutes) % 60;
-      const sign = offsetMinutes >= 0 ? '+' : '-';
-      return `UTC${sign}${hours}:${minutes.toString().padStart(2, '0')}`;
+      const sign = offsetMinutes >= 0 ? "+" : "-";
+      return `UTC${sign}${hours}:${minutes.toString().padStart(2, "0")}`;
     } catch {
-      return 'UTC';
+      return "UTC";
     }
   };
 
@@ -63,11 +64,11 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
    */
   const timezoneOptions = useMemo<TimezoneOption[]>(() => {
     try {
-      const timezones = Intl.supportedValuesOf('timeZone');
-      return timezones.map(tz => ({
+      const timezones = Intl.supportedValuesOf("timeZone");
+      return timezones.map((tz) => ({
         value: tz,
         label: tz,
-        offset: getUTCOffset(tz)
+        offset: getUTCOffset(tz),
       }));
     } catch {
       // Fallback if Intl.supportedValuesOf is not available
@@ -79,43 +80,46 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
    * Auto-save detected timezone to database
    * This runs automatically when timezone is detected for first-time users
    */
-  const autoSaveDetectedTimezone = useCallback(async (detectedTimezone: string) => {
-    try {
-      // Create preferences object with detected timezone and current defaults
-      const autoSavePreferences = {
-        dateFormat: originalPreferences.dateFormat,
-        timeFormat: originalPreferences.timeFormat,
-        firstDayOfWeek: originalPreferences.firstDayOfWeek,
-        timezone: detectedTimezone
-      };
+  const autoSaveDetectedTimezone = useCallback(
+    async (detectedTimezone: string) => {
+      try {
+        // Create preferences object with detected timezone and current defaults
+        const autoSavePreferences = {
+          dateFormat: originalPreferences.dateFormat,
+          timeFormat: originalPreferences.timeFormat,
+          firstDayOfWeek: originalPreferences.firstDayOfWeek,
+          timezone: detectedTimezone,
+        };
 
-      const response = await fetch("/api/user/preferences", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(autoSavePreferences),
-      });
+        const response = await fetch("/api/user/preferences", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(autoSavePreferences),
+        });
 
-      if (response.ok) {
-        // Update original preferences to reflect what's now saved in database
-        setOriginalPreferences(autoSavePreferences);
-        setHasUnsavedChanges(false);
-        
-        // Show a subtle success message for auto-save
-        setSuccessMessage("Timezone auto-detected and saved");
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 2000);
-        
-        console.log('Auto-saved detected timezone:', detectedTimezone);
-      } else {
-        console.error('Failed to auto-save detected timezone');
+        if (response.ok) {
+          // Update original preferences to reflect what's now saved in database
+          setOriginalPreferences(autoSavePreferences);
+          setHasUnsavedChanges(false);
+
+          // Show a subtle success message for auto-save
+          setSuccessMessage("Timezone auto-detected and saved");
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 2000);
+
+          console.log("Auto-saved detected timezone:", detectedTimezone);
+        } else {
+          console.error("Failed to auto-save detected timezone");
+        }
+      } catch (error) {
+        console.error("Error auto-saving detected timezone:", error);
       }
-    } catch (error) {
-      console.error('Error auto-saving detected timezone:', error);
-    }
-  }, [originalPreferences]);
+    },
+    [originalPreferences],
+  );
 
   /**
    * Auto-detect and save user's timezone on first load (when no timezone is saved)
@@ -127,13 +131,13 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
         const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (detectedTimezone) {
           // Update UI state immediately
-          setPreferences(prev => ({ ...prev, timezone: detectedTimezone }));
-          
+          setPreferences((prev) => ({ ...prev, timezone: detectedTimezone }));
+
           // Auto-save the detected timezone to database
           autoSaveDetectedTimezone(detectedTimezone);
         }
       } catch (error) {
-        console.error('Failed to detect timezone:', error);
+        console.error("Failed to detect timezone:", error);
       }
     }
   }, [originalPreferences.timezone, autoSaveDetectedTimezone]);
@@ -202,7 +206,9 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
       }, 3000);
     } catch (err) {
       console.error("Error saving preferences:", err);
-      setError(err instanceof Error ? err.message : "Failed to save preferences. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "Failed to save preferences. Please try again.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -234,110 +240,120 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
       <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-[2rem] p-6 md:p-10 flex flex-col gap-8 shadow-lg">
         {/* Date & Time */}
         <section className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 border-b border-border pb-2">
-                <Clock className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-medium text-text-main">Date & Time Formats</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-text-main flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-text-secondary" />
-                    Date Format
-                  </label>
-                  <select
-                    value={preferences.dateFormat}
-                    onChange={(e) => handleFieldChange("dateFormat", e.target.value as PreferencesState["dateFormat"])}
-                    className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
-                  >
-                    <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2000)</option>
-                    <option value="DD/MM/YYYY">DD/MM/YYYY (31/12/2000)</option>
-                    <option value="YYYY-MM-DD">YYYY-MM-DD (2000-12-31)</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-text-main flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-text-secondary" />
-                    Time Format
-                  </label>
-                  <select
-                    value={preferences.timeFormat}
-                    onChange={(e) => handleFieldChange("timeFormat", e.target.value as PreferencesState["timeFormat"])}
-                    className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
-                  >
-                    <option value="12h">12-hour (06:00 PM)</option>
-                    <option value="24h">24-hour (18:00)</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-2 md:col-span-2">
-                  <label className="text-sm font-medium text-text-main flex items-center gap-2">
-                    <SlidersHorizontal className="w-4 h-4 text-text-secondary" />
-                    First Day of the Week
-                  </label>
-                  <select
-                    value={preferences.firstDayOfWeek}
-                    onChange={(e) => handleFieldChange("firstDayOfWeek", e.target.value as PreferencesState["firstDayOfWeek"])}
-                    className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
-                  >
-                    <option value="sunday">Sunday</option>
-                    <option value="monday">Monday</option>
-                  </select>
-                </div>
-              </div>
-            </section>
-
-            {/* Timezone */}
-            <section className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 border-b border-border pb-2">
-                <Globe2 className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-medium text-text-main">Timezone</h3>
-              </div>
-              <p className="text-sm text-text-secondary">
-                Your timezone dictates when your scheduled videos will be published.
-              </p>
-              <div className="flex flex-col gap-2 mt-2">
-                <label className="text-sm font-medium text-text-main">Timezone</label>
-                <select
-                  value={preferences.timezone}
-                  onChange={(e) => handleFieldChange("timezone", e.target.value)}
-                  className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
-                >
-                  <option value="">Select your timezone</option>
-                  {timezoneOptions.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
-                      {tz.label} ({tz.offset})
-                    </option>
-                  ))}
-                </select>
-                {preferences.timezone && (
-                  <p className="text-xs text-text-secondary mt-1">
-                    Current time in {preferences.timezone}: {new Date().toLocaleString('en-US', { 
-                      timeZone: preferences.timezone,
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: preferences.timeFormat === '12h'
-                    })}
-                  </p>
-                )}
-              </div>
-            </section>
-
-            <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              {/* Unsaved Changes Indicator */}
-              {hasUnsavedChanges && (
-                <div className="flex items-center gap-2 text-amber-600 text-sm font-medium">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>Unsaved changes</span>
-                </div>
-              )}
-              
-              <button 
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-6 py-2.5 bg-primary hover:bg-secondary text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 sm:ml-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+          <div className="flex items-center gap-2 border-b border-border pb-2">
+            <Clock className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-medium text-text-main">Date & Time Formats</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-text-main flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-text-secondary" />
+                Date Format
+              </label>
+              <select
+                value={preferences.dateFormat}
+                onChange={(e) =>
+                  handleFieldChange("dateFormat", e.target.value as PreferencesState["dateFormat"])
+                }
+                className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
               >
-                {isSaving ? "Saving..." : "Save Preferences"}
-              </button>
+                <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2000)</option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY (31/12/2000)</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD (2000-12-31)</option>
+              </select>
             </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-text-main flex items-center gap-2">
+                <Clock className="w-4 h-4 text-text-secondary" />
+                Time Format
+              </label>
+              <select
+                value={preferences.timeFormat}
+                onChange={(e) =>
+                  handleFieldChange("timeFormat", e.target.value as PreferencesState["timeFormat"])
+                }
+                className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+              >
+                <option value="12h">12-hour (06:00 PM)</option>
+                <option value="24h">24-hour (18:00)</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <label className="text-sm font-medium text-text-main flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-text-secondary" />
+                First Day of the Week
+              </label>
+              <select
+                value={preferences.firstDayOfWeek}
+                onChange={(e) =>
+                  handleFieldChange(
+                    "firstDayOfWeek",
+                    e.target.value as PreferencesState["firstDayOfWeek"],
+                  )
+                }
+                className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+              >
+                <option value="sunday">Sunday</option>
+                <option value="monday">Monday</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        {/* Timezone */}
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 border-b border-border pb-2">
+            <Globe2 className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-medium text-text-main">Timezone</h3>
+          </div>
+          <p className="text-sm text-text-secondary">
+            Your timezone dictates when your scheduled videos will be published.
+          </p>
+          <div className="flex flex-col gap-2 mt-2">
+            <label className="text-sm font-medium text-text-main">Timezone</label>
+            <select
+              value={preferences.timezone}
+              onChange={(e) => handleFieldChange("timezone", e.target.value)}
+              className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-text-main focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+            >
+              <option value="">Select your timezone</option>
+              {timezoneOptions.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label} ({tz.offset})
+                </option>
+              ))}
+            </select>
+            {preferences.timezone && (
+              <p className="text-xs text-text-secondary mt-1">
+                Current time in {preferences.timezone}:{" "}
+                {new Date().toLocaleString("en-US", {
+                  timeZone: preferences.timezone,
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: preferences.timeFormat === "12h",
+                })}
+              </p>
+            )}
+          </div>
+        </section>
+
+        <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          {/* Unsaved Changes Indicator */}
+          {hasUnsavedChanges && (
+            <div className="flex items-center gap-2 text-amber-600 text-sm font-medium">
+              <AlertCircle className="w-4 h-4" />
+              <span>Unsaved changes</span>
+            </div>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-6 py-2.5 bg-primary hover:bg-secondary text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 sm:ml-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+          >
+            {isSaving ? "Saving..." : "Save Preferences"}
+          </button>
+        </div>
       </div>
     </div>
   );

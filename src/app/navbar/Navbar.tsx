@@ -15,7 +15,7 @@ interface NavbarProps {
 const NavbarWrapper = ({ imageSrc, user }: NavbarProps) => {
   const pathname = usePathname();
   const { data: session } = useSession();
-  
+
   // Use session role as primary source (fresh data), fallback to server prop
   const isAdminUser = session?.user?.role === "ADMIN" || user?.role === "ADMIN";
 

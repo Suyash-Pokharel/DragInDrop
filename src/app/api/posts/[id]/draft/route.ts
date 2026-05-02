@@ -8,12 +8,9 @@ import { getPrisma } from "@/lib/prisma";
  * and deleting all associated PlatformPost records while preserving the video file
  * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
+
   // Authenticate user
   // Requirement: 6.7 - Handle authentication errors (401)
   const user = await ensureAuth();
@@ -50,11 +47,8 @@ export async function PUT(
         postId: id,
         error: "Post does not exist",
       });
-      
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     // Check authorization - user must own the post
@@ -67,10 +61,10 @@ export async function PUT(
         postId: id,
         error: "User does not own the post",
       });
-      
+
       return NextResponse.json(
         { error: "You do not have permission to edit this post" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -82,7 +76,7 @@ export async function PUT(
       const updatedPost = await tx.post.update({
         where: { id },
         data: {
-          status: 'DRAFT',
+          status: "DRAFT",
           updatedAt: new Date(),
         },
       });
@@ -112,11 +106,7 @@ export async function PUT(
     });
 
     // Requirement: 6.6 - Return success response
-    return NextResponse.json(
-      { message: "Post saved as draft successfully" },
-      { status: 200 }
-    );
-
+    return NextResponse.json({ message: "Post saved as draft successfully" }, { status: 200 });
   } catch (error) {
     // Requirement: 6.10 - Handle database errors (500) with proper logging
     console.error("[PUT /api/posts/[id]/draft] Database error:", {
@@ -128,9 +118,6 @@ export async function PUT(
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to convert post to draft" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to convert post to draft" }, { status: 500 });
   }
 }

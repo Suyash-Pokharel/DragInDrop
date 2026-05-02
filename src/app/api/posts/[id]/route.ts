@@ -15,37 +15,37 @@ function convertToUTC(dateTimeStr: string, timezone: string): Date {
   // Support both formats: with seconds (2026-04-16T09:20:00) and without (2026-04-16T09:20)
   const match = dateTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
   if (!match) {
-    throw new Error('Invalid datetime format');
+    throw new Error("Invalid datetime format");
   }
-  
-  const [, year, month, day, hour, minute, second = '00'] = match;
-  
+
+  const [, year, month, day, hour, minute, second = "00"] = match;
+
   // Create a date string in ISO format with explicit timezone
   const localDateStr = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-  
+
   // Create two dates: one in UTC, one formatted in the target timezone
   const utcDate = new Date(`${localDateStr}Z`);
-  
+
   // Format this UTC date as it would appear in the target timezone
-  const formatter = new Intl.DateTimeFormat('en-US', {
+  const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     hour12: false,
   });
-  
+
   const parts = formatter.formatToParts(utcDate);
   const partsMap: Record<string, string> = {};
-  parts.forEach(part => {
-    if (part.type !== 'literal') {
+  parts.forEach((part) => {
+    if (part.type !== "literal") {
       partsMap[part.type] = part.value;
     }
   });
-  
+
   // The formatted string shows what time it is in the target timezone when it's utcDate in UTC
   const tzYear = parseInt(partsMap.year);
   const tzMonth = parseInt(partsMap.month);
@@ -53,16 +53,23 @@ function convertToUTC(dateTimeStr: string, timezone: string): Date {
   const tzHour = parseInt(partsMap.hour);
   const tzMinute = parseInt(partsMap.minute);
   const tzSecond = parseInt(partsMap.second);
-  
+
   // Calculate the difference in milliseconds
   const utcMs = utcDate.getTime();
   const tzDateMs = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMinute, tzSecond);
   const offset = utcMs - tzDateMs;
-  
+
   // Now apply this offset to our target local time
-  const targetLocalMs = Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute), parseInt(second));
+  const targetLocalMs = Date.UTC(
+    parseInt(year),
+    parseInt(month) - 1,
+    parseInt(day),
+    parseInt(hour),
+    parseInt(minute),
+    parseInt(second),
+  );
   const targetUtcMs = targetLocalMs + offset;
-  
+
   return new Date(targetUtcMs);
 }
 
@@ -80,18 +87,12 @@ const updatePostSchema = z.object({
     .max(250, "Description must not exceed 250 characters")
     .optional()
     .nullable(),
-  scheduledFor: z
-    .string({ message: "Scheduled time is required" })
-    .refine((val) => {
-      const date = new Date(val);
-      return !isNaN(date.getTime());
-    }, "Invalid date format"),
-  selectedPlatforms: z
-    .array(z.string())
-    .min(1, "At least one platform must be selected"),
-  timezone: z
-    .string()
-    .optional(),
+  scheduledFor: z.string({ message: "Scheduled time is required" }).refine((val) => {
+    const date = new Date(val);
+    return !isNaN(date.getTime());
+  }, "Invalid date format"),
+  selectedPlatforms: z.array(z.string()).min(1, "At least one platform must be selected"),
+  timezone: z.string().optional(),
 });
 
 /**
@@ -99,12 +100,9 @@ const updatePostSchema = z.object({
  * Retrieves a specific post with associated platform information
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
+
   // Authenticate user
   // Requirement: 4.4 - Handle authentication errors (401)
   const user = await ensureAuth();
@@ -146,11 +144,8 @@ export async function GET(
         postId: id,
         error: "Post does not exist",
       });
-      
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     // Check authorization - user must own the post
@@ -163,17 +158,17 @@ export async function GET(
         postId: id,
         error: "User does not own the post",
       });
-      
+
       return NextResponse.json(
         { error: "You do not have permission to access this post" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // Extract platform IDs from PlatformPost records
     // Requirement: 4.3 - Return associated platform IDs
     const selectedPlatforms = post.PlatformPost.map(
-      (platformPost) => platformPost.SocialAccount.platform
+      (platformPost) => platformPost.SocialAccount.platform,
     );
 
     // Prepare response data
@@ -214,10 +209,7 @@ export async function GET(
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to retrieve post" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to retrieve post" }, { status: 500 });
   }
 }
 
@@ -226,12 +218,9 @@ export async function GET(
  * Updates a scheduled post with new title, description, scheduledFor, and platform selection
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12, 5.13, 5.14, 5.15
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
+
   // Authenticate user
   // Requirement: 5.12 - Handle authentication errors (401)
   const user = await ensureAuth();
@@ -246,27 +235,25 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    
+
     // Validate request body
     // Requirements: 5.2, 5.3, 5.4, 5.5 - Validate input data
     const validationResult = updatePostSchema.safeParse(body);
     if (!validationResult.success) {
-      const errors = validationResult.error?.issues?.map(err => ({
-        field: err.path.join('.'),
-        message: err.message
-      })) || [];
-      
+      const errors =
+        validationResult.error?.issues?.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        })) || [];
+
       console.error("[PUT /api/posts/[id]] Validation failed:", {
         userId: user.id,
         postId: id,
         timestamp: new Date().toISOString(),
         errors,
       });
-      
-      return NextResponse.json(
-        { error: "Validation failed", details: errors },
-        { status: 400 }
-      );
+
+      return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 });
     }
 
     const { title, description, scheduledFor, selectedPlatforms, timezone } = validationResult.data;
@@ -298,11 +285,8 @@ export async function PUT(
         postId: id,
         error: "Post does not exist",
       });
-      
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     // Check authorization - user must own the post
@@ -315,10 +299,10 @@ export async function PUT(
         postId: id,
         error: "User does not own the post",
       });
-      
+
       return NextResponse.json(
         { error: "You do not have permission to edit this post" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -331,14 +315,14 @@ export async function PUT(
     // Convert scheduledFor from user timezone to UTC
     // Requirements: 5.6 - Convert scheduledFor from user timezone to UTC
     // Use timezone from request if provided, otherwise fall back to user preferences
-    const userTimezone = timezone || userPreferences?.timezone || 'UTC';
+    const userTimezone = timezone || userPreferences?.timezone || "UTC";
     const scheduledForUTC = convertToUTC(scheduledFor, userTimezone);
 
     // Validate scheduledFor is at least 10 minutes in the future
     // Requirement: 5.4 - Validate scheduledFor is at least 10 minutes in future
     const now = new Date();
     const minScheduleTime = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes from now
-    
+
     if (scheduledForUTC <= minScheduleTime) {
       console.error("[PUT /api/posts/[id]] Invalid schedule time:", {
         userId: user.id,
@@ -348,10 +332,10 @@ export async function PUT(
         minScheduleTime: minScheduleTime.toISOString(),
         error: "Schedule must be at least 10 minutes in the future",
       });
-      
+
       return NextResponse.json(
         { error: "Schedule must be at least 10 minutes in the future" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -365,9 +349,9 @@ export async function PUT(
     });
 
     // Validate that user has connected accounts for all selected platforms
-    const connectedPlatforms = socialAccounts.map(account => account.platform);
+    const connectedPlatforms = socialAccounts.map((account) => account.platform);
     const missingPlatforms = selectedPlatforms.filter(
-      platform => !connectedPlatforms.includes(platform)
+      (platform) => !connectedPlatforms.includes(platform),
     );
 
     if (missingPlatforms.length > 0) {
@@ -378,16 +362,16 @@ export async function PUT(
         missingPlatforms,
         error: "User does not have connected accounts for selected platforms",
       });
-      
+
       return NextResponse.json(
-        { 
-          error: "Missing platform connections", 
-          details: missingPlatforms.map(platform => ({
+        {
+          error: "Missing platform connections",
+          details: missingPlatforms.map((platform) => ({
             field: "selectedPlatforms",
-            message: `${platform} account not connected`
-          }))
+            message: `${platform} account not connected`,
+          })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -412,10 +396,10 @@ export async function PUT(
 
       // Determine platforms to add and remove
       const platformsToAdd = selectedPlatforms.filter(
-        platform => !currentPlatforms.includes(platform)
+        (platform) => !currentPlatforms.includes(platform),
       );
       const platformsToRemove = currentPlatforms.filter(
-        (platform) => !selectedPlatforms.includes(platform)
+        (platform) => !selectedPlatforms.includes(platform),
       );
 
       // Remove PlatformPost records for deselected platforms
@@ -435,15 +419,15 @@ export async function PUT(
       // Create PlatformPost records for newly selected platforms
       // Requirement: 5.9 - Create PlatformPost records for newly selected platforms
       if (platformsToAdd.length > 0) {
-        const socialAccountsToAdd = socialAccounts.filter(
-          account => platformsToAdd.includes(account.platform)
+        const socialAccountsToAdd = socialAccounts.filter((account) =>
+          platformsToAdd.includes(account.platform),
         );
 
-        const platformPostsToCreate = socialAccountsToAdd.map(account => ({
+        const platformPostsToCreate = socialAccountsToAdd.map((account) => ({
           id: crypto.randomUUID(),
           postId: id,
           socialAccountId: account.id,
-          status: 'PENDING' as const,
+          status: "PENDING" as const,
           createdAt: new Date(),
           updatedAt: new Date(),
         }));
@@ -468,11 +452,7 @@ export async function PUT(
     });
 
     // Requirement: 5.11 - Return success response
-    return NextResponse.json(
-      { message: "Post updated successfully" },
-      { status: 200 }
-    );
-
+    return NextResponse.json({ message: "Post updated successfully" }, { status: 200 });
   } catch (error) {
     // Requirement: 5.15 - Handle database errors (500) with proper logging
     console.error("[PUT /api/posts/[id]] Database error:", {
@@ -484,10 +464,7 @@ export async function PUT(
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to update post" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
   }
 }
 
@@ -498,10 +475,10 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  
+
   // Authenticate user
   // Requirement: 8.10 - Handle authentication errors (401)
   const user = await ensureAuth();
@@ -538,11 +515,8 @@ export async function DELETE(
         postId: id,
         error: "Post does not exist",
       });
-      
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     // Check authorization - user must own the post
@@ -555,10 +529,10 @@ export async function DELETE(
         postId: id,
         error: "User does not own the post",
       });
-      
+
       return NextResponse.json(
         { error: "You do not have permission to delete this post" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -583,12 +557,15 @@ export async function DELETE(
     try {
       // Step 1: Authorize with B2 API
       // Requirements: 8.5, 12.1, 12.2 - Authorize with B2 API using credentials
-      const authResponse = await fetch(`https://api.backblazeb2.com/b2api/v2/b2_authorize_account`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${process.env.B2_ACCOUNT_ID}:${process.env.B2_APPLICATION_KEY}`).toString('base64')}`
-        }
-      });
+      const authResponse = await fetch(
+        `https://api.backblazeb2.com/b2api/v2/b2_authorize_account`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${process.env.B2_ACCOUNT_ID}:${process.env.B2_APPLICATION_KEY}`).toString("base64")}`,
+          },
+        },
+      );
 
       if (!authResponse.ok) {
         const errorText = await authResponse.text();
@@ -600,7 +577,7 @@ export async function DELETE(
           error: errorText,
           videoFileKey: existingPost.videoFileKey,
         });
-        
+
         // Continue execution - database deletion was successful
       } else {
         const authData = await authResponse.json();
@@ -609,17 +586,17 @@ export async function DELETE(
         // Step 2: Get file info to obtain file ID
         // We need the file ID to delete the specific version
         const listResponse = await fetch(`${apiUrl}/b2api/v2/b2_list_file_names`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': authorizationToken,
-            'Content-Type': 'application/json'
+            Authorization: authorizationToken,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             bucketId: process.env.B2_BUCKET_ID,
             startFileName: existingPost.videoFileKey,
             maxFileCount: 1,
-            prefix: existingPost.videoFileKey
-          })
+            prefix: existingPost.videoFileKey,
+          }),
         });
 
         if (!listResponse.ok) {
@@ -634,22 +611,22 @@ export async function DELETE(
           });
         } else {
           const listData = await listResponse.json();
-          
+
           if (listData.files && listData.files.length > 0) {
             const fileInfo = listData.files[0];
-            
+
             // Step 3: Delete the file version
             // Requirements: 8.6, 12.3, 12.4 - Call b2_delete_file_version with file ID
             const deleteResponse = await fetch(`${apiUrl}/b2api/v2/b2_delete_file_version`, {
-              method: 'POST',
+              method: "POST",
               headers: {
-                'Authorization': authorizationToken,
-                'Content-Type': 'application/json'
+                Authorization: authorizationToken,
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 fileId: fileInfo.fileId,
-                fileName: fileInfo.fileName
-              })
+                fileName: fileInfo.fileName,
+              }),
             });
 
             if (!deleteResponse.ok) {
@@ -698,7 +675,7 @@ export async function DELETE(
         stack: b2Error instanceof Error ? b2Error.stack : undefined,
         videoFileKey: existingPost.videoFileKey,
       });
-      
+
       // Continue execution - database deletion was successful
     }
 
@@ -712,11 +689,7 @@ export async function DELETE(
     });
 
     // Requirement: 8.9 - Return success response
-    return NextResponse.json(
-      { message: "Post deleted successfully" },
-      { status: 200 }
-    );
-
+    return NextResponse.json({ message: "Post deleted successfully" }, { status: 200 });
   } catch (error) {
     // Requirement: 8.13 - Handle database errors (500) with proper logging
     console.error("[DELETE /api/posts/[id]] Database error:", {
@@ -728,9 +701,6 @@ export async function DELETE(
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to delete post" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
 }

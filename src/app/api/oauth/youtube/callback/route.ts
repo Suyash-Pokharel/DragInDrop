@@ -4,7 +4,12 @@ import { ensureAuth } from "@/lib/ensureAuth";
 import { encryptToken } from "@/lib/encryption";
 import { getPrisma } from "@/lib/prisma";
 import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
-import { validateHttps, sanitizeGoogleProfile, validateRedirectUri, sanitizeString } from "@/lib/sanitize";
+import {
+  validateHttps,
+  sanitizeGoogleProfile,
+  validateRedirectUri,
+  sanitizeString,
+} from "@/lib/sanitize";
 
 /**
  * GET /api/oauth/youtube/callback
@@ -14,8 +19,9 @@ import { validateHttps, sanitizeGoogleProfile, validateRedirectUri, sanitizeStri
 export async function GET(request: NextRequest) {
   // Rate limiting
   // Requirement: 10.13 - Apply rate limiting to OAuth endpoints
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
-  
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+
   try {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
@@ -27,7 +33,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -52,7 +58,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -80,7 +86,7 @@ export async function GET(request: NextRequest) {
         error: sanitizedError,
       });
       return NextResponse.redirect(
-        `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Authorization denied")}`
+        `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Authorization denied")}`,
       );
     }
 
@@ -91,17 +97,14 @@ export async function GET(request: NextRequest) {
         userId: user.id,
         timestamp: new Date().toISOString(),
       });
-      return NextResponse.json(
-        { error: "Missing authorization code" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing authorization code" }, { status: 400 });
     }
 
     // Verify CSRF token (state parameter)
     // Requirements: 2.2, 2.3, 2.4, 8.2, 10.2, 10.3, 10.4 - Verify state matches CSRF token and hasn't expired
     const storedState = request.cookies.get("youtube_oauth_state")?.value;
     const storedTimestamp = request.cookies.get("youtube_oauth_state_timestamp")?.value;
-    
+
     if (!state || !storedState || state !== storedState) {
       console.error("[GET /api/oauth/youtube/callback] Invalid state parameter:", {
         userId: user.id,
@@ -110,10 +113,7 @@ export async function GET(request: NextRequest) {
         stateStored: !!storedState,
         stateMatch: state === storedState,
       });
-      return NextResponse.json(
-        { error: "Invalid state parameter" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid state parameter" }, { status: 400 });
     }
 
     // Validate CSRF token hasn't expired (10 minutes)
@@ -123,10 +123,7 @@ export async function GET(request: NextRequest) {
         userId: user.id,
         timestamp: new Date().toISOString(),
       });
-      return NextResponse.json(
-        { error: "Invalid state parameter" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid state parameter" }, { status: 400 });
     }
 
     const tokenAge = Date.now() - parseInt(storedTimestamp, 10);
@@ -141,14 +138,14 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "Authorization session expired. Please try again." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate redirect URI
     // Requirements: 10.10, 10.11 - Validate redirect_uri matches configured value
     const redirectUri = `${appUrl}/api/oauth/youtube/callback`;
-    
+
     // Validate HTTPS in production
     // Requirement: 10.9 - Ensure HTTPS in production
     const isProduction = process.env.NODE_ENV === "production";
@@ -161,7 +158,7 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "OAuth configuration error: HTTPS required in production" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -177,7 +174,7 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "OAuth configuration error: Redirect URI mismatch" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -192,10 +189,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: "Missing YOUTUBE_CLIENT_ID or YOUTUBE_CLIENT_SECRET",
       });
-      return NextResponse.json(
-        { error: "OAuth configuration error" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "OAuth configuration error" }, { status: 500 });
     }
 
     // Exchange authorization code for tokens
@@ -242,7 +236,7 @@ export async function GET(request: NextRequest) {
       });
     } catch (fetchError) {
       clearTimeout(tokenTimeout);
-      
+
       // Check if error is due to timeout/abort
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/youtube/callback] Token exchange timeout:", {
@@ -250,12 +244,9 @@ export async function GET(request: NextRequest) {
           timestamp: new Date().toISOString(),
           error: "Request timeout",
         });
-        return NextResponse.json(
-          { error: "Request timeout. Please try again." },
-          { status: 504 }
-        );
+        return NextResponse.json({ error: "Request timeout. Please try again." }, { status: 504 });
       }
-      
+
       console.error("[GET /api/oauth/youtube/callback] Token exchange network error:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
@@ -263,7 +254,7 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
-        { status: 500 }
+        { status: 500 },
       );
     } finally {
       clearTimeout(tokenTimeout);
@@ -290,12 +281,12 @@ export async function GET(request: NextRequest) {
         const retryAfter = tokenResponse.headers.get("retry-after") || "60";
         return NextResponse.json(
           { error: `Rate limit exceeded. Please try again after ${retryAfter} seconds.` },
-          { 
+          {
             status: 429,
             headers: {
               "Retry-After": retryAfter,
             },
-          }
+          },
         );
       }
 
@@ -303,28 +294,25 @@ export async function GET(request: NextRequest) {
       // Google returns error codes like "redirect_uri_mismatch" or error descriptions
       const errorCode = errorData.error;
       const errorDescription = errorData.error_description;
-      
-      if (errorCode === "redirect_uri_mismatch" || 
-          (errorDescription && errorDescription.toLowerCase().includes("redirect"))) {
+
+      if (
+        errorCode === "redirect_uri_mismatch" ||
+        (errorDescription && errorDescription.toLowerCase().includes("redirect"))
+      ) {
         return NextResponse.redirect(
-          `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Redirect URI mismatch")}`
+          `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Redirect URI mismatch")}`,
         );
       }
 
       // Requirement: 2.11 - Return 500 if token exchange fails
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const tokenData = await tokenResponse.json();
-    const {
-      access_token,
-      refresh_token,
-      expires_in,
-      token_type,
-    } = tokenData;
+    const { access_token, refresh_token, expires_in, token_type } = tokenData;
 
     if (!access_token || !refresh_token) {
       console.error("[GET /api/oauth/youtube/callback] Invalid token response:", {
@@ -335,7 +323,7 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -373,7 +361,7 @@ export async function GET(request: NextRequest) {
       });
     } catch (fetchError) {
       clearTimeout(profileTimeout);
-      
+
       // Check if error is due to timeout/abort
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/youtube/callback] Profile fetch timeout:", {
@@ -381,22 +369,16 @@ export async function GET(request: NextRequest) {
           timestamp: new Date().toISOString(),
           error: "Request timeout",
         });
-        return NextResponse.json(
-          { error: "Request timeout. Please try again." },
-          { status: 504 }
-        );
+        return NextResponse.json({ error: "Request timeout. Please try again." }, { status: 504 });
       }
-      
+
       console.error("[GET /api/oauth/youtube/callback] Profile fetch network error:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
         error: fetchError instanceof Error ? fetchError.message : "Unknown error",
       });
       // Requirement: 2.12 - Return 500 if profile fetch fails
-      return NextResponse.json(
-        { error: "Failed to fetch Google profile" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to fetch Google profile" }, { status: 500 });
     } finally {
       clearTimeout(profileTimeout);
     }
@@ -415,24 +397,21 @@ export async function GET(request: NextRequest) {
         const retryAfter = profileResponse.headers.get("retry-after") || "60";
         return NextResponse.json(
           { error: `Rate limit exceeded. Please try again after ${retryAfter} seconds.` },
-          { 
+          {
             status: 429,
             headers: {
               "Retry-After": retryAfter,
             },
-          }
+          },
         );
       }
 
       // Requirement: 2.12 - Return 500 if profile fetch fails
-      return NextResponse.json(
-        { error: "Failed to fetch Google profile" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to fetch Google profile" }, { status: 500 });
     }
 
     const profileData = await profileResponse.json();
-    
+
     // Sanitize all user inputs from Google API responses
     // Requirement: 10.10 - Sanitize all user inputs from Google API responses
     const sanitizedProfile = sanitizeGoogleProfile(profileData);
@@ -446,10 +425,7 @@ export async function GET(request: NextRequest) {
         hasGoogleUserId: !!googleUserId,
       });
       // Requirement: 2.12 - Return 500 if profile fetch fails
-      return NextResponse.json(
-        { error: "Failed to fetch Google profile" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to fetch Google profile" }, { status: 500 });
     }
 
     console.log("[GET /api/oauth/youtube/callback] Profile data received and sanitized:", {
@@ -470,8 +446,9 @@ export async function GET(request: NextRequest) {
 
     try {
       // Request both snippet (for title) and brandingSettings (for customUrl/handle)
-      const channelUrl = "https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings&mine=true";
-      
+      const channelUrl =
+        "https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings&mine=true";
+
       const channelController = new AbortController();
       const channelTimeout = setTimeout(() => channelController.abort(), 10000);
 
@@ -487,15 +464,15 @@ export async function GET(request: NextRequest) {
 
       if (channelResponse.ok) {
         const channelData = await channelResponse.json();
-        
+
         if (channelData.items && channelData.items.length > 0) {
           const channel = channelData.items[0];
-          
+
           // Priority: customUrl (handle) > title > email
           // customUrl is the @handle format (e.g., @YourChannelName)
           const customUrl = channel.snippet?.customUrl;
           const channelTitle = channel.snippet?.title;
-          
+
           if (customUrl) {
             // customUrl already includes @ prefix
             youtubeChannelUsername = sanitizeString(customUrl, 100);
@@ -507,16 +484,22 @@ export async function GET(request: NextRequest) {
           } else if (channelTitle) {
             // Fallback to title if no custom URL/handle set
             youtubeChannelUsername = sanitizeString(channelTitle, 100);
-            console.log("[GET /api/oauth/youtube/callback] YouTube channel title fetched (no handle):", {
-              userId: user.id,
-              timestamp: new Date().toISOString(),
-              channelTitle: youtubeChannelUsername,
-            });
+            console.log(
+              "[GET /api/oauth/youtube/callback] YouTube channel title fetched (no handle):",
+              {
+                userId: user.id,
+                timestamp: new Date().toISOString(),
+                channelTitle: youtubeChannelUsername,
+              },
+            );
           } else {
-            console.warn("[GET /api/oauth/youtube/callback] No channel handle or title found, using email:", {
-              userId: user.id,
-              timestamp: new Date().toISOString(),
-            });
+            console.warn(
+              "[GET /api/oauth/youtube/callback] No channel handle or title found, using email:",
+              {
+                userId: user.id,
+                timestamp: new Date().toISOString(),
+              },
+            );
           }
         } else {
           console.warn("[GET /api/oauth/youtube/callback] No YouTube channel found, using email:", {
@@ -525,11 +508,14 @@ export async function GET(request: NextRequest) {
           });
         }
       } else {
-        console.warn("[GET /api/oauth/youtube/callback] YouTube channel fetch failed, using email:", {
-          userId: user.id,
-          timestamp: new Date().toISOString(),
-          status: channelResponse.status,
-        });
+        console.warn(
+          "[GET /api/oauth/youtube/callback] YouTube channel fetch failed, using email:",
+          {
+            userId: user.id,
+            timestamp: new Date().toISOString(),
+            status: channelResponse.status,
+          },
+        );
       }
     } catch (channelError) {
       // Non-critical error - we'll use email as fallback
@@ -569,13 +555,11 @@ export async function GET(request: NextRequest) {
       console.error("[GET /api/oauth/youtube/callback] Token encryption failed:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
-        error: encryptionError instanceof Error ? encryptionError.message : "Unknown encryption error",
+        error:
+          encryptionError instanceof Error ? encryptionError.message : "Unknown encryption error",
       });
 
-      return NextResponse.json(
-        { error: "Failed to save account connection" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to save account connection" }, { status: 500 });
     }
 
     // Create or update SocialAccount record
@@ -637,17 +621,14 @@ export async function GET(request: NextRequest) {
         error: dbError instanceof Error ? dbError.message : "Unknown error",
         stack: dbError instanceof Error ? dbError.stack : undefined,
       });
-      return NextResponse.json(
-        { error: "Failed to save account connection" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to save account connection" }, { status: 500 });
     }
 
     // Clear CSRF token and timestamp after successful validation
     // Requirements: 10.3, 10.4 - Clear CSRF token after successful validation
     // Requirement: 3.12 - Redirect to social accounts page with success message
     const response = NextResponse.redirect(
-      `${appUrl}/settings/social-accounts?success=${encodeURIComponent("YouTube account connected successfully")}`
+      `${appUrl}/settings/social-accounts?success=${encodeURIComponent("YouTube account connected successfully")}`,
     );
     response.cookies.delete("youtube_oauth_state");
     response.cookies.delete("youtube_oauth_state_timestamp");
@@ -662,9 +643,6 @@ export async function GET(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to complete OAuth callback" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to complete OAuth callback" }, { status: 500 });
   }
 }

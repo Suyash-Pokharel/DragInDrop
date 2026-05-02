@@ -12,8 +12,17 @@ interface UploadProps {
 }
 
 export default function Upload({ onClose }: UploadProps) {
-  const { file, uploading, progress, previewUrl, handleUpload, openEditPost, clearUpload, uploadError, clearError } =
-    useModal();
+  const {
+    file,
+    uploading,
+    progress,
+    previewUrl,
+    handleUpload,
+    openEditPost,
+    clearUpload,
+    uploadError,
+    clearError,
+  } = useModal();
 
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -26,10 +35,10 @@ export default function Upload({ onClose }: UploadProps) {
   useEffect(() => {
     const autoDetectTimezone = async () => {
       try {
-        const response = await fetch('/api/user/preferences');
+        const response = await fetch("/api/user/preferences");
         if (response.ok) {
           const preferences = await response.json();
-          
+
           // If no timezone is set, auto-detect and save it
           if (!preferences.timezone) {
             try {
@@ -38,9 +47,9 @@ export default function Upload({ onClose }: UploadProps) {
                 // Auto-save the detected timezone
                 const autoSavePreferences = {
                   dateFormat: preferences.dateFormat || "DD/MM/YYYY",
-                  timeFormat: preferences.timeFormat || "12h", 
+                  timeFormat: preferences.timeFormat || "12h",
                   firstDayOfWeek: preferences.firstDayOfWeek || "sunday",
-                  timezone: detectedTimezone
+                  timezone: detectedTimezone,
                 };
 
                 const saveResponse = await fetch("/api/user/preferences", {
@@ -52,18 +61,18 @@ export default function Upload({ onClose }: UploadProps) {
                 });
 
                 if (saveResponse.ok) {
-                  console.log('Auto-saved detected timezone in Upload:', detectedTimezone);
+                  console.log("Auto-saved detected timezone in Upload:", detectedTimezone);
                 } else {
-                  console.error('Failed to auto-save detected timezone in Upload');
+                  console.error("Failed to auto-save detected timezone in Upload");
                 }
               }
             } catch (error) {
-              console.error('Failed to detect timezone in Upload:', error);
+              console.error("Failed to detect timezone in Upload:", error);
             }
           }
         }
       } catch (error) {
-        console.error('Failed to fetch user timezone in Upload:', error);
+        console.error("Failed to fetch user timezone in Upload:", error);
       }
     };
 
@@ -187,7 +196,10 @@ export default function Upload({ onClose }: UploadProps) {
                     clearError(); // Clear any existing error first
                     setTimeout(() => {
                       const errorEvent = new CustomEvent("error", {
-                        detail: { message: "File size exceeds 250MB limit", code: "FILE_TOO_LARGE" },
+                        detail: {
+                          message: "File size exceeds 250MB limit",
+                          code: "FILE_TOO_LARGE",
+                        },
                       });
                       uploadService.dispatchEvent(errorEvent);
                     }, 0);
@@ -257,7 +269,9 @@ export default function Upload({ onClose }: UploadProps) {
             }}
             disabled={!file}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-95 ${
-              !file ? "bg-primary/60 cursor-not-allowed" : "bg-primary hover:bg-secondary shadow-md hover:shadow-lg"
+              !file
+                ? "bg-primary/60 cursor-not-allowed"
+                : "bg-primary hover:bg-secondary shadow-md hover:shadow-lg"
             }`}
           >
             Continue to Details
@@ -318,7 +332,10 @@ export default function Upload({ onClose }: UploadProps) {
                         clearError();
                         setTimeout(() => {
                           const errorEvent = new CustomEvent("error", {
-                            detail: { message: "Only video files are allowed", code: "INVALID_TYPE" },
+                            detail: {
+                              message: "Only video files are allowed",
+                              code: "INVALID_TYPE",
+                            },
                           });
                           uploadService.dispatchEvent(errorEvent);
                         }, 0);
@@ -331,7 +348,10 @@ export default function Upload({ onClose }: UploadProps) {
                         clearError();
                         setTimeout(() => {
                           const errorEvent = new CustomEvent("error", {
-                            detail: { message: "File size exceeds 250MB limit", code: "FILE_TOO_LARGE" },
+                            detail: {
+                              message: "File size exceeds 250MB limit",
+                              code: "FILE_TOO_LARGE",
+                            },
                           });
                           uploadService.dispatchEvent(errorEvent);
                         }, 0);

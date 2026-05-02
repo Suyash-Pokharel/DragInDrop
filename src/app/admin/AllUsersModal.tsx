@@ -47,8 +47,9 @@ export default function AllUsersModal({
 
   // Sort users by registration date (newest first)
   const sortedUsers = useMemo(
-    () => [...users].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [users]
+    () =>
+      [...users].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [users],
   );
 
   // Handle Escape key to close modal
@@ -71,7 +72,7 @@ export default function AllUsersModal({
 
     const modal = modalRef.current;
     const focusableElements = modal.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
@@ -108,14 +109,16 @@ export default function AllUsersModal({
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/60 z-[100] ${
-          isClosing ? "opacity-0 duration-200" : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
+          isClosing
+            ? "opacity-0 duration-200"
+            : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
         } transition-opacity cursor-pointer`}
         onClick={handleClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
-      <div 
+      <div
         ref={modalRef}
         className={`fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none transition-all duration-200 ${
           isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
@@ -124,15 +127,23 @@ export default function AllUsersModal({
         aria-modal="true"
         aria-labelledby="all-users-modal-title"
       >
-        <div className={`bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl pointer-events-auto ${!isClosing && 'animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]'}`}>
+        <div
+          className={`bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl pointer-events-auto ${!isClosing && "animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]"}`}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-6 md:p-8 border-b border-border/60 bg-surface/40 backdrop-blur-md rounded-t-[2rem]">
             <div>
-              <h2 id="all-users-modal-title" className="text-2xl font-bold flex items-center gap-2 text-text-main">
+              <h2
+                id="all-users-modal-title"
+                className="text-2xl font-bold flex items-center gap-2 text-text-main"
+              >
                 <Users className="text-primary w-7 h-7" />
                 List of All Users
               </h2>
-              <p className="text-sm text-text-secondary mt-1">Total registered users: <span className="font-bold text-text-main">{users.length}</span></p>
+              <p className="text-sm text-text-secondary mt-1">
+                Total registered users:{" "}
+                <span className="font-bold text-text-main">{users.length}</span>
+              </p>
             </div>
             <button
               ref={closeButtonRef}
@@ -147,9 +158,7 @@ export default function AllUsersModal({
           {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto p-2 sm:p-6 custom-scrollbar">
             {sortedUsers.length === 0 ? (
-              <p className="text-text-secondary text-center py-8">
-                No users registered yet
-              </p>
+              <p className="text-text-secondary text-center py-8">No users registered yet</p>
             ) : (
               <>
                 {/* Desktop Table View */}
@@ -166,11 +175,14 @@ export default function AllUsersModal({
                     <tbody className="divide-y divide-border/30">
                       {sortedUsers.map((user) => {
                         const oauthCount = user.SocialAccount.length;
-                        const registeredDate = new Date(user.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        });
+                        const registeredDate = new Date(user.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        );
 
                         return (
                           <tr
@@ -189,9 +201,7 @@ export default function AllUsersModal({
                               </div>
                             </td>
                             <td className="py-4 px-6 w-[25%]">
-                              <p className="text-sm text-text-secondary truncate">
-                                {user.email}
-                              </p>
+                              <p className="text-sm text-text-secondary truncate">{user.email}</p>
                             </td>
                             <td className="py-4 px-6 w-[20%]">
                               <p className="text-sm text-text-secondary font-medium whitespace-nowrap">
@@ -240,9 +250,7 @@ export default function AllUsersModal({
                             <p className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors">
                               {user.name || "Unnamed User"}
                             </p>
-                            <p className="text-xs text-text-secondary truncate">
-                              {user.email}
-                            </p>
+                            <p className="text-xs text-text-secondary truncate">{user.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center justify-between pt-3 border-t border-border/50">
@@ -269,6 +277,6 @@ export default function AllUsersModal({
         </div>
       </div>
     </>,
-    document.body
+    document.body,
   );
 }

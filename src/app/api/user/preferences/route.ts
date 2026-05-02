@@ -18,9 +18,7 @@ const preferencesSchema = z.object({
   firstDayOfWeek: z.enum(["sunday", "monday"], {
     message: "Invalid first day of week",
   }),
-  timezone: z
-    .string({ message: "Timezone is required" })
-    .min(1, "Timezone is required"),
+  timezone: z.string({ message: "Timezone is required" }).min(1, "Timezone is required"),
 });
 
 /**
@@ -79,10 +77,7 @@ export async function GET() {
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    return NextResponse.json(
-      { error: "Failed to fetch preferences" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch preferences" }, { status: 500 });
   }
 }
 
@@ -109,12 +104,11 @@ export async function POST(request: NextRequest) {
           error: "Validation failed",
           details: validationResult.error.issues,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { dateFormat, timeFormat, firstDayOfWeek, timezone } =
-      validationResult.data;
+    const { dateFormat, timeFormat, firstDayOfWeek, timezone } = validationResult.data;
 
     // Validate timezone is a valid IANA identifier
     if (!isValidTimezone(timezone)) {
@@ -123,7 +117,7 @@ export async function POST(request: NextRequest) {
           error: "Invalid timezone",
           details: "Timezone must be a valid IANA timezone identifier",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -161,9 +155,6 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to save preferences" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to save preferences" }, { status: 500 });
   }
 }

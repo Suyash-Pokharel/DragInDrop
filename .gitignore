@@ -41,12 +41,15 @@ lerna-debug.log*
 # Editor and IDE
 .vscode/
 .idea/
-.kiro/
+.kiro/settings/
+.kiro/steering/
+.kiro/skills/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 
+# YouTube worker is a separate repository
 youtube-worker/
 
 # Mac / Windows files
@@ -70,12 +73,6 @@ next-env.d.ts
 .parcel-cache/
 .tmp/
 temp/
-*.md
-*.txt
-*.test.ts
-*.test.tsx
-*.example.ts
-*.example.tsx
 
 # Logs and debug
 *.log
@@ -99,6 +96,3 @@ docker-compose.override.yml
 # Misc
 *.zip
 *.tar
-
-
-/src/generated/prisma

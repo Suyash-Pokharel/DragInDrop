@@ -27,7 +27,7 @@ interface ProviderConfig {
 const PROVIDERS: ProviderConfig[] = [
   // OAuth Login Providers
   { name: "Google", logo: GoogleLogo, key: "google", type: "login" },
-  // Social Media Platforms  
+  // Social Media Platforms
   { name: "YouTube", logo: YoutubeLogo, key: "YouTube", type: "social" },
   { name: "Instagram", logo: InstagramLogo, key: "Instagram", type: "social" },
   { name: "TikTok", logo: TikTokLogo, key: "TikTok", type: "social" },
@@ -39,15 +39,15 @@ const PROVIDERS: ProviderConfig[] = [
 // Helper function to get platform-specific glow class
 const getPlatformGlowClass = (platform: string): string => {
   const glowClasses: Record<string, string> = {
-    'YouTube': 'hover:shadow-[0_0_30px_-5px_#FF0000]',
-    'Instagram': 'hover:shadow-[0_0_30px_-5px_#E1306C]',
-    'TikTok': 'hover:shadow-[0_0_30px_-5px_#00F2EA]',
-    'Facebook': 'hover:shadow-[0_0_30px_-5px_#1877F2]',
-    'Twitter': 'hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)]',
-    'LinkedIn': 'hover:shadow-[0_0_30px_-5px_#0A66C2]',
-    'Google': 'hover:shadow-[0_0_30px_-5px_#4285F4]',
+    YouTube: "hover:shadow-[0_0_30px_-5px_#FF0000]",
+    Instagram: "hover:shadow-[0_0_30px_-5px_#E1306C]",
+    TikTok: "hover:shadow-[0_0_30px_-5px_#00F2EA]",
+    Facebook: "hover:shadow-[0_0_30px_-5px_#1877F2]",
+    Twitter: "hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)]",
+    LinkedIn: "hover:shadow-[0_0_30px_-5px_#0A66C2]",
+    Google: "hover:shadow-[0_0_30px_-5px_#4285F4]",
   };
-  return glowClasses[platform] || 'hover:shadow-[0_0_30px_-5px_var(--primary)]';
+  return glowClasses[platform] || "hover:shadow-[0_0_30px_-5px_var(--primary)]";
 };
 
 export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
@@ -104,7 +104,7 @@ export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
                 className="object-contain"
               />
             </div>
-            
+
             {/* Right: Count */}
             <div className="text-right">
               <p className="text-3xl md:text-4xl font-black text-text-main">
@@ -115,11 +115,9 @@ export default function OAuthProviderStats({ users }: OAuthProviderStatsProps) {
               </p>
             </div>
           </div>
-          
+
           {/* Platform Name */}
-          <p className="text-sm font-semibold text-text-secondary mt-4">
-            {provider.name}
-          </p>
+          <p className="text-sm font-semibold text-text-secondary mt-4">{provider.name}</p>
         </div>
       ))}
     </div>

@@ -46,7 +46,7 @@ type ModalContextType = {
   handleUpload: (file: File) => void;
   abortUpload: () => void;
   clearUpload: () => void;
-  
+
   // Error handling
   uploadError: string | null;
   clearError: () => void;
@@ -92,7 +92,9 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Delete confirmation modal state
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<{ postId: string; postTitle: string } | null>(null);
+  const [postToDelete, setPostToDelete] = useState<{ postId: string; postTitle: string } | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Background Upload States
@@ -155,7 +157,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
           setProgress(100);
           setUploaded(true);
           setUploadError(null);
-          
+
           // Parse upload response to extract fileKey
           try {
             const responseData = JSON.parse(responseText);
@@ -180,16 +182,16 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubError = uploadService.onError((detail: { message: string; code?: string }) => {
       setUploading(false);
       setUploaded(false);
-      
+
       console.log("Error detail received:", detail);
-      
+
       // Handle authentication errors by redirecting to login
       if (detail.code === "AUTH_FAILED") {
         console.error("Authentication failed during upload");
         router.push("/login");
         return;
       }
-      
+
       // Set user-friendly error message with fallback
       const errorMessage = detail?.message || "An unexpected error occurred. Please try again.";
       setUploadError(errorMessage);
@@ -218,14 +220,14 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       setUploaded(false);
       setProgress(0);
       setUploadError(null); // Clear any previous errors
-      
+
       // Clear previous fileKey when starting new upload
       setFileKey(null);
-      
+
       // Store videoFileName and videoFileSize from file
       setVideoFileName(fileToUpload.name);
       setVideoFileSize(fileToUpload.size);
-      
+
       uploadService.start(fileToUpload);
     },
     [updateFileState],
@@ -247,12 +249,12 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     abortUpload();
     updateFileState(null);
     setSelectedDate(null);
-    
+
     // Reset all file metadata
     setFileKey(null);
     setVideoFileName(null);
     setVideoFileSize(null);
-    
+
     // Reset post metadata
     setPostTitle("");
     setPostDescription("");
@@ -369,7 +371,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
           showError("Failed to refresh dashboard");
         }
         // Trigger dashboard refresh if on dashboard page
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const win = window as Window & { refreshDashboard?: () => void };
           if (win.refreshDashboard) {
             win.refreshDashboard();
@@ -384,7 +386,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("Error deleting post:", error);
       // Show error toast notification with API error message
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
         showError("Network error. Please check your connection and try again.");
       } else {
         showError(error instanceof Error ? error.message : "Failed to delete post");

@@ -10,11 +10,7 @@ interface RecentUsersListProps {
   onSelectUser?: (user: UserWithAccounts) => void;
 }
 
-export default function RecentUsersList({
-  users,
-  onViewAll,
-  onSelectUser,
-}: RecentUsersListProps) {
+export default function RecentUsersList({ users, onViewAll, onSelectUser }: RecentUsersListProps) {
   // Get 5 most recent users (already sorted by createdAt desc)
   const recentUsers = useMemo(() => users.slice(0, 10), [users]);
 
@@ -50,7 +46,9 @@ export default function RecentUsersList({
                 key={user.id}
                 onClick={onSelectUser ? () => onSelectUser(user) : undefined}
                 className={`flex items-center justify-between p-3.5 bg-surface/30 backdrop-blur-md border border-border/60 rounded-xl relative overflow-hidden ${
-                  onSelectUser ? "cursor-pointer hover:bg-surface/50 transition-colors hover:border-primary/30" : ""
+                  onSelectUser
+                    ? "cursor-pointer hover:bg-surface/50 transition-colors hover:border-primary/30"
+                    : ""
                 }`}
               >
                 {/* Left side: Avatar + Info */}
@@ -62,9 +60,7 @@ export default function RecentUsersList({
                     <p className="text-sm font-bold text-text-main truncate">
                       {user.name || "Unnamed User"}
                     </p>
-                    <p className="text-xs text-text-secondary truncate">
-                      {user.email}
-                    </p>
+                    <p className="text-xs text-text-secondary truncate">{user.email}</p>
                   </div>
                 </div>
 
@@ -89,11 +85,12 @@ export default function RecentUsersList({
       {/* Footer Button */}
       {users.length > 0 && (
         <div className="mt-auto pt-4 border-t border-border flex justify-center">
-          <button 
+          <button
             onClick={onViewAll}
             className="text-sm font-bold text-primary group-hover/btn:text-secondary flex items-center justify-center gap-2 hover:gap-3 transition-all cursor-pointer group"
           >
-            Show All Users<ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            Show All Users
+            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       )}

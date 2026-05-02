@@ -105,8 +105,8 @@ function CreatePasswordContent() {
       if (result.success) {
         // Wait briefly for database transaction to fully commit and be visible
         // This prevents race condition where NextAuth reads stale data
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         // Auto-login using NextAuth signIn with credentials
         const signInResult = await signIn("credentials", {
           email: result.email,

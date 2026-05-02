@@ -11,17 +11,17 @@
  */
 export function sanitizeString(input: string | null | undefined, maxLength = 500): string {
   if (!input) return "";
-  
+
   // Trim and limit length
   let sanitized = input.trim().slice(0, maxLength);
-  
+
   // Remove control characters except newlines and tabs
   sanitized = sanitized.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, "");
-  
+
   // Remove potential script tags and HTML
   sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gi, "");
   sanitized = sanitized.replace(/<[^>]+>/g, "");
-  
+
   // Escape special characters that could be used for injection
   sanitized = sanitized
     .replace(/&/g, "&amp;")
@@ -30,7 +30,7 @@ export function sanitizeString(input: string | null | undefined, maxLength = 500
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#x27;")
     .replace(/\//g, "&#x2F;");
-  
+
   return sanitized;
 }
 
@@ -83,7 +83,7 @@ export function sanitizeGoogleProfile(profile: {
  */
 export function sanitizeUrl(url: string | null | undefined): string {
   if (!url) return "";
-  
+
   try {
     const parsed = new URL(url);
     // Only allow http and https protocols
@@ -106,7 +106,7 @@ export function validateRedirectUri(redirectUri: string, expectedUri: string): b
   try {
     const provided = new URL(redirectUri);
     const expected = new URL(expectedUri);
-    
+
     // Must match protocol, host, and pathname exactly
     return (
       provided.protocol === expected.protocol &&
@@ -126,7 +126,7 @@ export function validateRedirectUri(redirectUri: string, expectedUri: string): b
  */
 export function validateHttps(url: string, isProduction: boolean): boolean {
   if (!isProduction) return true; // Allow HTTP in development
-  
+
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:";

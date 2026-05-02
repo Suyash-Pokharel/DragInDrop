@@ -255,7 +255,7 @@ const MonthCalendar = () => {
                   border
                   ${
                     today
-                      ? "border-primary bg-primary/5 backdrop-blur-md" 
+                      ? "border-primary bg-primary/5 backdrop-blur-md"
                       : "border-border/60 bg-surface/60 backdrop-blur-sm"
                   }
                   ${

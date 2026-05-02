@@ -114,11 +114,11 @@ export async function registerUser(
     // record registration attempt by IP if provided
     if (ip) {
       try {
-        await prisma.registrationAttempt.create({ 
-          data: { 
+        await prisma.registrationAttempt.create({
+          data: {
             id: crypto.randomUUID(),
-            ip 
-          } 
+            ip,
+          },
         });
       } catch (e) {
         console.warn("Failed to record registration attempt", e);
@@ -246,8 +246,11 @@ export async function registerUser(
 
     try {
       console.log("[REGISTRATION] Attempting to send email to:", normalizedEmail);
-      console.log("[REGISTRATION] From address:", "DragInDrop <onboarding@contact.suyash-pokharel.com.np>");
-      
+      console.log(
+        "[REGISTRATION] From address:",
+        "DragInDrop <onboarding@contact.suyash-pokharel.com.np>",
+      );
+
       const emailResult = await resend.emails.send({
         from: "DragInDrop <onboarding@contact.suyash-pokharel.com.np>",
         to: normalizedEmail,
@@ -268,7 +271,7 @@ If you didn't create an account with DragInDrop, you can safely ignore this emai
 © ${new Date().getFullYear()} DragInDrop. All rights reserved.
 This is an automated message, please do not reply to this email.`,
       });
-      
+
       console.log("[REGISTRATION] Email sent successfully!");
       console.log("[REGISTRATION] Email ID:", emailResult.data?.id);
       console.log("[REGISTRATION] Email error:", emailResult.error);
@@ -597,8 +600,11 @@ export async function requestPasswordReset(email: string): Promise<Result> {
     // Send email
     try {
       console.log("[PASSWORD RESET] Attempting to send email to:", normalizedEmail);
-      console.log("[PASSWORD RESET] From address:", "DragInDrop <onboarding@contact.suyash-pokharel.com.np>");
-      
+      console.log(
+        "[PASSWORD RESET] From address:",
+        "DragInDrop <onboarding@contact.suyash-pokharel.com.np>",
+      );
+
       const emailResult = await resend.emails.send({
         from: "DragInDrop <onboarding@contact.suyash-pokharel.com.np>",
         to: normalizedEmail,
@@ -620,7 +626,7 @@ If you didn't request a password reset, you can safely ignore this email. Your p
 © ${new Date().getFullYear()} DragInDrop. All rights reserved.
 This is an automated message, please do not reply to this email.`,
       });
-      
+
       console.log("[PASSWORD RESET] Email sent successfully!");
       console.log("[PASSWORD RESET] Email ID:", emailResult.data?.id);
       console.log("[PASSWORD RESET] Email error:", emailResult.error);

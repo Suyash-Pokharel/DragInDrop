@@ -12,8 +12,9 @@ import { validateHttps } from "@/lib/sanitize";
 export async function GET(request: NextRequest) {
   // Rate limiting
   // Requirement: 10.13 - Apply rate limiting to OAuth endpoints
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
-  
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+
   try {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -67,10 +68,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: "Missing YOUTUBE_CLIENT_ID or YOUTUBE_CLIENT_SECRET",
       });
-      return NextResponse.json(
-        { error: "OAuth configuration error" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "OAuth configuration error" }, { status: 500 });
     }
 
     // Generate cryptographically secure CSRF token with timestamp
@@ -81,7 +79,7 @@ export async function GET(request: NextRequest) {
     // Construct YouTube authorization URL
     // Requirements: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 10.9
     const redirectUri = `${appUrl}/api/oauth/youtube/callback`;
-    
+
     // Validate HTTPS in production
     // Requirement: 10.9 - Ensure HTTPS in production
     const isProduction = process.env.NODE_ENV === "production";
@@ -94,13 +92,14 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "OAuth configuration error: HTTPS required in production" },
-        { status: 500 }
+        { status: 500 },
       );
     }
-    
+
     // YouTube-specific scopes
     // Requirement: 1.5 - Use YouTube-specific scopes
-    const scope = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
+    const scope =
+      "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
     const responseType = "code";
     const accessType = "offline"; // To receive refresh token
     const prompt = "consent"; // Force consent screen to ensure refresh token
@@ -155,9 +154,6 @@ export async function GET(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to initiate authorization" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to initiate authorization" }, { status: 500 });
   }
 }

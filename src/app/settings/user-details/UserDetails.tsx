@@ -144,7 +144,7 @@ export default function UserDetails({ user }: UserDetailsProps) {
                 </p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => setShowPasswordResetModal(true)}
               className="px-5 py-2.5 border border-border/60 hover:bg-surface-highlight hover:border-text-secondary text-text-main text-sm font-semibold rounded-xl transition-all whitespace-nowrap shadow-sm hover:shadow-md active:scale-95"
             >

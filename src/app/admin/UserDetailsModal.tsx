@@ -84,7 +84,7 @@ export default function UserDetailsModal({
 
     const modal = modalRef.current;
     const focusableElements = modal.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
@@ -127,14 +127,16 @@ export default function UserDetailsModal({
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/60 z-[120] transition-opacity cursor-pointer ${
-          isClosing ? "opacity-0 duration-200" : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
+          isClosing
+            ? "opacity-0 duration-200"
+            : "animate-[modal-backdrop-in_0.3s_ease-out_forwards]"
         }`}
         onClick={handleClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
-      <div 
+      <div
         ref={modalRef}
         className={`fixed inset-0 z-[130] flex items-center justify-center p-4 pointer-events-none transition-all duration-200 ${
           isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
@@ -143,10 +145,15 @@ export default function UserDetailsModal({
         aria-modal="true"
         aria-labelledby="user-details-modal-title"
       >
-        <div className={`bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl pointer-events-auto ${!isClosing && 'animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]'}`}>
+        <div
+          className={`bg-surface/80 backdrop-blur-xl border border-border rounded-[2rem] w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl pointer-events-auto ${!isClosing && "animate-[modal-pop-in_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]"}`}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-6 md:p-8 border-b border-border/60 bg-surface/40 backdrop-blur-md rounded-t-[2rem]">
-            <h2 id="user-details-modal-title" className="text-xl font-bold flex items-center gap-2 text-text-main">
+            <h2
+              id="user-details-modal-title"
+              className="text-xl font-bold flex items-center gap-2 text-text-main"
+            >
               <User className="w-6 h-6 text-primary" />
               User Profile
             </h2>
@@ -164,10 +171,8 @@ export default function UserDetailsModal({
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* User Information Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-text-main">
-                User Information
-              </h3>
-              
+              <h3 className="text-lg font-semibold text-text-main">User Information</h3>
+
               <div className="space-y-3">
                 {/* Name & Avatar */}
                 <div className="flex items-center gap-4 bg-surface/30 p-4 rounded-2xl border border-border/50">
@@ -178,24 +183,24 @@ export default function UserDetailsModal({
                     <p className="text-lg font-bold text-text-main group-hover:text-primary transition-colors">
                       {user.name || "Unnamed User"}
                     </p>
-                    <p className="text-sm text-text-secondary">
-                      {user.email}
-                    </p>
+                    <p className="text-sm text-text-secondary">{user.email}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   {/* Registration Date */}
                   <div className="bg-surface/30 p-4 rounded-2xl border border-border/50">
-                    <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">Registration Date</p>
-                    <p className="text-sm font-bold text-text-main">
-                      {registeredDate}
+                    <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                      Registration Date
                     </p>
+                    <p className="text-sm font-bold text-text-main">{registeredDate}</p>
                   </div>
 
                   {/* User Role */}
                   <div className="bg-surface/30 p-4 rounded-2xl border border-border/50">
-                    <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">User Role</p>
+                    <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                      User Role
+                    </p>
                     <div
                       className={`inline-flex px-3 py-1 mt-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-colors ${
                         user.role === "ADMIN"
@@ -210,7 +215,9 @@ export default function UserDetailsModal({
 
                 {/* Email Verification Status */}
                 <div className="bg-surface/30 p-4 rounded-2xl border border-border/50 col-span-2">
-                  <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">Email Verification</p>
+                  <p className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
+                    Email Verification
+                  </p>
                   <div
                     className={`inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider shadow-sm transition-colors ${
                       user.emailVerified
@@ -267,14 +274,13 @@ export default function UserDetailsModal({
                             />
                           </div>
                         )}
-                        
+
                         {/* Provider Name and Details */}
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-text-main">
-                            {platform}
-                          </p>
+                          <p className="text-sm font-medium text-text-main">{platform}</p>
                           <p className="text-xs text-text-secondary">
-                            {socialAccount.platformUsername || `ID: ${socialAccount.platformAccountId}`}
+                            {socialAccount.platformUsername ||
+                              `ID: ${socialAccount.platformAccountId}`}
                           </p>
                         </div>
 
@@ -307,13 +313,16 @@ export default function UserDetailsModal({
               className="w-full flex items-center justify-center gap-2 px-4 py-3.5 border border-error text-error bg-error/5 hover:bg-error hover:text-white rounded-2xl transition-all duration-300 font-bold active:scale-95 group"
               aria-label="Delete user account"
             >
-              <AlertTriangle className="w-5 h-5 group-hover:rotate-12 transition-transform" aria-hidden="true" />
+              <AlertTriangle
+                className="w-5 h-5 group-hover:rotate-12 transition-transform"
+                aria-hidden="true"
+              />
               Delete Account
             </button>
           </div>
         </div>
       </div>
     </>,
-    document.body
+    document.body,
   );
 }

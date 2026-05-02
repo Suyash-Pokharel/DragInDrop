@@ -42,7 +42,9 @@ export default function UploadDropzone({ accept = "*", onFiles, files = [] }: Dr
         onDragLeave={() => setIsDrag(false)}
         onDrop={onDrop}
         className={`w-full flex-1 min-h-[280px] border-2 rounded-2xl flex flex-col items-center justify-center p-6 transition-colors cursor-pointer shadow-sm ${
-          isDrag ? "border-primary bg-primary/5" : "border-dashed border-border/60 bg-surface/40 backdrop-blur-md hover:bg-surface/60 hover:border-border"
+          isDrag
+            ? "border-primary bg-primary/5"
+            : "border-dashed border-border/60 bg-surface/40 backdrop-blur-md hover:bg-surface/60 hover:border-border"
         }`}
       >
         <input

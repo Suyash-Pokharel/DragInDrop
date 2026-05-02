@@ -1,20 +1,20 @@
 /**
  * TikTok Rate Limiter Module
- * 
+ *
  * This module enforces TikTok API rate limits using Redis to track usage across
  * distributed serverless instances. Rate limits are enforced per user per day.
- * 
+ *
  * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
  */
 
-import { getRedis } from '../redis';
+import { getRedis } from "../redis";
 
 /**
  * Rate limit configuration
  */
 export interface RateLimitConfig {
-  maxUploadsPerDay: number;  // 10
-  maxStatusPollsPerDay: number;  // 100
+  maxUploadsPerDay: number; // 10
+  maxStatusPollsPerDay: number; // 100
 }
 
 /**
@@ -37,44 +37,41 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 
 /**
  * Get the current date in YYYYMMDD format (UTC)
- * 
+ *
  * @returns {string} Date string in YYYYMMDD format
  */
 function getDateKey(): string {
   const now = new Date();
   const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(now.getUTCDate()).padStart(2, '0');
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(now.getUTCDate()).padStart(2, "0");
   return `${year}${month}${day}`;
 }
 
 /**
  * Get the timestamp for midnight UTC (start of next day)
- * 
+ *
  * @returns {number} Unix timestamp in seconds
  */
 function getMidnightUTC(): number {
   const now = new Date();
-  const midnight = new Date(Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() + 1,
-    0, 0, 0, 0
-  ));
+  const midnight = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0),
+  );
   return Math.floor(midnight.getTime() / 1000);
 }
 
 /**
  * Check if a user has exceeded the upload rate limit
- * 
+ *
  * This function checks if the user has remaining upload quota for the current day.
  * Rate limit: 10 uploads per user per day (Requirement 9.2)
- * 
+ *
  * @param {string} userId - The user ID to check
  * @returns {Promise<RateLimitResult>} Rate limit check result
- * 
+ *
  * Requirements: 9.1, 9.2, 9.4
- * 
+ *
  * @example
  * const result = await checkUploadRateLimit('user123');
  * if (result.allowed) {
@@ -111,7 +108,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
     };
   } catch (error) {
     // Log error but allow operation to proceed (fail open)
-    console.error('[rateLimiter] Error checking upload rate limit:', error);
+    console.error("[rateLimiter] Error checking upload rate limit:", error);
     return {
       allowed: true,
       remaining: limit,
@@ -122,15 +119,15 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
 
 /**
  * Check if a user has exceeded the status poll rate limit
- * 
+ *
  * This function checks if the user has remaining status poll quota for the current day.
  * Rate limit: 100 status polls per user per day (Requirement 9.3)
- * 
+ *
  * @param {string} userId - The user ID to check
  * @returns {Promise<RateLimitResult>} Rate limit check result
- * 
+ *
  * Requirements: 9.1, 9.3, 9.4
- * 
+ *
  * @example
  * const result = await checkStatusPollRateLimit('user123');
  * if (result.allowed) {
@@ -167,7 +164,7 @@ export async function checkStatusPollRateLimit(userId: string): Promise<RateLimi
     };
   } catch (error) {
     // Log error but allow operation to proceed (fail open)
-    console.error('[rateLimiter] Error checking status poll rate limit:', error);
+    console.error("[rateLimiter] Error checking status poll rate limit:", error);
     return {
       allowed: true,
       remaining: limit,
@@ -178,18 +175,18 @@ export async function checkStatusPollRateLimit(userId: string): Promise<RateLimi
 
 /**
  * Increment the upload counter for a user
- * 
+ *
  * This function increments the upload counter and sets expiration to midnight UTC.
  * The counter resets automatically at midnight UTC (Requirement 9.6).
- * 
+ *
  * @param {string} userId - The user ID to increment
  * @returns {Promise<void>}
- * 
+ *
  * Requirements: 9.4, 9.5, 9.6
- * 
+ *
  * Redis Key Format: tiktok:upload:{userId}:{YYYYMMDD}
  * Expiration: Midnight UTC
- * 
+ *
  * @example
  * await incrementUploadCounter('user123');
  */
@@ -202,31 +199,31 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
 
     // Increment counter
     await redis.incr(key);
-    
+
     // Set expiration to midnight UTC
     // Requirement: 9.6
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Log error but don't throw (fail silently for counter increments)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[rateLimiter] Error incrementing upload counter:', errorMessage);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("[rateLimiter] Error incrementing upload counter:", errorMessage);
   }
 }
 
 /**
  * Increment the status poll counter for a user
- * 
+ *
  * This function increments the status poll counter and sets expiration to midnight UTC.
  * The counter resets automatically at midnight UTC (Requirement 9.6).
- * 
+ *
  * @param {string} userId - The user ID to increment
  * @returns {Promise<void>}
- * 
+ *
  * Requirements: 9.4, 9.5, 9.6
- * 
+ *
  * Redis Key Format: tiktok:poll:{userId}:{YYYYMMDD}
  * Expiration: Midnight UTC
- * 
+ *
  * @example
  * await incrementStatusPollCounter('user123');
  */
@@ -239,13 +236,13 @@ export async function incrementStatusPollCounter(userId: string): Promise<void> 
 
     // Increment counter
     await redis.incr(key);
-    
+
     // Set expiration to midnight UTC
     // Requirement: 9.6
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Log error but don't throw (fail silently for counter increments)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[rateLimiter] Error incrementing status poll counter:', errorMessage);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("[rateLimiter] Error incrementing status poll counter:", errorMessage);
   }
 }

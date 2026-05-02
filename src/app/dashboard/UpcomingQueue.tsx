@@ -41,38 +41,55 @@ interface UpcomingQueueProps {
 
 const formatScheduledTime = (utcDate: Date, timezone: string | null): string => {
   const date = new Date(utcDate);
-  const userTimezone = timezone || 'UTC';
-  
+  const userTimezone = timezone || "UTC";
+
   return date.toLocaleString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZone: userTimezone
+    timeZone: userTimezone,
   });
 };
 
 const getPlatformIcon = (platform: string, className = "w-5 h-5") => {
   let src;
   switch (platform.toLowerCase()) {
-    case "youtube": src = YoutubeLogo; break;
-    case "instagram": src = InstagramLogo; break;
-    case "facebook": src = FacebookLogo; break;
-    case "x": 
-    case "twitter": src = XLogo; break;
-    case "tiktok": src = TikTokLogo; break;
-    case "threads": src = ThreadsLogo; break;
-    default: return <Link2 className={className + " text-text-secondary"} />;
+    case "youtube":
+      src = YoutubeLogo;
+      break;
+    case "instagram":
+      src = InstagramLogo;
+      break;
+    case "facebook":
+      src = FacebookLogo;
+      break;
+    case "x":
+    case "twitter":
+      src = XLogo;
+      break;
+    case "tiktok":
+      src = TikTokLogo;
+      break;
+    case "threads":
+      src = ThreadsLogo;
+      break;
+    default:
+      return <Link2 className={className + " text-text-secondary"} />;
   }
   return (
     <div className={`relative ${className}`}>
-        <Image src={src} alt={platform} fill sizes="40px" className="object-contain drop-shadow-sm" />
+      <Image src={src} alt={platform} fill sizes="40px" className="object-contain drop-shadow-sm" />
     </div>
   );
 };
 
-export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone }: UpcomingQueueProps) {
+export default function UpcomingQueue({
+  draftPosts,
+  upcomingPosts,
+  userTimezone,
+}: UpcomingQueueProps) {
   const modal = useModal();
   const { showSuccess, showError } = useToast();
   const [retryingPostId, setRetryingPostId] = useState<string | null>(null);
@@ -92,7 +109,7 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
       showSuccess(`"${postTitle}" has been queued for retry`);
 
       // Refresh dashboard data
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const win = window as Window & { refreshDashboard?: () => void };
         if (win.refreshDashboard) {
           win.refreshDashboard();
@@ -126,9 +143,11 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
             </div>
             <div>
               <h4 className="text-base font-bold text-text-main">Queue is entirely empty.</h4>
-              <p className="text-sm text-text-secondary mt-1">All caught up! Time to create some new content or drafts.</p>
+              <p className="text-sm text-text-secondary mt-1">
+                All caught up! Time to create some new content or drafts.
+              </p>
             </div>
-            <button 
+            <button
               onClick={() => modal.openUpload()}
               className="text-sm font-bold text-primary hover:text-secondary underline underline-offset-4"
             >
@@ -157,26 +176,24 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
                       DRAFT
                     </span>
                   </div>
-                  
+
                   {draft.description && (
                     <p className="text-xs text-text-secondary line-clamp-2 mb-3 leading-relaxed">
                       {draft.description}
                     </p>
                   )}
-                  
+
                   <div className="flex items-center justify-between pt-3 border-t border-warning/20">
-                    <span className="text-xs text-text-secondary font-medium">
-                      Not Scheduled
-                    </span>
+                    <span className="text-xs text-text-secondary font-medium">Not Scheduled</span>
                     <div className="flex items-center gap-2 sm:flex-row flex-col sm:gap-2 gap-1">
-                      <button 
+                      <button
                         className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-warning/10 hover:bg-warning hover:text-white flex items-center justify-center text-warning transition-colors cursor-pointer border border-warning/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
                         aria-label="Edit draft post"
                         onClick={() => {
                           modal.openEditPost(draft.id);
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
+                          if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             modal.openEditPost(draft.id);
                           }
@@ -185,14 +202,14 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
                       >
                         <FileEdit size={14} />
                       </button>
-                      <button 
+                      <button
                         className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-error/10 hover:bg-error hover:text-white flex items-center justify-center text-error transition-colors cursor-pointer border border-error/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
                         aria-label="Delete draft post"
                         onClick={() => {
                           modal.openDeleteConfirmation(draft.id, draft.title || "Untitled Draft");
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
+                          if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             modal.openDeleteConfirmation(draft.id, draft.title || "Untitled Draft");
                           }
@@ -206,21 +223,24 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
                 </div>
               </div>
             ))}
-            
+
             {/* Render Scheduled Posts Below */}
             {upcomingPosts.map((post, i) => {
-              const isNext = i === 0 && (post.status === "SCHEDULED" || post.status === "PUBLISHING");
+              const isNext =
+                i === 0 && (post.status === "SCHEDULED" || post.status === "PUBLISHING");
               const isFailed = post.status === "FAILED" || post.status === "PARTIALLY_PUBLISHED";
               const isRetrying = retryingPostId === post.id;
-              
+
               return (
                 <div key={post.id} className="relative group">
                   {/* Content Card */}
-                  <div className={`p-5 rounded-xl border transition-all duration-300 ${
-                    isFailed 
-                      ? 'bg-error/10 border-error/30 hover:border-error/50 hover:bg-error/15' 
-                      : 'bg-background border-border hover:border-primary/40 hover:bg-surface/50'
-                  }`}>
+                  <div
+                    className={`p-5 rounded-xl border transition-all duration-300 ${
+                      isFailed
+                        ? "bg-error/10 border-error/30 hover:border-error/50 hover:bg-error/15"
+                        : "bg-background border-border hover:border-primary/40 hover:bg-surface/50"
+                    }`}
+                  >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3 flex-1 pr-4">
                         {/* Blinking Indicator - positioned to the left of title */}
@@ -236,38 +256,53 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
                           </div>
                         )}
-                        <h4 className={`font-bold text-sm line-clamp-2 leading-relaxed transition-colors ${
-                          isFailed ? 'text-text-main' : 'text-text-main group-hover:text-primary'
-                        }`}>
+                        <h4
+                          className={`font-bold text-sm line-clamp-2 leading-relaxed transition-colors ${
+                            isFailed ? "text-text-main" : "text-text-main group-hover:text-primary"
+                          }`}
+                        >
                           {post.title || "Untitled Video"}
                         </h4>
                       </div>
-                      <div className={`shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider ${
-                        isFailed 
-                          ? 'bg-error text-white' 
-                          : isNext 
-                            ? 'bg-primary text-white' 
-                            : 'bg-surface-highlight text-text-secondary border border-border'
-                      }`}>
+                      <div
+                        className={`shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider ${
+                          isFailed
+                            ? "bg-error text-white"
+                            : isNext
+                              ? "bg-primary text-white"
+                              : "bg-surface-highlight text-text-secondary border border-border"
+                        }`}
+                      >
                         {post.status.replace("_", " ")}
                       </div>
                     </div>
-                    
-                    <div className={`flex items-center text-xs font-semibold mb-4 w-fit px-3 py-1.5 rounded-xl border shadow-inner ${
-                      isFailed 
-                        ? 'text-error bg-error/10 border-error/20' 
-                        : 'text-text-secondary bg-surface-highlight/50 border-border'
-                    }`}>
-                      <Clock size={14} className={`mr-2 ${isFailed ? 'text-error' : 'text-primary'}`} />
+
+                    <div
+                      className={`flex items-center text-xs font-semibold mb-4 w-fit px-3 py-1.5 rounded-xl border shadow-inner ${
+                        isFailed
+                          ? "text-error bg-error/10 border-error/20"
+                          : "text-text-secondary bg-surface-highlight/50 border-border"
+                      }`}
+                    >
+                      <Clock
+                        size={14}
+                        className={`mr-2 ${isFailed ? "text-error" : "text-primary"}`}
+                      />
                       {formatScheduledTime(post.scheduledFor, userTimezone)}
                     </div>
-                    
+
                     <div className="flex items-center justify-between pt-4 border-t border-border">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Platforms:</span>
+                        <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">
+                          Platforms:
+                        </span>
                         <div className="flex -space-x-2 relative z-0">
                           {post.platformPosts.slice(0, 4).map((pp) => (
-                            <div key={pp.id} className="w-7 h-7 rounded-full bg-surface border-2 border-background flex items-center justify-center text-text-main shadow-sm hover:z-20 hover:scale-110 transition-transform cursor-help" title={pp.socialAccount.platform}>
+                            <div
+                              key={pp.id}
+                              className="w-7 h-7 rounded-full bg-surface border-2 border-background flex items-center justify-center text-text-main shadow-sm hover:z-20 hover:scale-110 transition-transform cursor-help"
+                              title={pp.socialAccount.platform}
+                            >
                               {getPlatformIcon(pp.socialAccount.platform, "w-3.5 h-3.5")}
                             </div>
                           ))}
@@ -278,27 +313,27 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 sm:flex-row flex-col sm:gap-2 gap-1">
                         {isFailed ? (
-                          <button 
+                          <button
                             className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-error/10 hover:bg-error hover:text-white flex items-center justify-center text-error transition-colors cursor-pointer border border-error/20 shadow-sm min-h-[44px] sm:min-h-[32px] disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Retry failed post"
                             onClick={() => handleRetry(post.id, post.title || "Untitled Post")}
                             disabled={isRetrying}
                             title="Retry publishing this post"
                           >
-                            <RotateCw size={14} className={isRetrying ? 'animate-spin' : ''} />
+                            <RotateCw size={14} className={isRetrying ? "animate-spin" : ""} />
                           </button>
                         ) : (
-                          <button 
+                          <button
                             className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-primary/10 hover:bg-primary hover:text-white flex items-center justify-center text-primary transition-colors cursor-pointer border border-primary/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
                             aria-label="Edit scheduled post"
                             onClick={() => {
                               modal.openEditPost(post.id);
                             }}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
+                              if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
                                 modal.openEditPost(post.id);
                               }
@@ -308,14 +343,14 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
                             <FileEdit size={14} />
                           </button>
                         )}
-                        <button 
+                        <button
                           className="sm:w-8 sm:h-8 w-full h-10 rounded-full bg-error/10 hover:bg-error hover:text-white flex items-center justify-center text-error transition-colors cursor-pointer border border-error/20 shadow-sm min-h-[44px] sm:min-h-[32px]"
                           aria-label="Delete scheduled post"
                           onClick={() => {
                             modal.openDeleteConfirmation(post.id, post.title || "Untitled Post");
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
+                            if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
                               modal.openDeleteConfirmation(post.id, post.title || "Untitled Post");
                             }
@@ -333,10 +368,13 @@ export default function UpcomingQueue({ draftPosts, upcomingPosts, userTimezone 
           </div>
         )}
       </div>
-      
+
       {upcomingPosts.length > 0 && (
         <div className="mt-6 pt-4 border-t border-border text-center">
-          <Link href="/calendar" className="text-sm font-bold text-primary flex items-center justify-center gap-2 hover:gap-3 transition-all">
+          <Link
+            href="/calendar"
+            className="text-sm font-bold text-primary flex items-center justify-center gap-2 hover:gap-3 transition-all"
+          >
             Open Full Calendar <ArrowRight size={16} />
           </Link>
         </div>

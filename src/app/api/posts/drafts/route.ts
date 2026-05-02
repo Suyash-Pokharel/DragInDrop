@@ -13,10 +13,7 @@ const draftSchema = z.object({
     .string({ message: "Title is required" })
     .min(1, "Title is required")
     .max(100, "Title must not exceed 100 characters"),
-  description: z
-    .string()
-    .max(250, "Description must not exceed 250 characters")
-    .optional(),
+  description: z.string().max(250, "Description must not exceed 250 characters").optional(),
   videoFileKey: z
     .string({ message: "Video file key is required" })
     .min(1, "Video file key is required"),
@@ -52,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Validate request data
     // Requirements: 2.4, 2.5, 2.6, 2.7 - Handle validation errors (400)
     const validationResult = draftSchema.safeParse(body);
-    
+
     if (!validationResult.success) {
       const firstError = validationResult.error.issues[0];
       console.error("[POST /api/posts/drafts] Validation error:", {
@@ -62,20 +59,12 @@ export async function POST(request: NextRequest) {
         field: firstError.path.join("."),
         receivedValue: firstError.path.length > 0 ? body[firstError.path[0]] : undefined,
       });
-      
-      return NextResponse.json(
-        { error: firstError.message },
-        { status: 400 }
-      );
+
+      return NextResponse.json({ error: firstError.message }, { status: 400 });
     }
 
-    const {
-      title,
-      description,
-      videoFileKey,
-      videoFileName,
-      videoFileSize,
-    } = validationResult.data;
+    const { title, description, videoFileKey, videoFileName, videoFileSize } =
+      validationResult.data;
 
     const prisma = getPrisma();
 
@@ -91,7 +80,7 @@ export async function POST(request: NextRequest) {
         videoFileName,
         videoFileSize,
         // Use sentinel value for scheduledFor since schema requires DateTime
-        scheduledFor: new Date('2099-12-31T23:59:59Z'),
+        scheduledFor: new Date("2099-12-31T23:59:59Z"),
         status: "DRAFT",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -109,7 +98,7 @@ export async function POST(request: NextRequest) {
     // Requirement: 2.9
     return NextResponse.json(
       { success: true, draftId: draft.id, message: "Draft saved successfully" },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     // Requirement: 2.10, 9.5 - Handle database errors (500) and log with user context
@@ -121,9 +110,6 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to save draft" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to save draft" }, { status: 500 });
   }
 }

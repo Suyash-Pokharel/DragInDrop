@@ -9,12 +9,7 @@ import { ToastProvider } from "./components/ToastProvider";
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <UserProvider>
           <ToastProvider>
             <ModalProvider>{children}</ModalProvider>

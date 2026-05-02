@@ -52,14 +52,14 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     (message: string) => {
       showToast(message, "success");
     },
-    [showToast]
+    [showToast],
   );
 
   const showError = useCallback(
     (message: string) => {
       showToast(message, "error");
     },
-    [showToast]
+    [showToast],
   );
 
   const dismissToast = useCallback((id: string) => {
@@ -88,7 +88,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
               </div>
             ))}
           </div>,
-          document.body
+          document.body,
         )}
     </ToastContext.Provider>
   );

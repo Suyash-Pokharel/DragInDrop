@@ -1,9 +1,9 @@
 /**
  * TikTok API Integration Module
- * 
+ *
  * This module encapsulates all TikTok API interactions for video uploads and status polling
  * using TikTok's Content Posting API v2 with the PULL_FROM_URL method.
- * 
+ *
  * Requirements: 6.2, 6.8, 6.9, 8.2, 8.3, 8.4, 8.5, 15.1, 15.2
  */
 
@@ -14,7 +14,7 @@ export interface UploadVideoParams {
   accessToken: string;
   videoUrl: string; // Signed URL with authorization token
   title: string;
-  privacyLevel?: 'PUBLIC_TO_EVERYONE' | 'MUTUAL_FOLLOW_FRIENDS' | 'SELF_ONLY';
+  privacyLevel?: "PUBLIC_TO_EVERYONE" | "MUTUAL_FOLLOW_FRIENDS" | "SELF_ONLY";
   disableComment?: boolean;
   disableDuet?: boolean;
   disableStitch?: boolean;
@@ -43,7 +43,7 @@ export interface PollStatusParams {
  */
 export interface PollStatusResponse {
   success: boolean;
-  status?: 'PROCESSING_DOWNLOAD' | 'PROCESSING_UPLOAD' | 'PUBLISH_COMPLETE' | 'FAILED';
+  status?: "PROCESSING_DOWNLOAD" | "PROCESSING_UPLOAD" | "PUBLISH_COMPLETE" | "FAILED";
   publiclyAvailablePostIds?: string[]; // TikTok post IDs when published
   error?: string;
   errorCode?: string;
@@ -82,22 +82,22 @@ export interface TikTokStatusResponse {
 
 /**
  * Upload a video to TikTok using PULL_FROM_URL method
- * 
+ *
  * This function initiates a video upload to TikTok by providing a URL where TikTok
  * can download the video. The URL should be a signed Backblaze URL with authorization token.
- * 
+ *
  * @param {UploadVideoParams} params - Upload parameters including access token, video URL, and post settings
  * @returns {Promise<UploadVideoResponse>} Upload result with publish_id or error details
- * 
+ *
  * Requirements: 6.2, 6.8, 6.9, 15.1, 15.2
- * 
+ *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns error
  * - HTTP 401/403: Token expired → Returns auth error
  * - HTTP 429: Rate limit exceeded → Returns rate limit error
  * - HTTP 5xx: Server error → Returns server error
  * - Network timeout: 30-second timeout → Returns timeout error
- * 
+ *
  * @example
  * const result = await uploadVideo({
  *   accessToken: 'act.abc123...',
@@ -111,7 +111,7 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
     accessToken,
     videoUrl,
     title,
-    privacyLevel = 'PUBLIC_TO_EVERYONE',
+    privacyLevel = "PUBLIC_TO_EVERYONE",
     disableComment = false,
     disableDuet = false,
     disableStitch = false,
@@ -123,11 +123,11 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const response = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
-      method: 'POST',
+    const response = await fetch("https://open.tiktokapis.com/v2/post/publish/video/init/", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         post_info: {
@@ -138,7 +138,7 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
           disable_stitch: disableStitch,
         },
         source_info: {
-          source: 'PULL_FROM_URL',
+          source: "PULL_FROM_URL",
           video_url: videoUrl,
         },
       }),
@@ -157,8 +157,8 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
       if (response.status === 400) {
         return {
           success: false,
-          error: data.error?.message || 'Invalid request parameters',
-          errorCode: data.error?.code || 'bad_request',
+          error: data.error?.message || "Invalid request parameters",
+          errorCode: data.error?.code || "bad_request",
         };
       }
 
@@ -166,8 +166,8 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
       if (response.status === 401 || response.status === 403) {
         return {
           success: false,
-          error: data.error?.message || 'Authentication failed',
-          errorCode: data.error?.code || 'auth_error',
+          error: data.error?.message || "Authentication failed",
+          errorCode: data.error?.code || "auth_error",
         };
       }
 
@@ -175,8 +175,8 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
       if (response.status === 429) {
         return {
           success: false,
-          error: 'Rate limit exceeded',
-          errorCode: 'rate_limit',
+          error: "Rate limit exceeded",
+          errorCode: "rate_limit",
         };
       }
 
@@ -184,8 +184,8 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
       if (response.status >= 500) {
         return {
           success: false,
-          error: data.error?.message || 'TikTok server error',
-          errorCode: data.error?.code || 'server_error',
+          error: data.error?.message || "TikTok server error",
+          errorCode: data.error?.code || "server_error",
         };
       }
 
@@ -193,7 +193,7 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
       return {
         success: false,
         error: data.error?.message || `HTTP ${response.status} error`,
-        errorCode: data.error?.code || 'unknown_error',
+        errorCode: data.error?.code || "unknown_error",
       };
     }
 
@@ -202,8 +202,8 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
     if (!data.data?.publish_id) {
       return {
         success: false,
-        error: 'No publish_id in response',
-        errorCode: 'invalid_response',
+        error: "No publish_id in response",
+        errorCode: "invalid_response",
       };
     }
 
@@ -215,46 +215,46 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
     // Handle timeout and network errors
     // Requirement: 15.2
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         return {
           success: false,
-          error: 'Request timeout after 30 seconds',
-          errorCode: 'timeout',
+          error: "Request timeout after 30 seconds",
+          errorCode: "timeout",
         };
       }
 
       return {
         success: false,
         error: error.message,
-        errorCode: 'network_error',
+        errorCode: "network_error",
       };
     }
 
     return {
       success: false,
-      error: 'Unknown error occurred',
-      errorCode: 'unknown_error',
+      error: "Unknown error occurred",
+      errorCode: "unknown_error",
     };
   }
 }
 
 /**
  * Poll the status of a TikTok video upload
- * 
+ *
  * This function checks the current status of a video upload using the publish_id
  * returned from the upload initiation.
- * 
+ *
  * @param {PollStatusParams} params - Parameters including access token and publish_id
  * @returns {Promise<PollStatusResponse>} Status result with current upload status or error details
- * 
+ *
  * Requirements: 8.2, 8.3, 8.4, 8.5, 15.1, 15.2
- * 
+ *
  * Status Values:
  * - PROCESSING_DOWNLOAD: TikTok is downloading video from URL
  * - PROCESSING_UPLOAD: TikTok is processing the video
  * - PUBLISH_COMPLETE: Video published successfully
  * - FAILED: Upload or processing failed
- * 
+ *
  * @example
  * const result = await pollStatus({
  *   accessToken: 'act.abc123...',
@@ -270,11 +270,11 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const response = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
-      method: 'POST',
+    const response = await fetch("https://open.tiktokapis.com/v2/post/publish/status/fetch/", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         publish_id: publishId,
@@ -294,8 +294,8 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
       if (response.status === 400) {
         return {
           success: false,
-          error: data.error?.message || 'Invalid request parameters',
-          errorCode: data.error?.code || 'bad_request',
+          error: data.error?.message || "Invalid request parameters",
+          errorCode: data.error?.code || "bad_request",
         };
       }
 
@@ -303,8 +303,8 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
       if (response.status === 401 || response.status === 403) {
         return {
           success: false,
-          error: data.error?.message || 'Authentication failed',
-          errorCode: data.error?.code || 'auth_error',
+          error: data.error?.message || "Authentication failed",
+          errorCode: data.error?.code || "auth_error",
         };
       }
 
@@ -312,8 +312,8 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
       if (response.status === 429) {
         return {
           success: false,
-          error: 'Rate limit exceeded',
-          errorCode: 'rate_limit',
+          error: "Rate limit exceeded",
+          errorCode: "rate_limit",
         };
       }
 
@@ -321,8 +321,8 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
       if (response.status >= 500) {
         return {
           success: false,
-          error: data.error?.message || 'TikTok server error',
-          errorCode: data.error?.code || 'server_error',
+          error: data.error?.message || "TikTok server error",
+          errorCode: data.error?.code || "server_error",
         };
       }
 
@@ -330,7 +330,7 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
       return {
         success: false,
         error: data.error?.message || `HTTP ${response.status} error`,
-        errorCode: data.error?.code || 'unknown_error',
+        errorCode: data.error?.code || "unknown_error",
       };
     }
 
@@ -339,12 +339,12 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
     if (!data.data?.status) {
       return {
         success: false,
-        error: 'No status in response',
-        errorCode: 'invalid_response',
+        error: "No status in response",
+        errorCode: "invalid_response",
       };
     }
 
-    const status = data.data.status as PollStatusResponse['status'];
+    const status = data.data.status as PollStatusResponse["status"];
 
     return {
       success: true,
@@ -356,25 +356,25 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
     // Handle timeout and network errors
     // Requirement: 15.2
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         return {
           success: false,
-          error: 'Request timeout after 30 seconds',
-          errorCode: 'timeout',
+          error: "Request timeout after 30 seconds",
+          errorCode: "timeout",
         };
       }
 
       return {
         success: false,
         error: error.message,
-        errorCode: 'network_error',
+        errorCode: "network_error",
       };
     }
 
     return {
       success: false,
-      error: 'Unknown error occurred',
-      errorCode: 'unknown_error',
+      error: "Unknown error occurred",
+      errorCode: "unknown_error",
     };
   }
 }

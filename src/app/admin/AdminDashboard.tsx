@@ -38,7 +38,7 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
   // Modal hook
   const modal = useModal();
-  
+
   // State management
   const [users, setUsers] = useState<UserWithAccounts[]>(initialUsers);
   const [showAllUsersModal, setShowAllUsersModal] = useState(false);
@@ -84,7 +84,7 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
       <div className="absolute top-0 left-1/4 w-full max-w-[100vw] h-[400px] bg-primary/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[500px] right-0 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
       <div className="absolute top-[200px] left-0 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
-      
+
       {/* Error Display Component */}
       {error && (
         <div className="mb-6 bg-error/10 border border-error/40 text-error px-5 py-4 rounded-xl flex items-start gap-3 backdrop-blur-sm">
@@ -122,22 +122,27 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
                 </span>
                 System Online
               </div>
-              
+
               {/* Gradient Title */}
               <h2 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-secondary">
                 Welcome back, Admin.
               </h2>
-              <p className="text-text-secondary mt-2 text-lg">Manage users and monitor platform activity</p>
+              <p className="text-text-secondary mt-2 text-lg">
+                Manage users and monitor platform activity
+              </p>
             </div>
-            
+
             {/* Create New Post Button */}
             <div className="flex w-full md:w-auto">
-              <button 
+              <button
                 onClick={() => modal.openUpload()}
                 className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-8 py-3.5 rounded-xl font-bold hover:shadow-glow hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative"
               >
                 <div className="absolute inset-0 bg-white/20 w-full translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
-                <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                <Plus
+                  size={20}
+                  className="group-hover:rotate-90 transition-transform duration-300"
+                />
                 <span>Create New Post</span>
               </button>
             </div>
@@ -157,7 +162,9 @@ export default function AdminDashboard({ initialUsers }: AdminDashboardProps) {
                     <TrendingUp className="text-primary w-6 h-6" />
                     Registration Trends
                   </h3>
-                  <p className="text-sm text-text-secondary mt-1">New user signups over the last 7 days</p>
+                  <p className="text-sm text-text-secondary mt-1">
+                    New user signups over the last 7 days
+                  </p>
                 </div>
                 <span className="text-xs font-bold text-text-secondary bg-surface border border-border px-4 py-1.5 rounded-full shadow-sm">
                   Last 7 Days

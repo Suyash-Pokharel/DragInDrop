@@ -11,8 +11,12 @@ class UploadService extends EventTarget {
     if (this.xhr) this.abort();
 
     try {
-      console.log("Starting upload for file:", { name: file.name, type: file.type, size: file.size });
-      
+      console.log("Starting upload for file:", {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
+
       // Step 1: Get presigned URL from backend (NO file sent)
       const presignResponse = await fetch("/api/upload/presign", {
         method: "POST",
@@ -63,12 +67,12 @@ class UploadService extends EventTarget {
       xhr.onload = () => {
         const status = xhr.status;
         console.log("Upload completed with status:", status);
-        
+
         if (status >= 200 && status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
             console.log("B2 upload response:", response);
-            
+
             // Return the fileKey from presign step
             const responseText = JSON.stringify({ fileKey, success: true });
             this.dispatchEvent(
@@ -78,8 +82,11 @@ class UploadService extends EventTarget {
             console.error("Failed to parse B2 response:", error);
             this.dispatchEvent(
               new CustomEvent<ErrorDetail>("error", {
-                detail: { message: "Upload completed but response was invalid", code: "INVALID_RESPONSE" },
-              })
+                detail: {
+                  message: "Upload completed but response was invalid",
+                  code: "INVALID_RESPONSE",
+                },
+              }),
             );
           }
         } else {
@@ -88,14 +95,20 @@ class UploadService extends EventTarget {
             const errorResponse = JSON.parse(xhr.responseText);
             this.dispatchEvent(
               new CustomEvent<ErrorDetail>("error", {
-                detail: { message: errorResponse.message || "Upload failed", code: "UPLOAD_FAILED" },
-              })
+                detail: {
+                  message: errorResponse.message || "Upload failed",
+                  code: "UPLOAD_FAILED",
+                },
+              }),
             );
           } catch {
             this.dispatchEvent(
               new CustomEvent<ErrorDetail>("error", {
-                detail: { message: `Upload failed with status ${status}. Please try again.`, code: "UPLOAD_FAILED" },
-              })
+                detail: {
+                  message: `Upload failed with status ${status}. Please try again.`,
+                  code: "UPLOAD_FAILED",
+                },
+              }),
             );
           }
         }
@@ -108,15 +121,15 @@ class UploadService extends EventTarget {
         console.error("XHR readyState:", xhr.readyState);
         console.error("XHR status:", xhr.status);
         console.error("XHR statusText:", xhr.statusText);
-        const errorDetail: ErrorDetail = { 
-          message: "Upload failed. Please check your connection and try again.", 
-          code: "UPLOAD_FAILED" 
+        const errorDetail: ErrorDetail = {
+          message: "Upload failed. Please check your connection and try again.",
+          code: "UPLOAD_FAILED",
         };
         console.log("Dispatching error with detail:", errorDetail);
         this.dispatchEvent(
           new CustomEvent<ErrorDetail>("error", {
             detail: errorDetail,
-          })
+          }),
         );
         this.cleanup();
       };
@@ -137,11 +150,14 @@ class UploadService extends EventTarget {
       console.error("Upload error:", error);
       this.dispatchEvent(
         new CustomEvent<ErrorDetail>("error", {
-          detail: { 
-            message: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.", 
-            code: "UNKNOWN_ERROR" 
+          detail: {
+            message:
+              error instanceof Error
+                ? error.message
+                : "An unexpected error occurred. Please try again.",
+            code: "UNKNOWN_ERROR",
           },
-        })
+        }),
       );
     }
   }

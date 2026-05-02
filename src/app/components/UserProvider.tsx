@@ -26,8 +26,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Load mock connected platforms from session storage
   useEffect(() => {
     const loadMockConnections = () => {
-      if (typeof window !== 'undefined') {
-        const savedMockConnections = sessionStorage.getItem('mockConnectedPlatforms');
+      if (typeof window !== "undefined") {
+        const savedMockConnections = sessionStorage.getItem("mockConnectedPlatforms");
         if (savedMockConnections) {
           try {
             const parsed = JSON.parse(savedMockConnections);
@@ -35,7 +35,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
               setMockConnectedPlatforms(parsed);
             }
           } catch (error) {
-            console.error('Failed to parse mock connections from session storage:', error);
+            console.error("Failed to parse mock connections from session storage:", error);
           }
         }
       }
@@ -45,13 +45,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for storage changes to sync across tabs/components
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'mockConnectedPlatforms') {
+      if (e.key === "mockConnectedPlatforms") {
         loadMockConnections();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   // Combine real and mock connected platforms
@@ -101,7 +101,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <UserContext.Provider
-      value={{ tempImage, setTempImage, connectedPlatforms: allConnectedPlatforms, refetchConnectedPlatforms }}
+      value={{
+        tempImage,
+        setTempImage,
+        connectedPlatforms: allConnectedPlatforms,
+        refetchConnectedPlatforms,
+      }}
     >
       {children}
     </UserContext.Provider>

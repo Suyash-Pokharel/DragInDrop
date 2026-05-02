@@ -2,20 +2,14 @@ import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 import { ensureAdmin } from "@/lib/ensureAdmin";
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const adminCheck = await ensureAdmin();
   if (adminCheck instanceof NextResponse) return adminCheck;
 
   const { id } = await params;
 
   if (!id) {
-    return NextResponse.json(
-      { error: "User ID is required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "User ID is required" }, { status: 400 });
   }
 
   try {
@@ -28,18 +22,12 @@ export async function DELETE(
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Prevent deleting ADMIN users
     if (user.role === "ADMIN") {
-      return NextResponse.json(
-        { error: "Cannot delete admin users" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Cannot delete admin users" }, { status: 403 });
     }
 
     // Delete user (CASCADE will handle related records: accounts, sessions, tokens)
@@ -53,9 +41,6 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Error deleting user:", error);
-    return NextResponse.json(
-      { error: "Failed to delete user" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
 }

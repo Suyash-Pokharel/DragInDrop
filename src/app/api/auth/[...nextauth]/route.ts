@@ -56,7 +56,11 @@ export const authOptions: NextAuthOptions = {
       userinfo: "https://open.tiktokapis.com/v2/user/info/",
       clientId: process.env.TIKTOK_CLIENT_KEY!,
       clientSecret: process.env.TIKTOK_CLIENT_SECRET!,
-      profile(profile: { data: { user: { open_id: string; email: string; display_name: string; avatar_url: string } } }) {
+      profile(profile: {
+        data: {
+          user: { open_id: string; email: string; display_name: string; avatar_url: string };
+        };
+      }) {
         return {
           id: profile.data.user.open_id,
           email: profile.data.user.email,
@@ -86,7 +90,13 @@ export const authOptions: NextAuthOptions = {
       userinfo: "https://api.linkedin.com/v2/me",
       clientId: process.env.LINKEDIN_CLIENT_ID!,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
-      profile(profile: { id: string; localizedFirstName?: string; localizedLastName?: string; email?: string; profilePicture?: { displayImage?: string } }) {
+      profile(profile: {
+        id: string;
+        localizedFirstName?: string;
+        localizedLastName?: string;
+        email?: string;
+        profilePicture?: { displayImage?: string };
+      }) {
         const firstName = profile.localizedFirstName || "";
         const lastName = profile.localizedLastName || "";
         const fullName = lastName ? `${firstName} ${lastName}` : firstName;
@@ -180,39 +190,43 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider !== "credentials") {
         try {
           const prisma = getSafePrisma();
-          
+
           // Get the email from the OAuth profile
           const email = (profile?.email || user.email)?.toLowerCase().trim();
-          
+
           if (!email) {
             console.error("No email provided by OAuth provider");
             return false;
           }
-          
+
           // Check if a user with this email already exists
           const existingUser = await prisma.user.findUnique({
             where: { email },
             include: { Account: true },
           });
-          
+
           // If user exists, check if they have an account with this provider
           if (existingUser && account) {
             const hasThisProvider = existingUser.Account.some(
-              (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
+              (acc) =>
+                acc.provider === account.provider &&
+                acc.providerAccountId === account.providerAccountId,
             );
-            
+
             // If they don't have this specific provider account linked, block sign-in
             // This prevents automatic account linking and forces explicit user action
             if (!hasThisProvider) {
-              console.error(`User ${email} exists but doesn't have ${account.provider} account linked`);
+              console.error(
+                `User ${email} exists but doesn't have ${account.provider} account linked`,
+              );
               return false; // This will trigger OAuthAccountNotLinked error
             }
-            
+
             // User exists and has this provider - update emailVerified if needed
             if (!existingUser.emailVerified) {
               const now = new Date();
               const timeSinceCreation = now.getTime() - existingUser.createdAt.getTime();
-              
+
               if (timeSinceCreation < 5000) {
                 await prisma.user.update({
                   where: { id: existingUser.id },
@@ -232,7 +246,7 @@ export const authOptions: NextAuthOptions = {
           return false;
         }
       }
-      
+
       return true;
     },
 
@@ -241,7 +255,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.sub = user.id;
         token.email = user.email;
-        
+
         // For OAuth providers, fetch role from database since it's not in the user object
         if (account?.provider !== "credentials") {
           try {
@@ -302,7 +316,6 @@ export const authOptions: NextAuthOptions = {
   },
 
   // Let NextAuth handle cookies automatically based on the environment
-
 
   pages: {
     signIn: "/login",

@@ -1,21 +1,21 @@
 /**
  * Scheduled YouTube Upload Processing API Endpoint
- * 
+ *
  * This endpoint is triggered by cron-job.org every 5 minutes to process scheduled
  * YouTube uploads. It handles:
  * - Querying scheduled posts within the scheduling window
  * - Delegating upload jobs to Render.com worker
  * - Updating database records based on worker response
- * 
+ *
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getPrisma } from '@/lib/prisma';
-import { Post, PlatformPost, SocialAccount, PlatformPostStatus, PostStatus } from '@prisma/client';
-import { decryptToken } from '@/lib/encryption';
-import { isTokenExpired, refreshToken } from '@/lib/tokenManager';
-import { checkUploadRateLimit, incrementUploadCounter } from '@/lib/youtube/rateLimiter';
+import { NextRequest, NextResponse } from "next/server";
+import { getPrisma } from "@/lib/prisma";
+import { Post, PlatformPost, SocialAccount, PlatformPostStatus, PostStatus } from "@prisma/client";
+import { decryptToken } from "@/lib/encryption";
+import { isTokenExpired, refreshToken } from "@/lib/tokenManager";
+import { checkUploadRateLimit, incrementUploadCounter } from "@/lib/youtube/rateLimiter";
 
 /**
  * Summary of processing results
@@ -39,37 +39,35 @@ interface UploadResult {
 
 /**
  * Verify the CRON_SECRET from the Authorization header
- * 
+ *
  * This function checks if the request includes a valid Authorization header
  * with the correct CRON_SECRET to prevent unauthorized access.
- * 
+ *
  * @param {NextRequest} request - The incoming request
  * @returns {boolean} True if the secret is valid, false otherwise
- * 
+ *
  * Requirements: 3.2, 3.3
- * 
+ *
  * @example
  * if (!verifyCronSecret(request)) {
  *   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
  * }
  */
 function verifyCronSecret(request: NextRequest): boolean {
-  const authHeader = request.headers.get('Authorization');
-  
+  const authHeader = request.headers.get("Authorization");
+
   if (!authHeader) {
-    console.error('[process-scheduled-youtube-uploads] No Authorization header');
+    console.error("[process-scheduled-youtube-uploads] No Authorization header");
     return false;
   }
 
   // Extract token from "Bearer <token>" format
-  const token = authHeader.startsWith('Bearer ')
-    ? authHeader.substring(7)
-    : authHeader;
+  const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
 
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    console.error('[process-scheduled-youtube-uploads] CRON_SECRET not configured');
+    console.error("[process-scheduled-youtube-uploads] CRON_SECRET not configured");
     return false;
   }
 
@@ -78,14 +76,14 @@ function verifyCronSecret(request: NextRequest): boolean {
 
 /**
  * Calculate the scheduling window for finding posts to process
- * 
+ *
  * The scheduling window is ±6 minutes from the current time to ensure posts
  * scheduled between cron runs are not missed.
- * 
+ *
  * @returns {{ start: Date; end: Date }} The start and end of the scheduling window
- * 
+ *
  * Requirements: 4.1, 4.2, 4.3
- * 
+ *
  * @example
  * const window = getSchedulingWindow();
  * // If current time is 10:30:00
@@ -104,15 +102,15 @@ function getSchedulingWindow(): { start: Date; end: Date } {
 
 /**
  * POST /api/cron/process-scheduled-youtube-uploads
- * 
+ *
  * Main handler for processing scheduled YouTube uploads. This endpoint:
  * 1. Verifies the CRON_SECRET for authentication
  * 2. Queries for scheduled posts within the scheduling window
  * 3. Delegates upload jobs to Render.com worker
  * 4. Returns a summary of operations
- * 
+ *
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4
- * 
+ *
  * @param {NextRequest} request - The incoming request from cron-job.org
  * @returns {Promise<NextResponse>} Response with processing summary or error
  */
@@ -120,15 +118,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify CRON_SECRET
   // Requirements: 3.2, 3.3
   if (!verifyCronSecret(request)) {
-    console.error('[process-scheduled-youtube-uploads] Unauthorized request:', {
+    console.error("[process-scheduled-youtube-uploads] Unauthorized request:", {
       timestamp: new Date().toISOString(),
-      hasAuthHeader: !!request.headers.get('Authorization'),
+      hasAuthHeader: !!request.headers.get("Authorization"),
     });
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Requirement 12.1: Log cron execution start with timestamp
-  console.log('[process-scheduled-youtube-uploads] Cron execution started:', {
+  console.log("[process-scheduled-youtube-uploads] Cron execution started:", {
     timestamp: new Date().toISOString(),
   });
 
@@ -140,7 +138,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Requirements: 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4
     const scheduledPosts = await prisma.post.findMany({
       where: {
-        status: 'SCHEDULED',
+        status: "SCHEDULED",
         scheduledFor: {
           gte: window.start,
           lte: window.end,
@@ -149,9 +147,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       include: {
         PlatformPost: {
           where: {
-            status: 'PENDING',
+            status: "PENDING",
             SocialAccount: {
-              platform: 'YouTube',
+              platform: "YouTube",
               isActive: true,
             },
           },
@@ -164,12 +162,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Filter to only include posts with YouTube PlatformPost records
     // Requirement: 3.5
-    const postsToProcess = scheduledPosts.filter(
-      (post) => post.PlatformPost.length > 0
-    );
+    const postsToProcess = scheduledPosts.filter((post) => post.PlatformPost.length > 0);
 
     // Requirement 12.2: Log count of posts found in scheduling window
-    console.log('[process-scheduled-youtube-uploads] Found posts to process:', {
+    console.log("[process-scheduled-youtube-uploads] Found posts to process:", {
       timestamp: new Date().toISOString(),
       windowStart: window.start.toISOString(),
       windowEnd: window.end.toISOString(),
@@ -196,22 +192,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     for (const post of postsToProcess) {
       postIds.add(post.id);
     }
-    
+
     // Sync status for all affected posts
     for (const postId of postIds) {
       try {
         await syncPostStatus(postId);
       } catch (error) {
-        console.error('[process-scheduled-youtube-uploads] Failed to sync post status:', {
+        console.error("[process-scheduled-youtube-uploads] Failed to sync post status:", {
           postId,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
           timestamp: new Date().toISOString(),
         });
       }
     }
 
     // Requirement 12.1: Log cron execution end with timestamp
-    console.log('[process-scheduled-youtube-uploads] Cron execution completed:', {
+    console.log("[process-scheduled-youtube-uploads] Cron execution completed:", {
       timestamp: new Date().toISOString(),
       result,
     });
@@ -226,35 +222,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Return HTTP 500 on database errors
     // Requirement: 3.8
     // Requirement 12.5: Log all errors with full context
-    console.error('[process-scheduled-youtube-uploads] Database error:', {
+    console.error("[process-scheduled-youtube-uploads] Database error:", {
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
     });
 
     return NextResponse.json(
       {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 /**
  * Process scheduled posts for upload to YouTube via Render.com worker
- * 
+ *
  * This function processes each scheduled post by:
  * 1. Retrieving and decrypting the SocialAccount tokens
  * 2. Checking if the access token is expired and refreshing if needed
  * 3. Checking upload rate limits
  * 4. Delegating upload job to Render.com worker
  * 5. Updating the database with the result
- * 
+ *
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 9.1, 9.2, 9.3, 9.4, 9.5,
  *               9.6, 9.7, 9.8, 9.9, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7
- * 
+ *
  * @param posts - Array of posts with PlatformPost and SocialAccount data
  * @returns ProcessResult with upload count and errors
  */
@@ -263,7 +259,7 @@ async function processScheduledPosts(
     PlatformPost: (PlatformPost & {
       SocialAccount: SocialAccount;
     })[];
-  })[]
+  })[],
 ): Promise<{ uploaded: number; errors: string[] }> {
   let uploaded = 0;
   const errors: string[] = [];
@@ -272,11 +268,11 @@ async function processScheduledPosts(
     for (const platformPost of post.PlatformPost) {
       try {
         const result = await uploadToYouTube(post, platformPost, platformPost.SocialAccount);
-        
+
         if (result.success) {
           uploaded++;
           // Requirement 12.4: Log worker response with video ID
-          console.log('[processScheduledPosts] Upload successful:', {
+          console.log("[processScheduledPosts] Upload successful:", {
             userId: post.userId,
             postId: post.id,
             platformPostId: platformPost.id,
@@ -286,7 +282,7 @@ async function processScheduledPosts(
           });
         } else if (result.shouldSkip) {
           // Non-fatal error (rate limit, etc.) - log but don't count as error
-          console.warn('[processScheduledPosts] Upload skipped:', {
+          console.warn("[processScheduledPosts] Upload skipped:", {
             userId: post.userId,
             postId: post.id,
             platformPostId: platformPost.id,
@@ -297,7 +293,7 @@ async function processScheduledPosts(
           // Fatal error - add to errors array
           errors.push(`Post ${post.id}: ${result.error}`);
           // Requirement 12.5: Log all errors with full context
-          console.error('[processScheduledPosts] Upload failed:', {
+          console.error("[processScheduledPosts] Upload failed:", {
             userId: post.userId,
             postId: post.id,
             platformPostId: platformPost.id,
@@ -306,10 +302,10 @@ async function processScheduledPosts(
           });
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         errors.push(`Post ${post.id}: ${errorMessage}`);
         // Requirement 12.5: Log all errors with full context (userId, postId, error message, stack trace)
-        console.error('[processScheduledPosts] Unexpected error:', {
+        console.error("[processScheduledPosts] Unexpected error:", {
           userId: post.userId,
           postId: post.id,
           platformPostId: platformPost.id,
@@ -326,7 +322,7 @@ async function processScheduledPosts(
 
 /**
  * Upload a single post to YouTube via Render.com worker
- * 
+ *
  * This function handles the complete upload flow for a single post:
  * 1. Retrieve and decrypt access token
  * 2. Check if token is expired and refresh if needed
@@ -334,10 +330,10 @@ async function processScheduledPosts(
  * 4. Delegate upload job to Render.com worker
  * 5. Update database with result
  * 6. Increment rate limit counter
- * 
+ *
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 9.1, 9.2, 9.3, 9.4, 9.5,
  *               9.6, 9.7, 9.8, 9.9, 11.1, 11.2, 11.3
- * 
+ *
  * @param post - The Post record
  * @param platformPost - The PlatformPost record
  * @param socialAccount - The SocialAccount record with encrypted tokens
@@ -346,14 +342,14 @@ async function processScheduledPosts(
 async function uploadToYouTube(
   post: Post,
   platformPost: PlatformPost,
-  socialAccount: SocialAccount
+  socialAccount: SocialAccount,
 ): Promise<UploadResult> {
   // Step 1: Check if access token is expired and refresh if needed
   // Requirements: 5.3, 5.4, 5.5, 5.6, 5.7
   let currentSocialAccount = socialAccount;
-  
+
   if (isTokenExpired(socialAccount)) {
-    console.log('[uploadToYouTube] Token expired, refreshing:', {
+    console.log("[uploadToYouTube] Token expired, refreshing:", {
       userId: post.userId,
       postId: post.id,
       platform: socialAccount.platform,
@@ -362,27 +358,22 @@ async function uploadToYouTube(
     });
 
     const refreshResult = await refreshToken(socialAccount);
-    
+
     if (!refreshResult.success) {
       // Token refresh failed - mark as FAILED
       // Requirement: 5.7
-      await updatePlatformPostStatus(
-        platformPost.id,
-        'FAILED',
-        undefined,
-        'Token refresh failed'
-      );
+      await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, "Token refresh failed");
 
       return {
         success: false,
-        error: 'Token refresh failed',
+        error: "Token refresh failed",
       };
     }
 
     // Use the updated account with new tokens
     currentSocialAccount = refreshResult.updatedAccount!;
-    
-    console.log('[uploadToYouTube] Token refreshed successfully:', {
+
+    console.log("[uploadToYouTube] Token refreshed successfully:", {
       userId: post.userId,
       postId: post.id,
       platform: socialAccount.platform,
@@ -397,41 +388,41 @@ async function uploadToYouTube(
   let refreshTokenDecrypted: string;
   try {
     accessToken = decryptToken(currentSocialAccount.accessToken);
-    
+
     // Check if refreshToken exists before decrypting
     if (!currentSocialAccount.refreshToken) {
-      throw new Error('Refresh token is missing');
+      throw new Error("Refresh token is missing");
     }
-    
+
     refreshTokenDecrypted = decryptToken(currentSocialAccount.refreshToken);
   } catch (error) {
     // Requirement 12.5: Log all errors with full context
-    console.error('[uploadToYouTube] Failed to decrypt tokens:', {
+    console.error("[uploadToYouTube] Failed to decrypt tokens:", {
       userId: post.userId,
       postId: post.id,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       timestamp: new Date().toISOString(),
     });
 
     await updatePlatformPostStatus(
       platformPost.id,
-      'FAILED',
+      "FAILED",
       undefined,
-      'Failed to decrypt access token'
+      "Failed to decrypt access token",
     );
 
     return {
       success: false,
-      error: 'Failed to decrypt access token',
+      error: "Failed to decrypt access token",
     };
   }
 
   // Step 3: Check upload rate limit
   // Requirements: 11.1, 11.2, 11.3
   const rateLimitResult = await checkUploadRateLimit(post.userId);
-  
+
   if (!rateLimitResult.allowed) {
-    console.warn('[uploadToYouTube] Upload rate limit exceeded:', {
+    console.warn("[uploadToYouTube] Upload rate limit exceeded:", {
       userId: post.userId,
       postId: post.id,
       remaining: rateLimitResult.remaining,
@@ -442,7 +433,7 @@ async function uploadToYouTube(
     return {
       success: false,
       shouldSkip: true,
-      error: 'Upload rate limit exceeded',
+      error: "Upload rate limit exceeded",
     };
   }
 
@@ -452,7 +443,7 @@ async function uploadToYouTube(
   const workerSecret = process.env.WORKER_SECRET;
 
   if (!workerUrl || !workerSecret) {
-    console.error('[uploadToYouTube] Worker configuration missing:', {
+    console.error("[uploadToYouTube] Worker configuration missing:", {
       hasWorkerUrl: !!workerUrl,
       hasWorkerSecret: !!workerSecret,
       timestamp: new Date().toISOString(),
@@ -460,19 +451,19 @@ async function uploadToYouTube(
 
     await updatePlatformPostStatus(
       platformPost.id,
-      'FAILED',
+      "FAILED",
       undefined,
-      'Worker configuration missing'
+      "Worker configuration missing",
     );
 
     return {
       success: false,
-      error: 'Worker configuration missing',
+      error: "Worker configuration missing",
     };
   }
 
   // Requirement 12.3: Log worker request with userId, postId, endpoint
-  console.log('[uploadToYouTube] Calling Render.com worker:', {
+  console.log("[uploadToYouTube] Calling Render.com worker:", {
     userId: post.userId,
     postId: post.id,
     platformPostId: platformPost.id,
@@ -483,10 +474,10 @@ async function uploadToYouTube(
   try {
     // Requirement 9.1, 9.2, 9.3: Send HTTP POST to worker with authentication
     const response = await fetch(`${workerUrl}/upload`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${workerSecret}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${workerSecret}`,
       },
       body: JSON.stringify({
         postId: post.id,
@@ -498,7 +489,7 @@ async function uploadToYouTube(
         description: post.description,
         accessToken,
         refreshToken: refreshTokenDecrypted,
-        expiresAt: currentSocialAccount.expiresAt.toISOString(),
+        expiresAt: currentSocialAccount.expiresAt?.toISOString() || new Date().toISOString(),
         userId: post.userId,
       }),
       // Requirement 9.4: Set 6-minute timeout
@@ -508,7 +499,7 @@ async function uploadToYouTube(
     const responseData = await response.json();
 
     // Requirement 12.4: Log worker response
-    console.log('[uploadToYouTube] Worker response:', {
+    console.log("[uploadToYouTube] Worker response:", {
       userId: post.userId,
       postId: post.id,
       platformPostId: platformPost.id,
@@ -522,10 +513,10 @@ async function uploadToYouTube(
       // Requirement 9.5: Update status to PUBLISHED on success
       await updatePlatformPostStatus(
         platformPost.id,
-        'PUBLISHED',
+        "PUBLISHED",
         responseData.videoId,
         undefined,
-        responseData.videoUrl
+        responseData.videoUrl,
       );
 
       // Increment rate limit counter
@@ -539,11 +530,11 @@ async function uploadToYouTube(
       };
     } else {
       // Requirement 9.6: Update status to FAILED on error
-      const errorMessage = responseData.error || 'Worker upload failed';
-      
+      const errorMessage = responseData.error || "Worker upload failed";
+
       // Check if this is a retryable error
       // Requirement 15.1, 15.2, 15.3
-      if (response.status >= 500 || responseData.errorCode === 'timeout') {
+      if (response.status >= 500 || responseData.errorCode === "timeout") {
         // Retryable error - increment retry count
         const currentRetryCount = platformPost.retryCount;
         const newRetryCount = currentRetryCount + 1;
@@ -561,9 +552,9 @@ async function uploadToYouTube(
         if (newRetryCount > 3) {
           await updatePlatformPostStatus(
             platformPost.id,
-            'FAILED',
+            "FAILED",
             undefined,
-            `${errorMessage} (max retries exceeded)`
+            `${errorMessage} (max retries exceeded)`,
           );
 
           return {
@@ -573,7 +564,7 @@ async function uploadToYouTube(
         }
 
         // Requirement 15.2: Leave status as PENDING for retry
-        console.log('[uploadToYouTube] Will retry on next cron run:', {
+        console.log("[uploadToYouTube] Will retry on next cron run:", {
           userId: post.userId,
           postId: post.id,
           platformPostId: platformPost.id,
@@ -589,12 +580,7 @@ async function uploadToYouTube(
       } else {
         // Non-retryable error - mark as FAILED immediately
         // Requirement 15.5
-        await updatePlatformPostStatus(
-          platformPost.id,
-          'FAILED',
-          undefined,
-          errorMessage
-        );
+        await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
 
         return {
           success: false,
@@ -604,7 +590,7 @@ async function uploadToYouTube(
     }
   } catch (error) {
     // Requirement 9.7: Handle timeout errors
-    if (error instanceof Error && error.name === 'TimeoutError') {
+    if (error instanceof Error && error.name === "TimeoutError") {
       // Increment retry count
       const currentRetryCount = platformPost.retryCount;
       const newRetryCount = currentRetryCount + 1;
@@ -621,18 +607,18 @@ async function uploadToYouTube(
       if (newRetryCount > 3) {
         await updatePlatformPostStatus(
           platformPost.id,
-          'FAILED',
+          "FAILED",
           undefined,
-          'Worker request timeout (max retries exceeded)'
+          "Worker request timeout (max retries exceeded)",
         );
 
         return {
           success: false,
-          error: 'Worker request timeout (max retries exceeded)',
+          error: "Worker request timeout (max retries exceeded)",
         };
       }
 
-      console.log('[uploadToYouTube] Worker timeout, will retry:', {
+      console.log("[uploadToYouTube] Worker timeout, will retry:", {
         userId: post.userId,
         postId: post.id,
         platformPostId: platformPost.id,
@@ -648,8 +634,8 @@ async function uploadToYouTube(
     }
 
     // Other network errors
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[uploadToYouTube] Worker request failed:', {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("[uploadToYouTube] Worker request failed:", {
       userId: post.userId,
       postId: post.id,
       platformPostId: platformPost.id,
@@ -660,9 +646,9 @@ async function uploadToYouTube(
 
     await updatePlatformPostStatus(
       platformPost.id,
-      'FAILED',
+      "FAILED",
       undefined,
-      `Worker request failed: ${errorMessage}`
+      `Worker request failed: ${errorMessage}`,
     );
 
     return {
@@ -674,12 +660,12 @@ async function uploadToYouTube(
 
 /**
  * Update the status of a PlatformPost record
- * 
+ *
  * This function updates a PlatformPost record with new status, videoId,
  * platformUrl, and error message. It uses a database transaction to ensure atomic updates.
- * 
+ *
  * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 14.1, 14.2, 14.3, 14.4
- * 
+ *
  * @param platformPostId - The ID of the PlatformPost to update
  * @param status - The new status to set
  * @param videoId - Optional YouTube video ID
@@ -692,7 +678,7 @@ async function updatePlatformPostStatus(
   status: PlatformPostStatus,
   videoId?: string,
   errorMessage?: string,
-  videoUrl?: string
+  videoUrl?: string,
 ): Promise<void> {
   const prisma = getPrisma();
 
@@ -725,13 +711,13 @@ async function updatePlatformPostStatus(
       // Add errorMessage if provided (or clear it if null)
       if (errorMessage !== undefined) {
         updateData.errorMessage = errorMessage;
-      } else if (status === 'PUBLISHED') {
+      } else if (status === "PUBLISHED") {
         // Clear error message on successful publish
         updateData.errorMessage = null;
       }
 
       // Set publishedAt timestamp when status becomes PUBLISHED
-      if (status === 'PUBLISHED') {
+      if (status === "PUBLISHED") {
         updateData.publishedAt = new Date();
       }
 
@@ -741,7 +727,7 @@ async function updatePlatformPostStatus(
       });
     });
 
-    console.log('[updatePlatformPostStatus] Status updated:', {
+    console.log("[updatePlatformPostStatus] Status updated:", {
       platformPostId,
       status,
       videoId,
@@ -751,10 +737,10 @@ async function updatePlatformPostStatus(
     });
   } catch (error) {
     // Requirement: 14.3, 14.4
-    console.error('[updatePlatformPostStatus] Transaction failed:', {
+    console.error("[updatePlatformPostStatus] Transaction failed:", {
       platformPostId,
       status,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString(),
     });
@@ -764,15 +750,15 @@ async function updatePlatformPostStatus(
 
 /**
  * Synchronize Post status based on all PlatformPost records
- * 
+ *
  * This function calculates the Post status based on all associated PlatformPost records:
  * - All PUBLISHED → PUBLISHED
  * - All FAILED → FAILED
  * - Any PUBLISHING → PUBLISHING
  * - Mix of PUBLISHED and FAILED → PARTIALLY_PUBLISHED
- * 
+ *
  * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 14.1, 14.2, 14.3, 14.4
- * 
+ *
  * @param postId - The ID of the Post to synchronize
  * @returns Promise<void>
  */
@@ -790,7 +776,7 @@ async function syncPostStatus(postId: string): Promise<void> {
       });
 
       if (platformPosts.length === 0) {
-        console.warn('[syncPostStatus] No PlatformPost records found:', {
+        console.warn("[syncPostStatus] No PlatformPost records found:", {
           postId,
           timestamp: new Date().toISOString(),
         });
@@ -806,30 +792,27 @@ async function syncPostStatus(postId: string): Promise<void> {
 
       // All published → PUBLISHED
       // Requirement: 10.1
-      if (statuses.every((s) => s === 'PUBLISHED')) {
-        newPostStatus = 'PUBLISHED';
+      if (statuses.every((s) => s === "PUBLISHED")) {
+        newPostStatus = "PUBLISHED";
       }
       // All failed → FAILED
       // Requirement: 10.3
-      else if (statuses.every((s) => s === 'FAILED')) {
-        newPostStatus = 'FAILED';
+      else if (statuses.every((s) => s === "FAILED")) {
+        newPostStatus = "FAILED";
       }
       // Any publishing → PUBLISHING
       // Requirement: 10.4
-      else if (statuses.some((s) => s === 'PUBLISHING')) {
-        newPostStatus = 'PUBLISHING';
+      else if (statuses.some((s) => s === "PUBLISHING")) {
+        newPostStatus = "PUBLISHING";
       }
       // Mix of published and failed → PARTIALLY_PUBLISHED
       // Requirement: 10.2
-      else if (
-        statuses.some((s) => s === 'PUBLISHED') &&
-        statuses.some((s) => s === 'FAILED')
-      ) {
-        newPostStatus = 'PARTIALLY_PUBLISHED';
+      else if (statuses.some((s) => s === "PUBLISHED") && statuses.some((s) => s === "FAILED")) {
+        newPostStatus = "PARTIALLY_PUBLISHED";
       }
       // All pending → SCHEDULED (default)
       else {
-        newPostStatus = 'SCHEDULED';
+        newPostStatus = "SCHEDULED";
       }
 
       // Update Post status and updatedAt timestamp
@@ -842,7 +825,7 @@ async function syncPostStatus(postId: string): Promise<void> {
         },
       });
 
-      console.log('[syncPostStatus] Post status synchronized:', {
+      console.log("[syncPostStatus] Post status synchronized:", {
         postId,
         platformPostCount: platformPosts.length,
         platformStatuses: statuses,
@@ -852,9 +835,9 @@ async function syncPostStatus(postId: string): Promise<void> {
     });
   } catch (error) {
     // Requirement: 14.3, 14.4
-    console.error('[syncPostStatus] Transaction failed:', {
+    console.error("[syncPostStatus] Transaction failed:", {
       postId,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString(),
     });

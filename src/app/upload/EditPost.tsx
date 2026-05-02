@@ -16,12 +16,12 @@ interface EditPostProps {
 }
 
 export default function EditPost({ onClose, postId }: EditPostProps) {
-  const { 
-    progress, 
-    previewUrl, 
-    uploaded, 
-    clearUpload, 
-    selectedDate, 
+  const {
+    progress,
+    previewUrl,
+    uploaded,
+    clearUpload,
+    selectedDate,
     openSelectPlatform,
     postTitle,
     setPostTitle,
@@ -73,51 +73,53 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   // Fetch post data for edit mode
   const fetchPostData = useCallback(async () => {
     if (!postId) return;
-    
+
     setLoadPostError(null);
-    
+
     try {
       const response = await fetch(`/api/posts/${postId}`);
-      
+
       if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
-      
+
       if (response.status === 403) {
         setLoadPostError("You do not have permission to edit this post");
         return;
       }
-      
+
       if (response.status === 404) {
         setLoadPostError("Post not found");
         return;
       }
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         setLoadPostError(errorData.error || "Failed to load post data");
         return;
       }
-      
+
       const postData = await response.json();
-      
+
       // Pre-populate form fields
       setPostTitle(postData.title);
       setPostDescription(postData.description || "");
       setSelectedPlatforms(postData.selectedPlatforms || []);
-      
+
       // Convert scheduledFor from UTC to user timezone for display
       if (postData.scheduledFor && userTimezone) {
         const utcDate = new Date(postData.scheduledFor);
-        const localDateStr = utcDate.toLocaleString('sv-SE', { 
-          timeZone: userTimezone,
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        }).replace(' ', 'T');
+        const localDateStr = utcDate
+          .toLocaleString("sv-SE", {
+            timeZone: userTimezone,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(" ", "T");
         setPostScheduledFor(localDateStr);
         setOriginalScheduledFor(localDateStr); // Track original date for validation
       } else if (postData.scheduledFor) {
@@ -127,9 +129,8 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         setPostScheduledFor(formattedDate);
         setOriginalScheduledFor(formattedDate); // Track original date for validation
       }
-      
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
         setLoadPostError("Network error. Please check your connection and try again.");
       } else {
         setLoadPostError("An error occurred while loading the post. Please try again.");
@@ -144,15 +145,15 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   const getUTCOffset = (timezone: string): string => {
     try {
       const now = new Date();
-      const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
-      const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const tzDate = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+      const utcDate = new Date(now.toLocaleString("en-US", { timeZone: "UTC" }));
       const offsetMinutes = (tzDate.getTime() - utcDate.getTime()) / (1000 * 60);
       const hours = Math.floor(Math.abs(offsetMinutes) / 60);
       const minutes = Math.abs(offsetMinutes) % 60;
-      const sign = offsetMinutes >= 0 ? '+' : '-';
-      return `UTC${sign}${hours}:${minutes.toString().padStart(2, '0')}`;
+      const sign = offsetMinutes >= 0 ? "+" : "-";
+      return `UTC${sign}${hours}:${minutes.toString().padStart(2, "0")}`;
     } catch {
-      return 'UTC';
+      return "UTC";
     }
   };
 
@@ -160,14 +161,14 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
   useEffect(() => {
     const fetchUserTimezone = async () => {
       try {
-        const response = await fetch('/api/user/preferences');
+        const response = await fetch("/api/user/preferences");
         if (response.ok) {
           const preferences = await response.json();
           // Simply use the timezone if it exists (should be auto-saved from Upload page)
           setUserTimezone(preferences.timezone || null);
         }
       } catch (error) {
-        console.error('Failed to fetch user timezone:', error);
+        console.error("Failed to fetch user timezone:", error);
       }
     };
 
@@ -200,7 +201,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
 
   const isTitleValid = postTitle.trim() !== "" && postTitle.length <= 100;
   const isDateFilled = postScheduledFor.trim() !== "";
-  
+
   // Title validation error
   const getTitleError = (): string | null => {
     if (!titleTouched) return null;
@@ -208,37 +209,37 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
     if (postTitle.length > 100) return "Title must not exceed 100 characters";
     return null;
   };
-  
+
   const titleError = getTitleError();
-  
+
   // Description validation
   const [descriptionTouched, setDescriptionTouched] = useState(false);
-  
+
   const getDescriptionError = (): string | null => {
     if (!descriptionTouched) return null;
     if (postDescription.length > 250) return "Description must not exceed 250 characters";
     return null;
   };
-  
+
   const descriptionError = getDescriptionError();
 
   // Must be at least 10 minutes in the future
   const getDateError = (): string | null => {
     if (!isDateFilled) return null;
-    
+
     const selected = new Date(postScheduledFor);
     const tenMinsFromNow = new Date(Date.now() + 10 * 60 * 1000);
-    
+
     // Always validate that the time is in the future, but only show error if:
     // 1. User has touched the field, OR
-    // 2. The date was changed from original, OR  
+    // 2. The date was changed from original, OR
     // 3. The original date is now in the past (for existing posts)
     if (selected < tenMinsFromNow) {
       // For new posts or if user changed the date, always show error
       if (!isEditMode || postScheduledFor !== originalScheduledFor) {
         return "Schedule must be at least 10 minutes in the future.";
       }
-      
+
       // For existing posts with unchanged date, only show if the original time has passed
       if (isEditMode && originalScheduledFor) {
         const originalDate = new Date(originalScheduledFor);
@@ -247,25 +248,27 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         }
       }
     }
-    
+
     return null;
   };
 
-  const dateError = dateTouched ? getDateError() : (isEditMode ? getDateError() : null);
+  const dateError = dateTouched ? getDateError() : isEditMode ? getDateError() : null;
   const isDateValid = isDateFilled && getDateError() === null;
-  
+
   // Platform validation
   const validatePlatformSelection = (): string | null => {
     if (!isEditMode) return null;
     if (selectedPlatforms.length === 0) return "At least one platform must be selected";
-    
-    const disconnectedPlatforms = selectedPlatforms.filter(platform => !connectedPlatforms.includes(platform));
+
+    const disconnectedPlatforms = selectedPlatforms.filter(
+      (platform) => !connectedPlatforms.includes(platform),
+    );
     if (disconnectedPlatforms.length > 0) {
       return `${disconnectedPlatforms[0]} account not connected`;
     }
     return null;
   };
-  
+
   const platformValidationError = validatePlatformSelection();
   const isPlatformValid = !isEditMode || (selectedPlatforms.length > 0 && !platformValidationError);
   const isFormValid = isTitleValid && isDateValid && isPlatformValid && !descriptionError;
@@ -279,10 +282,10 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
     if (!mounted) return;
     requestAnimationFrame(() => setShowModal(true));
     document.body.style.overflow = "hidden";
-    
+
     // Store the currently focused element to return focus later
     returnFocusRef.current = document.activeElement as HTMLElement;
-    
+
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -308,7 +311,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
       if (e.key !== "Tab") return;
 
       const focusableElements = modal.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])',
       );
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
@@ -382,24 +385,24 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
 
       try {
         const response = await fetch(`/api/posts/${postId}/draft`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
         });
 
         if (response.status === 401) {
-          window.location.href = '/login';
+          window.location.href = "/login";
           return;
         }
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to save as draft');
+          throw new Error(data.error || "Failed to save as draft");
         }
 
         // Success - show toast notification
         showSuccess("Post saved as draft");
-        
+
         // Refresh dashboard data
         try {
           const dashboardResponse = await fetch("/api/dashboard");
@@ -407,7 +410,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
             showError("Failed to refresh dashboard");
           }
           // Trigger dashboard refresh if on dashboard page
-          if (typeof window !== 'undefined') {
+          if (typeof window !== "undefined") {
             const win = window as Window & { refreshDashboard?: () => void };
             if (win.refreshDashboard) {
               win.refreshDashboard();
@@ -418,18 +421,20 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
           console.error("Error refreshing dashboard:", refreshError);
           showError("Failed to refresh dashboard");
         }
-        
+
         // Close modal
         clearUpload();
         onClose();
-
       } catch (error) {
-        if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
           const errorMsg = "Network error. Please check your connection and try again.";
           setDraftError(errorMsg);
           showError(errorMsg);
         } else {
-          const errorMsg = error instanceof Error ? error.message : 'An error occurred while saving as draft. Please try again.';
+          const errorMsg =
+            error instanceof Error
+              ? error.message
+              : "An error occurred while saving as draft. Please try again.";
           setDraftError(errorMsg);
           showError(errorMsg);
         }
@@ -447,9 +452,9 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
       setDraftError(null);
 
       try {
-        const response = await fetch('/api/posts/drafts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/posts/drafts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title: postTitle,
             description: postDescription || undefined,
@@ -461,14 +466,14 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
 
         if (response.status === 401) {
           // Authentication error - redirect to login
-          window.location.href = '/login';
+          window.location.href = "/login";
           return;
         }
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to save draft');
+          throw new Error(data.error || "Failed to save draft");
         }
 
         // Success
@@ -479,7 +484,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
             console.error("Failed to refresh dashboard");
           }
           // Trigger dashboard refresh if on dashboard page
-          if (typeof window !== 'undefined') {
+          if (typeof window !== "undefined") {
             const win = window as Window & { refreshDashboard?: () => void };
             if (win.refreshDashboard) {
               win.refreshDashboard();
@@ -495,12 +500,15 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
           clearUpload();
           onClose();
         }, 2000);
-
       } catch (error) {
-        if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
           setDraftError("Network error. Please check your connection and try again.");
         } else {
-          setDraftError(error instanceof Error ? error.message : 'An error occurred while saving your draft. Please try again.');
+          setDraftError(
+            error instanceof Error
+              ? error.message
+              : "An error occurred while saving your draft. Please try again.",
+          );
         }
       } finally {
         setIsSavingDraft(false);
@@ -510,12 +518,12 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
 
   const handleUpdateSchedule = async () => {
     if (!isEditMode) return;
-    
+
     // Trigger validation by marking fields as touched
     setTitleTouched(true);
     setDescriptionTouched(true);
     setDateTouched(true);
-    
+
     // Check if form is valid
     if (!isFormValid) {
       if (titleError) {
@@ -529,37 +537,37 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
       }
       return;
     }
-    
+
     setIsUpdating(true);
     setUpdateError(null);
-    
+
     try {
       const response = await fetch(`/api/posts/${postId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: postTitle,
           description: postDescription || undefined,
           scheduledFor: postScheduledFor,
           selectedPlatforms: selectedPlatforms,
-          timezone: userTimezone || 'UTC',
+          timezone: userTimezone || "UTC",
         }),
       });
-      
+
       if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update post');
+        throw new Error(data.error || "Failed to update post");
       }
-      
+
       // Success - show success toast notification
       showSuccess("Post updated successfully");
-      
+
       // Refresh dashboard data
       try {
         const dashboardResponse = await fetch("/api/dashboard");
@@ -567,7 +575,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
           showError("Failed to refresh dashboard");
         }
         // Trigger dashboard refresh if on dashboard page
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const win = window as Window & { refreshDashboard?: () => void };
           if (win.refreshDashboard) {
             win.refreshDashboard();
@@ -578,18 +586,20 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         console.error("Error refreshing dashboard:", refreshError);
         showError("Failed to refresh dashboard");
       }
-      
+
       // Close modal
       clearUpload();
       onClose();
-      
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
         const errorMsg = "Network error. Please check your connection and try again.";
         setUpdateError(errorMsg);
         showError(errorMsg);
       } else {
-        const errorMsg = error instanceof Error ? error.message : 'An error occurred while updating the post. Please try again.';
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : "An error occurred while updating the post. Please try again.";
         setUpdateError(errorMsg);
         showError(errorMsg);
       }
@@ -614,7 +624,7 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-post-modal-title"
-        className={`bg-surface/85 backdrop-blur-2xl w-full ${isEditMode ? 'max-w-xl' : 'max-w-2xl'} max-h-[86dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/60 transition-all duration-300 ease-out transform ${
+        className={`bg-surface/85 backdrop-blur-2xl w-full ${isEditMode ? "max-w-xl" : "max-w-2xl"} max-h-[86dvh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/60 transition-all duration-300 ease-out transform ${
           showModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
@@ -627,13 +637,19 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
         </button>
 
         <div className="overflow-y-auto py-6 custom-scrollbar">
-          <h2 id="edit-post-modal-title" className="text-2xl md:text-3xl font-bold text-primary text-center mb-6">
+          <h2
+            id="edit-post-modal-title"
+            className="text-2xl md:text-3xl font-bold text-primary text-center mb-6"
+          >
             {isEditMode ? "Edit Scheduled Post" : "Edit & Schedule Post"}
           </h2>
 
-          <div className={`grid grid-cols-1 ${!isEditMode ? 'md:grid-cols-[1fr_auto]' : ''} gap-4 sm:gap-6 px-4 sm:px-6 md:px-8`}>
+          <div
+            className={`grid grid-cols-1 ${!isEditMode ? "md:grid-cols-[1fr_auto]" : ""} gap-4 sm:gap-6 px-4 sm:px-6 md:px-8`}
+          >
             {/* Left Side: Details Form */}
-            <div className="min-w-0 w-full">{/* Removed order classes since there's no right side in edit mode */}
+            <div className="min-w-0 w-full">
+              {/* Removed order classes since there's no right side in edit mode */}
               <div className="flex flex-col gap-5 w-full">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
@@ -660,8 +676,16 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
                   {/* Title validation error message */}
                   {titleError && (
                     <p className="text-xs text-error mt-1.5 flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      <svg
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       {titleError}
                     </p>
@@ -671,7 +695,9 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-text-main">Description & Tags</label>
-                    <span className="text-xs text-text-secondary">{postDescription.length}/250</span>
+                    <span className="text-xs text-text-secondary">
+                      {postDescription.length}/250
+                    </span>
                   </div>
                   <textarea
                     value={postDescription}
@@ -688,8 +714,16 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
                   {/* Description validation error message */}
                   {descriptionError && (
                     <p className="text-xs text-error mt-1.5 flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      <svg
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       {descriptionError}
                     </p>
@@ -735,20 +769,30 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
                   {/* Date validation error message */}
                   {dateError && (
                     <p className="text-xs text-error mt-1.5 flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      <svg
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       {dateError}
                     </p>
                   )}
-                  
+
                   {/* Timezone Information */}
                   {userTimezone ? (
                     <div className="mt-3 p-3 bg-surface/30 backdrop-blur-md border border-border/40 rounded-xl">
                       <div className="flex items-center gap-2 text-xs text-text-secondary">
                         <Globe2 className="w-4 h-4 text-primary" />
                         <span className="font-medium">Upload Timezone:</span>
-                        <span className="font-semibold text-text-main">{userTimezone} ({getUTCOffset(userTimezone)})</span>
+                        <span className="font-semibold text-text-main">
+                          {userTimezone} ({getUTCOffset(userTimezone)})
+                        </span>
                       </div>
                     </div>
                   ) : (
@@ -771,63 +815,83 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
                       Select Platforms <span className="text-error">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      {APP_PLATFORMS.filter(p => connectedPlatforms.includes(p.name)).map((platform) => {
-                        const isSelected = selectedPlatforms.includes(platform.name);
-                        const isConnected = connectedPlatforms.includes(platform.name);
-                        
-                        return (
-                          <label
-                            key={platform.name}
-                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                              isSelected
-                                ? "border-primary bg-primary/10"
-                                : "border-border/60 bg-surface/40 hover:bg-surface-highlight"
-                            } ${!isConnected ? "opacity-50 cursor-not-allowed" : ""}`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              disabled={!isConnected}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedPlatforms(prev => [...prev, platform.name]);
-                                } else {
-                                  setSelectedPlatforms(prev => prev.filter(p => p !== platform.name));
-                                }
-                              }}
-                              className="sr-only"
-                            />
-                            <div className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
-                              <Image
-                                src={platform.icon}
-                                alt={`${platform.name} logo`}
-                                fill
-                                className="object-cover"
+                      {APP_PLATFORMS.filter((p) => connectedPlatforms.includes(p.name)).map(
+                        (platform) => {
+                          const isSelected = selectedPlatforms.includes(platform.name);
+                          const isConnected = connectedPlatforms.includes(platform.name);
+
+                          return (
+                            <label
+                              key={platform.name}
+                              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                isSelected
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border/60 bg-surface/40 hover:bg-surface-highlight"
+                              } ${!isConnected ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={!isConnected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedPlatforms((prev) => [...prev, platform.name]);
+                                  } else {
+                                    setSelectedPlatforms((prev) =>
+                                      prev.filter((p) => p !== platform.name),
+                                    );
+                                  }
+                                }}
+                                className="sr-only"
                               />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-text-main truncate">
-                                {platform.name}
+                              <div className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+                                <Image
+                                  src={platform.icon}
+                                  alt={`${platform.name} logo`}
+                                  fill
+                                  className="object-cover"
+                                />
                               </div>
-                              <div className="text-xs text-text-secondary">
-                                {isConnected ? "Connected" : "Not connected"}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-text-main truncate">
+                                  {platform.name}
+                                </div>
+                                <div className="text-xs text-text-secondary">
+                                  {isConnected ? "Connected" : "Not connected"}
+                                </div>
                               </div>
-                            </div>
-                            {isSelected && (
-                              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-                          </label>
-                        );
-                      })}
+                              {isSelected && (
+                                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                  <svg
+                                    className="w-3 h-3 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                            </label>
+                          );
+                        },
+                      )}
                     </div>
                     {platformValidationError && (
                       <p className="text-xs text-error mt-1.5 flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        <svg
+                          className="w-3.5 h-3.5 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                         {platformValidationError}
                       </p>
@@ -890,8 +954,8 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
                                 clearError();
                                 // Re-upload the same file
                                 fetch(previewUrl)
-                                  .then(res => res.blob())
-                                  .then(blob => {
+                                  .then((res) => res.blob())
+                                  .then((blob) => {
                                     const file = new File([blob], "video.mp4", { type: blob.type });
                                     handleUpload(file);
                                   })
@@ -1019,14 +1083,25 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
             <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
               <div className="flex items-center justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-8 h-8 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
               </div>
               <h3 className="text-xl font-bold mb-2 text-text-main text-center">Draft Saved!</h3>
               <p className="text-sm text-text-secondary text-center">
-                Your post has been saved as a draft. You can continue editing it later from your dashboard.
+                Your post has been saved as a draft. You can continue editing it later from your
+                dashboard.
               </p>
             </div>
           </div>
@@ -1039,14 +1114,18 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
               <div className="flex items-center justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center">
                   <svg className="w-8 h-8 text-error" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Failed to Save Draft</h3>
-              <p className="text-sm text-text-secondary text-center mb-6">
-                {draftError}
-              </p>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">
+                Failed to Save Draft
+              </h3>
+              <p className="text-sm text-text-secondary text-center mb-6">{draftError}</p>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setDraftError(null)}
@@ -1072,14 +1151,18 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
               <div className="flex items-center justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center">
                   <svg className="w-8 h-8 text-error" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Failed to Load Post</h3>
-              <p className="text-sm text-text-secondary text-center mb-6">
-                {loadPostError}
-              </p>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">
+                Failed to Load Post
+              </h3>
+              <p className="text-sm text-text-secondary text-center mb-6">{loadPostError}</p>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => {
@@ -1111,14 +1194,18 @@ export default function EditPost({ onClose, postId }: EditPostProps) {
               <div className="flex items-center justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center">
                   <svg className="w-8 h-8 text-error" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Failed to Update Post</h3>
-              <p className="text-sm text-text-secondary text-center mb-6">
-                {updateError}
-              </p>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">
+                Failed to Update Post
+              </h3>
+              <p className="text-sm text-text-secondary text-center mb-6">{updateError}</p>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setUpdateError(null)}

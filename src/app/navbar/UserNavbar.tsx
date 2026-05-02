@@ -77,10 +77,10 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
   const [activeDropdown, setActiveDropdown] = useState<"notifications" | "profile" | null>(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
+
   // Get fresh session data for role verification
   const { data: session } = useSession();
-  
+
   // modal context
   const modal = useModal();
   const { tempImage } = useUser();
@@ -351,13 +351,13 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
                   onClick={async () => {
                     // Clear any client-side state
                     setActiveDropdown(null);
-                    
+
                     // Sign out and redirect to login
-                    await signOut({ 
-                      callbackUrl: "/login", 
-                      redirect: true 
+                    await signOut({
+                      callbackUrl: "/login",
+                      redirect: true,
                     });
-                    
+
                     // Force a hard reload to clear any cached state
                     window.location.href = "/login";
                   }}

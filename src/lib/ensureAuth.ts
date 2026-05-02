@@ -9,7 +9,7 @@ export async function ensureAuth() {
   if (!session?.user) {
     return NextResponse.json(
       { error: "Unauthorized. Please log in to continue." },
-      { status: 401 }
+      { status: 401 },
     );
   }
 

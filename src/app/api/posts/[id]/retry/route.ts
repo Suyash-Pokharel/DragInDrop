@@ -4,16 +4,13 @@ import { getPrisma } from "@/lib/prisma";
 
 /**
  * POST /api/posts/[id]/retry
- * 
+ *
  * Retry a failed post by resetting its status and platform post statuses
  * This allows the cron job to pick it up again for processing
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
+
   try {
     const user = await getCurrentUser();
 
@@ -44,7 +41,7 @@ export async function POST(
     if (post.status !== "FAILED" && post.status !== "PARTIALLY_PUBLISHED") {
       return NextResponse.json(
         { error: "Only failed or partially published posts can be retried" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,9 +83,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("[Retry Post] Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

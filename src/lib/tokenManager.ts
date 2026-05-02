@@ -1,16 +1,16 @@
-import { SocialAccount } from '@prisma/client';
-import { decryptToken, encryptToken } from './encryption';
-import { getPrisma } from './prisma';
+import { SocialAccount } from "@prisma/client";
+import { decryptToken, encryptToken } from "./encryption";
+import { getPrisma } from "./prisma";
 
 /**
  * TikTok OAuth token endpoint
  */
-const TIKTOK_TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
+const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 
 /**
  * Google OAuth token endpoint
  */
-const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
 /**
  * Token refresh buffer time in milliseconds (5 minutes)
@@ -30,10 +30,10 @@ const INITIAL_RETRY_DELAY_MS = 1000;
 
 /**
  * Checks if a token is expired or will expire soon
- * 
+ *
  * @param socialAccount - The SocialAccount record to check
  * @returns True if the token needs to be refreshed, false otherwise
- * 
+ *
  * @example
  * const needsRefresh = isTokenExpired(socialAccount);
  * if (needsRefresh) {
@@ -65,11 +65,11 @@ export interface TokenRefreshResult {
 
 /**
  * Refreshes an expired or expiring OAuth token
- * 
+ *
  * @param socialAccount - The SocialAccount record with the token to refresh
  * @param userId - The ID of the user requesting the refresh (for authorization check)
  * @returns TokenRefreshResult indicating success or failure
- * 
+ *
  * @example
  * const result = await refreshToken(socialAccount, user.id);
  * if (result.success) {
@@ -80,19 +80,19 @@ export interface TokenRefreshResult {
  */
 export async function refreshToken(
   socialAccount: SocialAccount,
-  userId?: string
+  userId?: string,
 ): Promise<TokenRefreshResult> {
   // Authorization check: Validate user owns SocialAccount
   // Requirement: 10.12 - Validate user owns SocialAccount before token refresh
   if (userId && socialAccount.userId !== userId) {
-    console.error('Authorization failed: User does not own SocialAccount:', {
+    console.error("Authorization failed: User does not own SocialAccount:", {
       requestingUserId: userId,
       accountUserId: socialAccount.userId,
       platform: socialAccount.platform,
     });
     return {
       success: false,
-      error: 'Unauthorized: You do not own this account',
+      error: "Unauthorized: You do not own this account",
     };
   }
 
@@ -100,7 +100,7 @@ export async function refreshToken(
   if (!socialAccount.refreshToken) {
     return {
       success: false,
-      error: 'No refresh token available',
+      error: "No refresh token available",
     };
   }
 
@@ -109,14 +109,14 @@ export async function refreshToken(
   try {
     decryptedRefreshToken = decryptToken(socialAccount.refreshToken);
   } catch (error) {
-    console.error('Failed to decrypt refresh token:', {
+    console.error("Failed to decrypt refresh token:", {
       userId: socialAccount.userId,
       platform: socialAccount.platform,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     return {
       success: false,
-      error: 'Failed to decrypt refresh token',
+      error: "Failed to decrypt refresh token",
     };
   }
 
@@ -125,19 +125,19 @@ export async function refreshToken(
   let clientSecret: string | undefined;
   let tokenUrl: string;
 
-  if (socialAccount.platform === 'TikTok') {
+  if (socialAccount.platform === "TikTok") {
     clientKey = process.env.TIKTOK_CLIENT_KEY;
     clientSecret = process.env.TIKTOK_CLIENT_SECRET;
     tokenUrl = TIKTOK_TOKEN_URL;
-  } else if (socialAccount.platform === 'YouTube') {
+  } else if (socialAccount.platform === "YouTube") {
     clientKey = process.env.YOUTUBE_CLIENT_ID;
     clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
     tokenUrl = GOOGLE_TOKEN_URL;
   } else {
-    console.error('Unsupported platform for token refresh:', socialAccount.platform);
+    console.error("Unsupported platform for token refresh:", socialAccount.platform);
     return {
       success: false,
-      error: 'Unsupported platform',
+      error: "Unsupported platform",
     };
   }
 
@@ -145,12 +145,12 @@ export async function refreshToken(
     console.error(`Missing ${socialAccount.platform} OAuth credentials`);
     return {
       success: false,
-      error: 'OAuth configuration error',
+      error: "OAuth configuration error",
     };
   }
 
   // Attempt token refresh with retry logic
-  let lastError: string = '';
+  let lastError: string = "";
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
       const result = await attemptTokenRefresh(
@@ -158,7 +158,7 @@ export async function refreshToken(
         clientKey,
         clientSecret,
         decryptedRefreshToken,
-        tokenUrl
+        tokenUrl,
       );
 
       if (result.success && result.tokens) {
@@ -170,7 +170,7 @@ export async function refreshToken(
           socialAccount,
           result.tokens.accessToken,
           newRefreshToken,
-          result.tokens.expiresIn
+          result.tokens.expiresIn,
         );
       }
 
@@ -184,32 +184,32 @@ export async function refreshToken(
         });
         return {
           success: false,
-          error: result.error || 'Rate limit exceeded',
+          error: result.error || "Rate limit exceeded",
         };
       }
 
       // If invalid_grant error, don't retry
-      if (result.error === 'invalid_grant') {
+      if (result.error === "invalid_grant") {
         await deactivateSocialAccount(socialAccount);
         return {
           success: false,
-          error: 'Refresh token is invalid or expired. Account deactivated.',
+          error: "Refresh token is invalid or expired. Account deactivated.",
         };
       }
 
       // If timeout error, allow retry with backoff
       if (result.isTimeout) {
-        lastError = result.error || 'Request timeout';
+        lastError = result.error || "Request timeout";
         console.warn(`Token refresh timeout on attempt ${attempt}:`, {
           userId: socialAccount.userId,
           platform: socialAccount.platform,
           attempt,
         });
       } else {
-        lastError = result.error || 'Unknown error';
+        lastError = result.error || "Unknown error";
       }
     } catch (error) {
-      lastError = error instanceof Error ? error.message : 'Network error';
+      lastError = error instanceof Error ? error.message : "Network error";
       console.error(`Token refresh attempt ${attempt} failed:`, {
         userId: socialAccount.userId,
         platform: socialAccount.platform,
@@ -226,7 +226,7 @@ export async function refreshToken(
   }
 
   // All retries failed
-  console.error('Token refresh failed after all retries:', {
+  console.error("Token refresh failed after all retries:", {
     userId: socialAccount.userId,
     platform: socialAccount.platform,
     attempts: MAX_RETRY_ATTEMPTS,
@@ -247,7 +247,7 @@ async function attemptTokenRefresh(
   clientKey: string,
   clientSecret: string,
   refreshToken: string,
-  tokenUrl: string
+  tokenUrl: string,
 ): Promise<{
   success: boolean;
   tokens?: {
@@ -263,24 +263,24 @@ async function attemptTokenRefresh(
   let params: URLSearchParams;
 
   // Build request parameters based on platform
-  if (platform === 'TikTok') {
+  if (platform === "TikTok") {
     params = new URLSearchParams({
       client_key: clientKey,
       client_secret: clientSecret,
-      grant_type: 'refresh_token',
+      grant_type: "refresh_token",
       refresh_token: refreshToken,
     });
-  } else if (platform === 'YouTube') {
+  } else if (platform === "YouTube") {
     params = new URLSearchParams({
       client_id: clientKey,
       client_secret: clientSecret,
-      grant_type: 'refresh_token',
+      grant_type: "refresh_token",
       refresh_token: refreshToken,
     });
   } else {
     return {
       success: false,
-      error: 'Unsupported platform',
+      error: "Unsupported platform",
     };
   }
 
@@ -291,25 +291,25 @@ async function attemptTokenRefresh(
   let response: Response;
   try {
     response = await fetch(tokenUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: params.toString(),
       signal: controller.signal,
     });
   } catch (fetchError) {
     clearTimeout(timeout);
-    
+
     // Check if error is due to timeout/abort
-    if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+    if (fetchError instanceof Error && fetchError.name === "AbortError") {
       return {
         success: false,
-        error: 'Request timeout. Please try again.',
+        error: "Request timeout. Please try again.",
         isTimeout: true,
       };
     }
-    
+
     // Re-throw other fetch errors to be caught by retry logic
     throw fetchError;
   } finally {
@@ -332,7 +332,7 @@ async function attemptTokenRefresh(
   if (!response.ok || data.error) {
     return {
       success: false,
-      error: data.error || data.error_description || 'Token refresh failed',
+      error: data.error || data.error_description || "Token refresh failed",
     };
   }
 
@@ -356,7 +356,7 @@ async function updateSocialAccountTokens(
   socialAccount: SocialAccount,
   accessToken: string,
   refreshToken: string,
-  expiresIn: number
+  expiresIn: number,
 ): Promise<TokenRefreshResult> {
   try {
     // Encrypt the new tokens
@@ -369,15 +369,16 @@ async function updateSocialAccountTokens(
     } catch (encryptionError) {
       // Requirement: 10.14 - Log encryption errors without logging plaintext tokens
       // Requirement: 10.15 - Never log plaintext tokens
-      console.error('[updateSocialAccountTokens] Token encryption failed:', {
+      console.error("[updateSocialAccountTokens] Token encryption failed:", {
         userId: socialAccount.userId,
         platform: socialAccount.platform,
         timestamp: new Date().toISOString(),
-        error: encryptionError instanceof Error ? encryptionError.message : 'Unknown encryption error',
+        error:
+          encryptionError instanceof Error ? encryptionError.message : "Unknown encryption error",
       });
       return {
         success: false,
-        error: 'Failed to encrypt tokens',
+        error: "Failed to encrypt tokens",
       };
     }
 
@@ -396,7 +397,7 @@ async function updateSocialAccountTokens(
       },
     });
 
-    console.log('Token refreshed successfully:', {
+    console.log("Token refreshed successfully:", {
       userId: socialAccount.userId,
       platform: socialAccount.platform,
       expiresAt,
@@ -407,15 +408,15 @@ async function updateSocialAccountTokens(
       updatedAccount,
     };
   } catch (error) {
-    console.error('Failed to update SocialAccount with new tokens:', {
+    console.error("Failed to update SocialAccount with new tokens:", {
       userId: socialAccount.userId,
       platform: socialAccount.platform,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     });
 
     return {
       success: false,
-      error: 'Failed to update account with new tokens',
+      error: "Failed to update account with new tokens",
     };
   }
 }
@@ -423,9 +424,7 @@ async function updateSocialAccountTokens(
 /**
  * Deactivates a SocialAccount when refresh token is invalid
  */
-async function deactivateSocialAccount(
-  socialAccount: SocialAccount
-): Promise<void> {
+async function deactivateSocialAccount(socialAccount: SocialAccount): Promise<void> {
   try {
     const prisma = getPrisma();
     await prisma.socialAccount.update({
@@ -436,15 +435,15 @@ async function deactivateSocialAccount(
       },
     });
 
-    console.log('SocialAccount deactivated due to invalid refresh token:', {
+    console.log("SocialAccount deactivated due to invalid refresh token:", {
       userId: socialAccount.userId,
       platform: socialAccount.platform,
     });
   } catch (error) {
-    console.error('Failed to deactivate SocialAccount:', {
+    console.error("Failed to deactivate SocialAccount:", {
       userId: socialAccount.userId,
       platform: socialAccount.platform,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
@@ -458,11 +457,11 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Gets a valid access token for a SocialAccount, refreshing if necessary
- * 
+ *
  * @param socialAccount - The SocialAccount record
  * @param userId - The ID of the user requesting the token (for authorization check)
  * @returns The decrypted access token, or null if refresh failed
- * 
+ *
  * @example
  * const accessToken = await getValidAccessToken(socialAccount, user.id);
  * if (accessToken) {
@@ -473,12 +472,12 @@ function sleep(ms: number): Promise<void> {
  */
 export async function getValidAccessToken(
   socialAccount: SocialAccount,
-  userId?: string
+  userId?: string,
 ): Promise<string | null> {
   // Authorization check: Validate user owns SocialAccount
   // Requirement: 10.12 - Validate user owns SocialAccount before token access
   if (userId && socialAccount.userId !== userId) {
-    console.error('Authorization failed: User does not own SocialAccount:', {
+    console.error("Authorization failed: User does not own SocialAccount:", {
       requestingUserId: userId,
       accountUserId: socialAccount.userId,
       platform: socialAccount.platform,
@@ -500,10 +499,10 @@ export async function getValidAccessToken(
   try {
     return decryptToken(socialAccount.accessToken);
   } catch (error) {
-    console.error('Failed to decrypt access token:', {
+    console.error("Failed to decrypt access token:", {
       userId: socialAccount.userId,
       platform: socialAccount.platform,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     return null;
   }

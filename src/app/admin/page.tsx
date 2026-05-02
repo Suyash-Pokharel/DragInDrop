@@ -6,14 +6,14 @@ import AdminDashboard from "./AdminDashboard";
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
-  
+
   // Check if user is authenticated and has ADMIN role
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/dashboard");
   }
 
   const prisma = getPrisma();
-  
+
   // Fetch users with their OAuth login accounts and social media accounts
   const users = await prisma.user.findMany({
     select: {

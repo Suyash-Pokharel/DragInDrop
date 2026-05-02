@@ -17,39 +17,39 @@ function convertToUTC(dateTimeStr: string, timezone: string): Date {
   // Support both formats: with seconds (2026-04-16T09:20:00) and without (2026-04-16T09:20)
   const match = dateTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
   if (!match) {
-    throw new Error('Invalid datetime format');
+    throw new Error("Invalid datetime format");
   }
-  
-  const [, year, month, day, hour, minute, second = '00'] = match;
-  
+
+  const [, year, month, day, hour, minute, second = "00"] = match;
+
   // Create a date string in ISO format with explicit timezone
   // We'll use a reference date to find the offset
   const localDateStr = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-  
+
   // Create two dates: one in UTC, one formatted in the target timezone
   // This helps us calculate the offset
   const utcDate = new Date(`${localDateStr}Z`);
-  
+
   // Format this UTC date as it would appear in the target timezone
-  const formatter = new Intl.DateTimeFormat('en-US', {
+  const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     hour12: false,
   });
-  
+
   const parts = formatter.formatToParts(utcDate);
   const partsMap: Record<string, string> = {};
-  parts.forEach(part => {
-    if (part.type !== 'literal') {
+  parts.forEach((part) => {
+    if (part.type !== "literal") {
       partsMap[part.type] = part.value;
     }
   });
-  
+
   // The formatted string shows what time it is in the target timezone when it's utcDate in UTC
   const tzYear = parseInt(partsMap.year);
   const tzMonth = parseInt(partsMap.month);
@@ -57,16 +57,23 @@ function convertToUTC(dateTimeStr: string, timezone: string): Date {
   const tzHour = parseInt(partsMap.hour);
   const tzMinute = parseInt(partsMap.minute);
   const tzSecond = parseInt(partsMap.second);
-  
+
   // Calculate the difference in milliseconds
   const utcMs = utcDate.getTime();
   const tzDateMs = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMinute, tzSecond);
   const offset = utcMs - tzDateMs;
-  
+
   // Now apply this offset to our target local time
-  const targetLocalMs = Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute), parseInt(second));
+  const targetLocalMs = Date.UTC(
+    parseInt(year),
+    parseInt(month) - 1,
+    parseInt(day),
+    parseInt(hour),
+    parseInt(minute),
+    parseInt(second),
+  );
   const targetUtcMs = targetLocalMs + offset;
-  
+
   return new Date(targetUtcMs);
 }
 
@@ -79,19 +86,14 @@ const createPostSchema = z.object({
     .string({ message: "Title is required" })
     .min(1, "Title is required")
     .max(100, "Title must not exceed 100 characters"),
-  description: z
-    .string()
-    .max(250, "Description must not exceed 250 characters")
-    .optional(),
-  scheduledFor: z
-    .string({ message: "Scheduled time is required" })
-    .refine(
-      (dateStr) => {
-        const scheduledDate = new Date(dateStr);
-        return scheduledDate > new Date();
-      },
-      { message: "Scheduled time must be in the future" }
-    ),
+  description: z.string().max(250, "Description must not exceed 250 characters").optional(),
+  scheduledFor: z.string({ message: "Scheduled time is required" }).refine(
+    (dateStr) => {
+      const scheduledDate = new Date(dateStr);
+      return scheduledDate > new Date();
+    },
+    { message: "Scheduled time must be in the future" },
+  ),
   videoFileKey: z
     .string({ message: "Video file key is required" })
     .min(1, "Video file key is required"),
@@ -130,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Validate request data
     // Requirements: 2.7-2.12 - Handle validation errors (400)
     const validationResult = createPostSchema.safeParse(body);
-    
+
     if (!validationResult.success) {
       const firstError = validationResult.error.issues[0];
       console.error("[POST /api/posts] Validation error:", {
@@ -140,11 +142,8 @@ export async function POST(request: NextRequest) {
         field: firstError.path.join("."),
         receivedValue: firstError.path.length > 0 ? body[firstError.path[0]] : undefined,
       });
-      
-      return NextResponse.json(
-        { error: firstError.message },
-        { status: 400 }
-      );
+
+      return NextResponse.json({ error: firstError.message }, { status: 400 });
     }
 
     const {
@@ -168,7 +167,7 @@ export async function POST(request: NextRequest) {
 
     // Convert scheduled time from user's timezone to UTC for storage
     // Use UTC as fallback if no timezone is set
-    const userTimezone = userPreferences?.timezone || 'UTC';
+    const userTimezone = userPreferences?.timezone || "UTC";
     const scheduledForUTC = convertToUTC(scheduledFor, userTimezone);
 
     // Query SocialAccount records for user and selected platforms
@@ -185,7 +184,7 @@ export async function POST(request: NextRequest) {
     // Requirement: 4.7, 5.8, 11.1, 11.4 - Handle missing SocialAccount errors (400)
     const foundPlatforms = socialAccounts.map((sa) => sa.platform);
     const missingPlatforms = selectedPlatforms.filter(
-      (platform) => !foundPlatforms.includes(platform)
+      (platform) => !foundPlatforms.includes(platform),
     );
 
     if (missingPlatforms.length > 0) {
@@ -197,22 +196,18 @@ export async function POST(request: NextRequest) {
         selectedPlatforms,
         foundPlatforms,
       });
-      
+
       // Provide specific error message for single platform (Requirement 11.4)
-      const errorMessage = missingPlatforms.length === 1
-        ? `${missingPlatforms[0]} account not connected`
-        : `Invalid platform selection: ${missingPlatforms.join(", ")}`;
-      
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: 400 }
-      );
+      const errorMessage =
+        missingPlatforms.length === 1
+          ? `${missingPlatforms[0]} account not connected`
+          : `Invalid platform selection: ${missingPlatforms.join(", ")}`;
+
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
     // Create a map of platform to socialAccountId for easy lookup
-    const platformToAccountMap = new Map(
-      socialAccounts.map((sa) => [sa.platform, sa.id])
-    );
+    const platformToAccountMap = new Map(socialAccounts.map((sa) => [sa.platform, sa.id]));
 
     // Use Prisma transaction to ensure atomicity
     // Requirements: 2.3, 2.4, 2.5, 4.8
@@ -246,8 +241,8 @@ export async function POST(request: NextRequest) {
               createdAt: new Date(),
               updatedAt: new Date(),
             },
-          })
-        )
+          }),
+        ),
       );
 
       return { post, platformPosts };
@@ -267,7 +262,7 @@ export async function POST(request: NextRequest) {
     // Return 201 with postId on success
     return NextResponse.json(
       { success: true, postId: result.post.id, message: "Post created successfully" },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     // Requirement: 2.13, 5.6 - Handle database errors (500) and log with user context
@@ -279,9 +274,6 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to create post" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
   }
 }

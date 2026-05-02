@@ -109,59 +109,56 @@ export default function ForgetPassword({ onClose }: ForgetPasswordProps) {
         {/* --- INPUT FORM --- */}
         <div className="p-6 md:p-8">
           <Reveal width="100%" delay={0.05}>
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
-                  <Mail size={32} />
-                </div>
-                <h2 className="text-3xl font-bold text-text-main mb-2">Forgot password?</h2>
-                <p className="text-text-secondary text-sm">
-                  Enter your email address and we&apos;ll send you a link to reset your password.
-                </p>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                <Mail size={32} />
               </div>
-            </Reveal>
+              <h2 className="text-3xl font-bold text-text-main mb-2">Forgot password?</h2>
+              <p className="text-text-secondary text-sm">
+                Enter your email address and we&apos;ll send you a link to reset your password.
+              </p>
+            </div>
+          </Reveal>
 
-            <Reveal width="100%" delay={0.1}>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-1.5 text-left">
-                  <label
-                    htmlFor="recoveryEmail"
-                    className="block text-sm font-medium text-text-main"
-                  >
-                    Email
-                    {isEmailError && <span className="inline-error">REQUIRED</span>}
-                  </label>
+          <Reveal width="100%" delay={0.1}>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-1.5 text-left">
+                <label htmlFor="recoveryEmail" className="block text-sm font-medium text-text-main">
+                  Email
+                  {isEmailError && <span className="inline-error">REQUIRED</span>}
+                </label>
 
-                  <input
-                    id="recoveryEmail"
-                    name="email"
-                    autoComplete="email"
-                    type="email"
-                    disabled={isLoading}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onBlur={() => setTouched(true)}
-                    placeholder="example@gmail.com"
-                    className={`input-base ${isEmailError ? "input-error" : "input-default"}`}
-                  />
-                </div>
+                <input
+                  id="recoveryEmail"
+                  name="email"
+                  autoComplete="email"
+                  type="email"
+                  disabled={isLoading}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setTouched(true)}
+                  placeholder="example@gmail.com"
+                  className={`input-base ${isEmailError ? "input-error" : "input-default"}`}
+                />
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading || !isFormValid}
-                  className="w-full py-3 px-4 rounded-lg bg-primary text-white font-semibold hover:bg-secondary active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 size={20} className="animate-spin" />
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    "Get Email"
-                  )}
-                </button>
-              </form>
-            </Reveal>
-          </div>
+              <button
+                type="submit"
+                disabled={isLoading || !isFormValid}
+                className="w-full py-3 px-4 rounded-lg bg-primary text-white font-semibold hover:bg-secondary active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  "Get Email"
+                )}
+              </button>
+            </form>
+          </Reveal>
+        </div>
       </div>
     </div>,
     document.body,

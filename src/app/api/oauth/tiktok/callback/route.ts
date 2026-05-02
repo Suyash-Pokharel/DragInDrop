@@ -14,8 +14,9 @@ import { validateHttps } from "@/lib/sanitize";
 export async function GET(request: NextRequest) {
   // Rate limiting
   // Requirement: 10.13 - Apply rate limiting to OAuth endpoints
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
-  
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+
   try {
     if (ip !== "unknown") {
       await perIpOAuthLimiter.consume(ip);
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
         error,
       });
       return NextResponse.redirect(
-        `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Authorization denied")}`
+        `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Authorization denied")}`,
       );
     }
 
@@ -86,10 +87,7 @@ export async function GET(request: NextRequest) {
         userId: user.id,
         timestamp: new Date().toISOString(),
       });
-      return NextResponse.json(
-        { error: "Missing authorization code" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing authorization code" }, { status: 400 });
     }
 
     // Verify CSRF token (state parameter)
@@ -103,10 +101,7 @@ export async function GET(request: NextRequest) {
         stateStored: !!storedState,
         stateMatch: state === storedState,
       });
-      return NextResponse.json(
-        { error: "Invalid state parameter" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid state parameter" }, { status: 400 });
     }
 
     // Retrieve PKCE code_verifier from cookie
@@ -116,17 +111,14 @@ export async function GET(request: NextRequest) {
         userId: user.id,
         timestamp: new Date().toISOString(),
       });
-      return NextResponse.json(
-        { error: "Invalid OAuth session" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid OAuth session" }, { status: 400 });
     }
 
     // Validate redirect URI
     // Requirements: 10.10, 10.11 - Validate redirect_uri matches configured value
     const redirectUri = `${appUrl}/api/oauth/tiktok/callback`;
     const isProduction = process.env.NODE_ENV === "production";
-    
+
     if (!validateHttps(redirectUri, isProduction)) {
       console.error("[GET /api/oauth/tiktok/callback] Invalid redirect URI protocol:", {
         userId: user.id,
@@ -136,7 +128,7 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "OAuth configuration error: HTTPS required in production" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -151,10 +143,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: "Missing TIKTOK_CLIENT_KEY or TIKTOK_CLIENT_SECRET",
       });
-      return NextResponse.json(
-        { error: "OAuth configuration error" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "OAuth configuration error" }, { status: 500 });
     }
 
     // Exchange authorization code for tokens
@@ -196,7 +185,7 @@ export async function GET(request: NextRequest) {
       });
     } catch (fetchError) {
       clearTimeout(tokenTimeout);
-      
+
       // Check if error is due to timeout/abort
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/tiktok/callback] Token exchange timeout:", {
@@ -204,12 +193,9 @@ export async function GET(request: NextRequest) {
           timestamp: new Date().toISOString(),
           error: "Request timeout",
         });
-        return NextResponse.json(
-          { error: "Request timeout. Please try again." },
-          { status: 504 }
-        );
+        return NextResponse.json({ error: "Request timeout. Please try again." }, { status: 504 });
       }
-      
+
       // Re-throw other fetch errors
       throw fetchError;
     } finally {
@@ -224,47 +210,44 @@ export async function GET(request: NextRequest) {
         status: tokenResponse.status,
         error: errorData,
       });
-      
+
       // Requirement: 8.6 - Handle rate limit errors from TikTok API
       if (tokenResponse.status === 429) {
         const retryAfter = tokenResponse.headers.get("retry-after") || "60";
         return NextResponse.json(
           { error: `Rate limit exceeded. Please try again after ${retryAfter} seconds.` },
-          { 
+          {
             status: 429,
             headers: {
               "Retry-After": retryAfter,
             },
-          }
+          },
         );
       }
-      
+
       // Requirement: 8.5 - Handle redirect URI mismatch
       // TikTok returns error codes like "redirect_uri_mismatch" or error descriptions
       const errorCode = errorData.error || errorData.error_code;
       const errorDescription = errorData.error_description || errorData.message;
-      
-      if (errorCode === "redirect_uri_mismatch" || 
-          (errorDescription && errorDescription.toLowerCase().includes("redirect"))) {
+
+      if (
+        errorCode === "redirect_uri_mismatch" ||
+        (errorDescription && errorDescription.toLowerCase().includes("redirect"))
+      ) {
         return NextResponse.redirect(
-          `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Redirect URI mismatch")}`
+          `${appUrl}/settings/social-accounts?error=${encodeURIComponent("Redirect URI mismatch")}`,
         );
       }
-      
+
       // Requirement: 2.11 - Return 500 if token exchange fails
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const tokenData = await tokenResponse.json();
-    const {
-      access_token,
-      refresh_token,
-      expires_in,
-      open_id,
-    } = tokenData;
+    const { access_token, refresh_token, expires_in, open_id } = tokenData;
 
     if (!access_token || !refresh_token || !open_id) {
       console.error("[GET /api/oauth/tiktok/callback] Invalid token response:", {
@@ -276,7 +259,7 @@ export async function GET(request: NextRequest) {
       });
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -312,7 +295,7 @@ export async function GET(request: NextRequest) {
       });
     } catch (fetchError) {
       clearTimeout(profileTimeout);
-      
+
       // Check if error is due to timeout/abort
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/tiktok/callback] Profile fetch timeout:", {
@@ -320,12 +303,9 @@ export async function GET(request: NextRequest) {
           timestamp: new Date().toISOString(),
           error: "Request timeout",
         });
-        return NextResponse.json(
-          { error: "Request timeout. Please try again." },
-          { status: 504 }
-        );
+        return NextResponse.json({ error: "Request timeout. Please try again." }, { status: 504 });
       }
-      
+
       // Re-throw other fetch errors
       throw fetchError;
     } finally {
@@ -341,35 +321,38 @@ export async function GET(request: NextRequest) {
         error: errorData,
         responseHeaders: Object.fromEntries(profileResponse.headers.entries()),
       });
-      
+
       // Requirement: 8.6 - Handle rate limit errors from TikTok API
       if (profileResponse.status === 429) {
         const retryAfter = profileResponse.headers.get("retry-after") || "60";
         return NextResponse.json(
           { error: `Rate limit exceeded. Please try again after ${retryAfter} seconds.` },
-          { 
+          {
             status: 429,
             headers: {
               "Retry-After": retryAfter,
             },
-          }
+          },
         );
       }
-      
+
       // If profile fetch fails due to scope issues, we can still save the account
       // We'll use open_id as the username fallback
-      console.warn("[GET /api/oauth/tiktok/callback] Profile fetch failed, using open_id as fallback:", {
-        userId: user.id,
-        timestamp: new Date().toISOString(),
-        openId: open_id,
-      });
-      
+      console.warn(
+        "[GET /api/oauth/tiktok/callback] Profile fetch failed, using open_id as fallback:",
+        {
+          userId: user.id,
+          timestamp: new Date().toISOString(),
+          openId: open_id,
+        },
+      );
+
       // Use open_id as platformUsername fallback
       const platformUsername = open_id;
-      
+
       // Continue with account save using minimal data
       const expiresAt = new Date(Date.now() + expires_in * 1000);
-      
+
       let encryptedAccessToken: string;
       let encryptedRefreshToken: string;
 
@@ -382,10 +365,7 @@ export async function GET(request: NextRequest) {
           timestamp: new Date().toISOString(),
           error: encryptionError instanceof Error ? encryptionError.message : "Unknown error",
         });
-        return NextResponse.json(
-          { error: "Failed to save account connection" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to save account connection" }, { status: 500 });
       }
 
       try {
@@ -419,14 +399,17 @@ export async function GET(request: NextRequest) {
           },
         });
 
-        console.log("[GET /api/oauth/tiktok/callback] SocialAccount saved successfully (without profile):", {
-          userId: user.id,
-          platform: "TikTok",
-          timestamp: new Date().toISOString(),
-        });
-        
+        console.log(
+          "[GET /api/oauth/tiktok/callback] SocialAccount saved successfully (without profile):",
+          {
+            userId: user.id,
+            platform: "TikTok",
+            timestamp: new Date().toISOString(),
+          },
+        );
+
         const response = NextResponse.redirect(
-          `${appUrl}/settings/social-accounts?success=${encodeURIComponent("TikTok account connected successfully")}`
+          `${appUrl}/settings/social-accounts?success=${encodeURIComponent("TikTok account connected successfully")}`,
         );
         response.cookies.delete("tiktok_oauth_state");
         response.cookies.delete("tiktok_code_verifier");
@@ -438,10 +421,7 @@ export async function GET(request: NextRequest) {
           error: dbError instanceof Error ? dbError.message : "Unknown error",
           stack: dbError instanceof Error ? dbError.stack : undefined,
         });
-        return NextResponse.json(
-          { error: "Failed to save account connection" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to save account connection" }, { status: 500 });
       }
     }
 
@@ -482,10 +462,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: encryptionError instanceof Error ? encryptionError.message : "Unknown error",
       });
-      return NextResponse.json(
-        { error: "Failed to save account connection" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to save account connection" }, { status: 500 });
     }
 
     // Create or update SocialAccount record
@@ -541,16 +518,13 @@ export async function GET(request: NextRequest) {
         error: dbError instanceof Error ? dbError.message : "Unknown error",
         stack: dbError instanceof Error ? dbError.stack : undefined,
       });
-      return NextResponse.json(
-        { error: "Failed to save account connection" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to save account connection" }, { status: 500 });
     }
 
     // Clear CSRF token and code_verifier after successful validation
     // Requirement: 10.4 - Clear CSRF token
     const response = NextResponse.redirect(
-      `${appUrl}/settings/social-accounts?success=${encodeURIComponent("TikTok account connected successfully")}`
+      `${appUrl}/settings/social-accounts?success=${encodeURIComponent("TikTok account connected successfully")}`,
     );
     response.cookies.delete("tiktok_oauth_state");
     response.cookies.delete("tiktok_code_verifier");
@@ -565,9 +539,6 @@ export async function GET(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      { error: "Failed to complete OAuth callback" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to complete OAuth callback" }, { status: 500 });
   }
 }

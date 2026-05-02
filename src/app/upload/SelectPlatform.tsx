@@ -15,7 +15,7 @@ interface SelectPlatformProps {
 
 export default function SelectPlatform({ onClose }: SelectPlatformProps) {
   const router = useRouter();
-  const { 
+  const {
     clearUpload,
     goBackToEditPost,
     postTitle,
@@ -103,10 +103,10 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
 
       // Requirement 3.2 - Make POST request to /api/posts endpoint
       // Requirement 4.4 - Gather all required data from context/props
-      const response = await fetch('/api/posts', {
-        method: 'POST',
+      const response = await fetch("/api/posts", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title: postTitle,
@@ -121,7 +121,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
 
       // Requirement 5.1 - Handle 401 errors with redirect to login
       if (response.status === 401) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
@@ -129,15 +129,15 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
       // Requirement 5.4 - Display server errors with generic message
       if (!response.ok) {
         const error = await response.json();
-        
+
         // Display specific validation message from API response
         if (response.status === 400) {
-          setSubmitError(error.error || 'Validation error occurred');
+          setSubmitError(error.error || "Validation error occurred");
         } else if (response.status >= 500) {
           // Server error - display generic message
-          setSubmitError('An error occurred while saving your post. Please try again.');
+          setSubmitError("An error occurred while saving your post. Please try again.");
         } else {
-          setSubmitError(error.error || 'Failed to create post');
+          setSubmitError(error.error || "Failed to create post");
         }
         return;
       }
@@ -151,7 +151,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
           console.error("Failed to refresh dashboard");
         }
         // Trigger dashboard refresh if on dashboard page
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const win = window as Window & { refreshDashboard?: () => void };
           if (win.refreshDashboard) {
             win.refreshDashboard();
@@ -175,11 +175,11 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
       }, 2000); // Show success message for 2 seconds before closing
     } catch (error) {
       // Requirement 5.2 - Display network errors with retry option
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        setSubmitError('Network error. Please check your connection and try again.');
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        setSubmitError("Network error. Please check your connection and try again.");
       } else {
         // Requirement 3.6 - Display error message
-        setSubmitError(error instanceof Error ? error.message : 'An error occurred');
+        setSubmitError(error instanceof Error ? error.message : "An error occurred");
       }
     } finally {
       // Requirement 6.4 - Set isSubmitting to false after request completes
@@ -209,9 +209,9 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
     setDraftError(null);
 
     try {
-      const response = await fetch('/api/posts/drafts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/posts/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: postTitle,
           description: postDescription || undefined,
@@ -223,14 +223,14 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
 
       if (response.status === 401) {
         // Authentication error - redirect to login
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save draft');
+        throw new Error(data.error || "Failed to save draft");
       }
 
       // Success
@@ -241,7 +241,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
           console.error("Failed to refresh dashboard");
         }
         // Trigger dashboard refresh if on dashboard page
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const win = window as Window & { refreshDashboard?: () => void };
           if (win.refreshDashboard) {
             win.refreshDashboard();
@@ -257,12 +257,15 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         clearUpload();
         onClose();
       }, 2000);
-
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
         setDraftError("Network error. Please check your connection and try again.");
       } else {
-        setDraftError(error instanceof Error ? error.message : 'An error occurred while saving your draft. Please try again.');
+        setDraftError(
+          error instanceof Error
+            ? error.message
+            : "An error occurred while saving your draft. Please try again.",
+        );
       }
     } finally {
       setIsSavingDraft(false);
@@ -348,7 +351,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
               {successMessage}
             </div>
           )}
-          
+
           {/* Requirement 3.6, 5.5 - Display error message with retry option */}
           {submitError && (
             <div className="flex items-start justify-between gap-2 text-sm text-error bg-error/10 border border-error/20 rounded-md px-3 py-2">
@@ -362,7 +365,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
               </button>
             </div>
           )}
-          
+
           <div className="flex items-center justify-between gap-4 mt-2">
             <div className="flex items-center gap-2 sm:gap-4">
               <button
@@ -444,14 +447,25 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
             <div className="bg-surface/90 backdrop-blur-2xl border border-border/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
               <div className="flex items-center justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-8 h-8 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
               </div>
               <h3 className="text-xl font-bold mb-2 text-text-main text-center">Draft Saved!</h3>
               <p className="text-sm text-text-secondary text-center">
-                Your post has been saved as a draft. You can continue editing it later from your dashboard.
+                Your post has been saved as a draft. You can continue editing it later from your
+                dashboard.
               </p>
             </div>
           </div>
@@ -464,14 +478,18 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
               <div className="flex items-center justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center">
                   <svg className="w-8 h-8 text-error" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-text-main text-center">Failed to Save Draft</h3>
-              <p className="text-sm text-text-secondary text-center mb-6">
-                {draftError}
-              </p>
+              <h3 className="text-xl font-bold mb-2 text-text-main text-center">
+                Failed to Save Draft
+              </h3>
+              <p className="text-sm text-text-secondary text-center mb-6">{draftError}</p>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <button
                   onClick={() => setDraftError(null)}

@@ -4,15 +4,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { Reveal } from "./components/Reveal";
 import Footer from "./components/Footer";
-import { 
-  ArrowRight, 
-  UploadCloud, 
-  CalendarClock, 
-  BarChart3, 
-  Link2, 
+import {
+  ArrowRight,
+  UploadCloud,
+  CalendarClock,
+  BarChart3,
+  Link2,
   PlayCircle,
   CheckCircle2,
-  Star
+  Star,
 } from "lucide-react";
 
 // Platform Logos
@@ -24,18 +24,53 @@ import XLogo from "./assets/logo/X.webp";
 import ThreadsLogo from "./assets/logo/Threads.webp";
 
 const REVIEWS = [
-  { name: "Alex R.", handle: "@alexcreates", text: "DragInDrop completely transformed how I schedule my content. The multi-platform feature is insane!", avatarText: "AR", stars: 5 },
-  { name: "Sarah J.", handle: "@sarahvlogs", text: "I save at least 10 hours a week. Uploading once and boom, it's everywhere.", avatarText: "SJ", stars: 3 },
-  { name: "Mike T.", handle: "@miketech", text: "The UI is buttery smooth. Literally drag, drop, and I'm done for the week.", avatarText: "MT", stars: 5 },
-  { name: "Emily W.", handle: "@emilytravels", text: "Finally, a tool that supports all my networks without buggy uploads.", avatarText: "EW", stars: 4 },
-  { name: "Chris P.", handle: "@chrisp_dev", text: "If you're a creator, you need this. It's the standard now.", avatarText: "CP", stars: 4 },
-  { name: "Jessica L.", handle: "@jess_lifestyle", text: "Seamless Instagram and TikTok syncing. Best decision ever.", avatarText: "JL", stars: 5 },
+  {
+    name: "Alex R.",
+    handle: "@alexcreates",
+    text: "DragInDrop completely transformed how I schedule my content. The multi-platform feature is insane!",
+    avatarText: "AR",
+    stars: 5,
+  },
+  {
+    name: "Sarah J.",
+    handle: "@sarahvlogs",
+    text: "I save at least 10 hours a week. Uploading once and boom, it's everywhere.",
+    avatarText: "SJ",
+    stars: 3,
+  },
+  {
+    name: "Mike T.",
+    handle: "@miketech",
+    text: "The UI is buttery smooth. Literally drag, drop, and I'm done for the week.",
+    avatarText: "MT",
+    stars: 5,
+  },
+  {
+    name: "Emily W.",
+    handle: "@emilytravels",
+    text: "Finally, a tool that supports all my networks without buggy uploads.",
+    avatarText: "EW",
+    stars: 4,
+  },
+  {
+    name: "Chris P.",
+    handle: "@chrisp_dev",
+    text: "If you're a creator, you need this. It's the standard now.",
+    avatarText: "CP",
+    stars: 4,
+  },
+  {
+    name: "Jessica L.",
+    handle: "@jess_lifestyle",
+    text: "Seamless Instagram and TikTok syncing. Best decision ever.",
+    avatarText: "JL",
+    stars: 5,
+  },
 ];
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-text-main font-sans overflow-hidden">
-      
       {/* 1. HERO SECTION & INTEGRATION BAR */}
       <section className="relative pt-28 pb-12 px-4 max-w-7xl mx-auto flex flex-col items-center text-center">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
@@ -52,29 +87,30 @@ export default function Home() {
 
         <Reveal width="100%" delay={0.2}>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-transparent bg-clip-text bg-gradient-to-r from-text-main to-text-secondary">
-            Schedule your Videos<br className="hidden md:block" />
+            Schedule your Videos
+            <br className="hidden md:block" />
             <span className="text-primary">Anywhere</span>
           </h1>
         </Reveal>
 
         <Reveal width="100%" delay={0.3}>
           <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
-            DragInDrop is the all-in-one platform for content creators to schedule, automate,
-            their videos and let us publish it across all your platforms automatically.
+            DragInDrop is the all-in-one platform for content creators to schedule, automate, their
+            videos and let us publish it across all your platforms automatically.
           </p>
         </Reveal>
 
         <Reveal width="100%" delay={0.4}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full mb-12">
-            <Link 
-              href="/register" 
+            <Link
+              href="/register"
               className="w-full sm:w-auto px-8 py-4 bg-primary text-white rounded-xl font-semibold hover:bg-secondary hover:shadow-glow hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 group"
             >
               Get Started for Free
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link 
-              href="/pricing" 
+            <Link
+              href="/pricing"
               className="w-full sm:w-auto px-8 py-4 bg-surface border border-border text-text-main rounded-xl font-semibold hover:border-primary/50 hover:bg-surface hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
             >
               View Pricing
@@ -97,8 +133,18 @@ export default function Home() {
                 { name: "X", src: XLogo },
                 { name: "Threads", src: ThreadsLogo },
               ].map((platform) => (
-                <div key={platform.name} title={platform.name} className="w-8 h-8 md:w-10 md:h-10 relative grayscale hover:grayscale-0 transition duration-300 transform hover:scale-110 cursor-pointer">
-                  <Image src={platform.src} alt={platform.name} fill sizes="(max-width: 768px) 32px, 40px" className="object-contain" />
+                <div
+                  key={platform.name}
+                  title={platform.name}
+                  className="w-8 h-8 md:w-10 md:h-10 relative grayscale hover:grayscale-0 transition duration-300 transform hover:scale-110 cursor-pointer"
+                >
+                  <Image
+                    src={platform.src}
+                    alt={platform.name}
+                    fill
+                    sizes="(max-width: 768px) 32px, 40px"
+                    className="object-contain"
+                  />
                 </div>
               ))}
             </div>
@@ -112,14 +158,16 @@ export default function Home() {
           <Reveal width="100%">
             <div className="text-center mb-24">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text-main">How it works</h2>
-              <p className="text-text-secondary text-lg">The 3 simple steps to automate your content delivery.</p>
+              <p className="text-text-secondary text-lg">
+                The 3 simple steps to automate your content delivery.
+              </p>
             </div>
           </Reveal>
 
           <div className="relative">
             {/* Connecting line for desktop */}
             <div className="hidden md:block absolute top-[4.5rem] left-[10%] right-[10%] h-[3px] bg-border rounded-full -z-10">
-               <div className="absolute top-0 left-0 h-full bg-primary/30 w-full animate-pulse rounded-full"></div>
+              <div className="absolute top-0 left-0 h-full bg-primary/30 w-full animate-pulse rounded-full"></div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-12 relative z-10">
@@ -127,24 +175,27 @@ export default function Home() {
                 {
                   step: "01",
                   title: "Connect Accounts",
-                  description: "Securely link your social media profiles using OAuth. We never store your passwords.",
+                  description:
+                    "Securely link your social media profiles using OAuth. We never store your passwords.",
                   icon: <Link2 size={24} strokeWidth={2.5} />,
-                  delay: 0.1
+                  delay: 0.1,
                 },
                 {
                   step: "02",
                   title: "Upload & Schedule",
-                  description: "Drag your video into the dashboard, write your caption, and pick a date.",
+                  description:
+                    "Drag your video into the dashboard, write your caption, and pick a date.",
                   icon: <UploadCloud size={24} strokeWidth={2.5} />,
-                  delay: 0.2
+                  delay: 0.2,
                 },
                 {
                   step: "03",
                   title: "Sit Back & Relax",
-                  description: "Our system automatically publishes your posts to all selected platforms at the exact time.",
+                  description:
+                    "Our system automatically publishes your posts to all selected platforms at the exact time.",
                   icon: <PlayCircle size={24} strokeWidth={2.5} />,
-                  delay: 0.3
-                }
+                  delay: 0.3,
+                },
               ].map((item, i) => (
                 <Reveal width="100%" delay={item.delay} key={i}>
                   <div className="flex flex-col items-center text-center px-4 group">
@@ -154,7 +205,9 @@ export default function Home() {
                       </span>
                       {item.icon}
                     </div>
-                    <h3 className="text-xl font-bold mb-3 text-text-main group-hover:text-primary transition-colors">{item.title}</h3>
+                    <h3 className="text-xl font-bold mb-3 text-text-main group-hover:text-primary transition-colors">
+                      {item.title}
+                    </h3>
                     <p className="text-text-secondary leading-relaxed">{item.description}</p>
                   </div>
                 </Reveal>
@@ -168,45 +221,50 @@ export default function Home() {
       <section className="py-24 overflow-hidden relative">
         <div className="text-center mb-16">
           <Reveal width="100%">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text-main">Loved by Creators</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text-main">
+              Loved by Creators
+            </h2>
             <p className="text-text-secondary text-lg">See what our community is saying.</p>
           </Reveal>
         </div>
 
         {/* Sliding Track */}
         <div className="relative w-full flex overflow-hidden group">
-           {/* Fading Edges */}
-           <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
-           <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+          {/* Fading Edges */}
+          <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
 
-           {/* The animated flex container - moving Left To Right */}
-           <div className="flex shrink-0 gap-6 animate-slide-ltr w-max">
-             {/* Render reviews 3 times to ensure continuous seamless loop */}
-             {[...REVIEWS, ...REVIEWS, ...REVIEWS].map((review, i) => (
-               <div key={i} className="w-80 shrink-0 bg-surface border border-border p-6 rounded-2xl shadow-sm hover:border-primary cursor-default transition-all duration-300">
-                 <div className="flex items-center gap-1 mb-4">
-                   {[...Array(5)].map((_, starIdx) => (
-                     <Star 
-                       key={starIdx} 
-                       size={18} 
-                       fill={starIdx < review.stars ? "currentColor" : "transparent"} 
-                       className={starIdx < review.stars ? "text-warning" : "text-border"} 
-                     />
-                   ))}
-                 </div>
-                 <p className="text-text-main leading-relaxed mb-6">&quot;{review.text}&quot;</p>
-                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center shadow-sm">
-                     {review.avatarText}
-                   </div>
-                   <div>
-                     <div className="font-bold text-sm text-text-main">{review.name}</div>
-                     <div className="text-xs text-text-secondary">{review.handle}</div>
-                   </div>
-                 </div>
-               </div>
-             ))}
-           </div>
+          {/* The animated flex container - moving Left To Right */}
+          <div className="flex shrink-0 gap-6 animate-slide-ltr w-max">
+            {/* Render reviews 3 times to ensure continuous seamless loop */}
+            {[...REVIEWS, ...REVIEWS, ...REVIEWS].map((review, i) => (
+              <div
+                key={i}
+                className="w-80 shrink-0 bg-surface border border-border p-6 rounded-2xl shadow-sm hover:border-primary cursor-default transition-all duration-300"
+              >
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, starIdx) => (
+                    <Star
+                      key={starIdx}
+                      size={18}
+                      fill={starIdx < review.stars ? "currentColor" : "transparent"}
+                      className={starIdx < review.stars ? "text-warning" : "text-border"}
+                    />
+                  ))}
+                </div>
+                <p className="text-text-main leading-relaxed mb-6">&quot;{review.text}&quot;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center shadow-sm">
+                    {review.avatarText}
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm text-text-main">{review.name}</div>
+                    <div className="text-xs text-text-secondary">{review.handle}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -215,9 +273,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <Reveal width="100%">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text-main">Everything you need to scale</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text-main">
+                Everything you need to scale
+              </h2>
               <p className="text-text-secondary max-w-2xl mx-auto text-lg leading-relaxed">
-                Stop wasting hours posting manually. We built the tools so you can focus on creating.
+                Stop wasting hours posting manually. We built the tools so you can focus on
+                creating.
               </p>
             </Reveal>
           </div>
@@ -230,7 +291,8 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-text-main">Drag & Drop Uploads</h3>
                 <p className="text-text-secondary leading-relaxed">
-                  Easily upload videos up to 250MB. Our intuitive interface securely processes all modern formats directly to our cloud.
+                  Easily upload videos up to 250MB. Our intuitive interface securely processes all
+                  modern formats directly to our cloud.
                 </p>
               </div>
             </Reveal>
@@ -242,7 +304,8 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-text-main">Multi-Platform Scheduling</h3>
                 <p className="text-text-secondary leading-relaxed">
-                  Plan your posts weeks or months in advance. One video, multiple networks. Connect to all the available platforms instantly.
+                  Plan your posts weeks or months in advance. One video, multiple networks. Connect
+                  to all the available platforms instantly.
                 </p>
               </div>
             </Reveal>
@@ -254,7 +317,8 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-text-main">Advanced Analytics</h3>
                 <p className="text-text-secondary leading-relaxed">
-                  Track your content performance deeply across all platforms from a single unified dashboard view.
+                  Track your content performance deeply across all platforms from a single unified
+                  dashboard view.
                 </p>
               </div>
             </Reveal>
@@ -268,15 +332,18 @@ export default function Home() {
           <div className="max-w-5xl mx-auto bg-surface border border-primary/20 rounded-[2.5rem] p-10 md:p-20 text-center relative overflow-hidden shadow-glow">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
-            
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-text-main tracking-tight">Ready to streamline your workflow?</h2>
+
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-text-main tracking-tight">
+              Ready to streamline your workflow?
+            </h2>
             <p className="text-lg md:text-xl text-text-secondary mb-12 max-w-2xl mx-auto leading-relaxed">
-              Join thousands of creators who save hours every week. Try DragInDrop today on our Free plan. No credit card required.
+              Join thousands of creators who save hours every week. Try DragInDrop today on our Free
+              plan. No credit card required.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-              <Link 
-                href="/register" 
+              <Link
+                href="/register"
                 className="w-full sm:w-auto px-10 py-4 bg-primary text-white text-lg rounded-xl font-bold hover:bg-secondary hover:-translate-y-1 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
               >
                 Create Free Account
@@ -294,7 +361,9 @@ export default function Home() {
       <Footer />
 
       {/* MARQUEE STYLES */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @keyframes slideLeftToRight {
           from { transform: translateX(-33.333333%); }
           to { transform: translateX(0); }
@@ -305,7 +374,9 @@ export default function Home() {
         .animate-slide-ltr:hover {
           animation-play-state: paused;
         }
-      `}} />
+      `,
+        }}
+      />
     </div>
   );
 }
