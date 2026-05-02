@@ -47,6 +47,8 @@ lerna-debug.log*
 *.njsproj
 *.sln
 
+youtube-worker/
+
 # Mac / Windows files
 .DS_Store
 Thumbs.db
