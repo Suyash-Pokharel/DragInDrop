@@ -47,7 +47,7 @@ class UploadService extends EventTarget {
       xhr.setRequestHeader("Authorization", authorizationToken);
       xhr.setRequestHeader("X-Bz-File-Name", encodeURIComponent(fileKey));
       xhr.setRequestHeader("Content-Type", fileType);
-      xhr.setRequestHeader("Content-Length", file.size.toString());
+      // Note: Content-Length is automatically set by the browser
       xhr.setRequestHeader("X-Bz-Content-Sha1", "do_not_verify");
 
       // Implement upload progress handler

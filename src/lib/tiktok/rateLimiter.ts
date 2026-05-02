@@ -194,12 +194,12 @@ export async function checkStatusPollRateLimit(userId: string): Promise<RateLimi
  * await incrementUploadCounter('user123');
  */
 export async function incrementUploadCounter(userId: string): Promise<void> {
-  const redis = getRedis();
-  const dateKey = getDateKey();
-  const key = `tiktok:upload:${userId}:${dateKey}`;
-  const expireAt = getMidnightUTC();
-
   try {
+    const redis = getRedis();
+    const dateKey = getDateKey();
+    const key = `tiktok:upload:${userId}:${dateKey}`;
+    const expireAt = getMidnightUTC();
+
     // Increment counter
     await redis.incr(key);
     
@@ -208,7 +208,8 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Log error but don't throw (fail silently for counter increments)
-    console.error('[rateLimiter] Error incrementing upload counter:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[rateLimiter] Error incrementing upload counter:', errorMessage);
   }
 }
 
@@ -230,12 +231,12 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
  * await incrementStatusPollCounter('user123');
  */
 export async function incrementStatusPollCounter(userId: string): Promise<void> {
-  const redis = getRedis();
-  const dateKey = getDateKey();
-  const key = `tiktok:poll:${userId}:${dateKey}`;
-  const expireAt = getMidnightUTC();
-
   try {
+    const redis = getRedis();
+    const dateKey = getDateKey();
+    const key = `tiktok:poll:${userId}:${dateKey}`;
+    const expireAt = getMidnightUTC();
+
     // Increment counter
     await redis.incr(key);
     
@@ -244,6 +245,7 @@ export async function incrementStatusPollCounter(userId: string): Promise<void> 
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Log error but don't throw (fail silently for counter increments)
-    console.error('[rateLimiter] Error incrementing status poll counter:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[rateLimiter] Error incrementing status poll counter:', errorMessage);
   }
 }

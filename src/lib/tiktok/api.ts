@@ -44,6 +44,7 @@ export interface PollStatusParams {
 export interface PollStatusResponse {
   success: boolean;
   status?: 'PROCESSING_DOWNLOAD' | 'PROCESSING_UPLOAD' | 'PUBLISH_COMPLETE' | 'FAILED';
+  publiclyAvailablePostIds?: string[]; // TikTok post IDs when published
   error?: string;
   errorCode?: string;
   failReason?: string;
@@ -348,6 +349,7 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
     return {
       success: true,
       status,
+      publiclyAvailablePostIds: data.data.publicaly_available_post_id, // Note: TikTok API has typo "publicaly"
       failReason: data.data.fail_reason,
     };
   } catch (error) {

@@ -260,9 +260,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // TODO: Task 6.5 - Implement error handling and retry logic
-    // TODO: Task 6.6 - Add comprehensive logging
-
     // Requirement 11.1: Log cron execution end with timestamp
     console.log('[process-scheduled-tiktok-uploads] Cron execution completed:', {
       timestamp: new Date().toISOString(),
@@ -913,8 +910,8 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
 /**
  * Update the status of a PlatformPost record
  * 
- * This function updates a PlatformPost record with new status, publishId, and error message.
- * It uses a database transaction to ensure atomic updates.
+ * This function updates a PlatformPost record with new status, publishId, platformPostId,
+ * platformUrl, and error message. It uses a database transaction to ensure atomic updates.
  * 
  * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 14.1, 14.2, 14.3, 14.4
  * 
@@ -922,13 +919,17 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
  * @param status - The new status to set
  * @param publishId - Optional TikTok publish_id
  * @param errorMessage - Optional error message for FAILED status
+ * @param tiktokPostId - Optional TikTok post ID (from publicaly_available_post_id)
+ * @param tiktokUrl - Optional TikTok post URL
  * @returns Promise<void>
  */
 async function updatePlatformPostStatus(
   platformPostId: string,
   status: PlatformPostStatus,
   publishId?: string,
-  errorMessage?: string
+  errorMessage?: string,
+  tiktokPostId?: string,
+  tiktokUrl?: string
 ): Promise<void> {
   const prisma = getPrisma();
 
@@ -942,6 +943,8 @@ async function updatePlatformPostStatus(
         publishId?: string;
         errorMessage?: string | null;
         publishedAt?: Date;
+        platformPostId?: string;
+        platformUrl?: string;
       } = {
         status,
         updatedAt: new Date(),
@@ -950,6 +953,16 @@ async function updatePlatformPostStatus(
       // Add publishId if provided
       if (publishId !== undefined) {
         updateData.publishId = publishId;
+      }
+
+      // Add platformPostId if provided
+      if (tiktokPostId !== undefined) {
+        updateData.platformPostId = tiktokPostId;
+      }
+
+      // Add platformUrl if provided
+      if (tiktokUrl !== undefined) {
+        updateData.platformUrl = tiktokUrl;
       }
 
       // Add errorMessage if provided (or clear it if null)
@@ -975,6 +988,8 @@ async function updatePlatformPostStatus(
       platformPostId,
       status,
       publishId,
+      tiktokPostId,
+      tiktokUrl,
       hasError: !!errorMessage,
       timestamp: new Date().toISOString(),
     });
@@ -1404,9 +1419,34 @@ async function pollUploadStatus(
 
   if (pollResult.status === 'PUBLISH_COMPLETE') {
     // Requirement: 8.3
+    // Extract TikTok post ID and construct URL
+    let tiktokPostId: string | undefined;
+    let tiktokUrl: string | undefined;
+
+    if (pollResult.publiclyAvailablePostIds && pollResult.publiclyAvailablePostIds.length > 0) {
+      tiktokPostId = pollResult.publiclyAvailablePostIds[0];
+      // Construct TikTok URL: https://www.tiktok.com/@username/video/{postId}
+      // Note: We don't have the username here, so we'll use a generic format
+      // The URL can be updated later if needed
+      tiktokUrl = `https://www.tiktok.com/video/${tiktokPostId}`;
+      
+      console.log('[pollUploadStatus] Extracted TikTok post details:', {
+        userId: platformPost.Post.userId,
+        postId: platformPost.postId,
+        platformPostId: platformPost.id,
+        tiktokPostId,
+        tiktokUrl,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     await updatePlatformPostStatus(
       platformPost.id,
-      'PUBLISHED'
+      'PUBLISHED',
+      undefined,
+      undefined,
+      tiktokPostId,
+      tiktokUrl
     );
     statusUpdated = true;
 
@@ -1415,6 +1455,8 @@ async function pollUploadStatus(
       postId: platformPost.postId,
       platformPostId: platformPost.id,
       publishId: platformPost.publishId,
+      tiktokPostId,
+      tiktokUrl,
       timestamp: new Date().toISOString(),
     });
   } else if (pollResult.status === 'FAILED') {
