@@ -397,6 +397,12 @@ async function uploadToYouTube(
   let refreshTokenDecrypted: string;
   try {
     accessToken = decryptToken(currentSocialAccount.accessToken);
+    
+    // Check if refreshToken exists before decrypting
+    if (!currentSocialAccount.refreshToken) {
+      throw new Error('Refresh token is missing');
+    }
+    
     refreshTokenDecrypted = decryptToken(currentSocialAccount.refreshToken);
   } catch (error) {
     // Requirement 12.5: Log all errors with full context
