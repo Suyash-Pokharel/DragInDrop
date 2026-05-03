@@ -96,10 +96,8 @@ export function getRedis(): Redis {
     console.error("[Redis] Failed to connect:", err.message);
   });
 
-  // Cache in development only (in production, let it recreate on each invocation if needed)
-  if (process.env.NODE_ENV !== "production") {
-    global.__ioredisClient = client;
-  }
+  // Cache globally for connection reuse across serverless invocations
+  global.__ioredisClient = client;
 
   return client;
 }
