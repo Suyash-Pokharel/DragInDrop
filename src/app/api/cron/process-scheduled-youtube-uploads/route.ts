@@ -509,11 +509,58 @@ async function uploadToYouTube(
         expiresAt: currentSocialAccount.expiresAt?.toISOString() || new Date().toISOString(),
         userId: post.userId,
       }),
-      // Requirement 9.4: Set 6-minute timeout
-      signal: AbortSignal.timeout(6 * 60 * 1000),
+      // Requirement 9.4: Set 10-minute timeout (increased to handle large videos)
+      signal: AbortSignal.timeout(10 * 60 * 1000),
     });
 
-    const responseData = await response.json();
+    // Parse response with error handling for incomplete JSON
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (jsonError) {
+      console.error("[uploadToYouTube] Failed to parse worker response:", {
+        userId: post.userId,
+        postId: post.id,
+        platformPostId: platformPost.id,
+        status: response.status,
+        error: jsonError instanceof Error ? jsonError.message : "Unknown error",
+        hint: "Worker may have crashed or timed out during upload",
+        timestamp: new Date().toISOString(),
+      });
+
+      // Treat as retryable error
+      const currentRetryCount = platformPost.retryCount;
+      const newRetryCount = currentRetryCount + 1;
+
+      const prisma = getPrisma();
+      await prisma.platformPost.update({
+        where: { id: platformPost.id },
+        data: {
+          retryCount: newRetryCount,
+          updatedAt: new Date(),
+        },
+      });
+
+      if (newRetryCount > 3) {
+        await updatePlatformPostStatus(
+          platformPost.id,
+          "FAILED",
+          undefined,
+          "Worker response parsing failed (max retries exceeded)",
+        );
+
+        return {
+          success: false,
+          error: "Worker response parsing failed (max retries exceeded)",
+        };
+      }
+
+      return {
+        success: false,
+        shouldSkip: true,
+        error: `Worker response parsing failed (will retry, attempt ${newRetryCount}/3)`,
+      };
+    }
 
     // Requirement 12.4: Log worker response
     console.log("[uploadToYouTube] Worker response:", {
