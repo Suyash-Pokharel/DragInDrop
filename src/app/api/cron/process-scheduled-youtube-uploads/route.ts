@@ -362,11 +362,28 @@ async function uploadToYouTube(
     if (!refreshResult.success) {
       // Token refresh failed - mark as FAILED
       // Requirement: 5.7
-      await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, "Token refresh failed");
+      console.error("[uploadToYouTube] Token refresh failed:", {
+        userId: post.userId,
+        postId: post.id,
+        platform: socialAccount.platform,
+        error: refreshResult.error,
+        timestamp: new Date().toISOString(),
+        hint:
+          refreshResult.error?.includes("invalid or expired")
+            ? "User needs to reconnect their YouTube account"
+            : "Check OAuth credentials and network connectivity",
+      });
+
+      await updatePlatformPostStatus(
+        platformPost.id,
+        "FAILED",
+        undefined,
+        refreshResult.error || "Token refresh failed",
+      );
 
       return {
         success: false,
-        error: "Token refresh failed",
+        error: refreshResult.error || "Token refresh failed",
       };
     }
 

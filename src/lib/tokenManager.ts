@@ -190,10 +190,16 @@ export async function refreshToken(
 
       // If invalid_grant error, don't retry
       if (result.error === "invalid_grant") {
+        console.error(`[refreshToken] Invalid grant error - deactivating account:`, {
+          userId: socialAccount.userId,
+          platform: socialAccount.platform,
+          timestamp: new Date().toISOString(),
+          hint: "User needs to reconnect their account",
+        });
         await deactivateSocialAccount(socialAccount);
         return {
           success: false,
-          error: "Refresh token is invalid or expired. Account deactivated.",
+          error: "Refresh token is invalid or expired. Please reconnect your account.",
         };
       }
 
@@ -330,6 +336,14 @@ async function attemptTokenRefresh(
   const data = await response.json();
 
   if (!response.ok || data.error) {
+    // Enhanced error logging for debugging
+    console.error(`[attemptTokenRefresh] ${platform} token refresh failed:`, {
+      status: response.status,
+      error: data.error,
+      errorDescription: data.error_description,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: false,
       error: data.error || data.error_description || "Token refresh failed",
