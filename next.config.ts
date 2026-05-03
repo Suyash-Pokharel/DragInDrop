@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
     workerThreads: false,
     cpus: 1,
   },
+  // Optimize for Vercel Free Tier (Hobby Plan)
+  // Fluid Compute gives us 300 seconds (5 minutes) by default
+  // No need to set maxDuration explicitly - it's automatic with Fluid Compute
   async redirects() {
     return [
       {
