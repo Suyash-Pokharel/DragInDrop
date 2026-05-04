@@ -34,6 +34,10 @@ lerna-debug.log*
 # keep example env if present
 !.env.example
 
+*.test.js
+*.test.ts
+*.test.tsx
+
 # Vercel / deployment
 .vercel/
 .now/
@@ -41,9 +45,7 @@ lerna-debug.log*
 # Editor and IDE
 .vscode/
 .idea/
-.kiro/settings/
-.kiro/steering/
-.kiro/skills/
+.kiro/
 *.suo
 *.ntvs*
 *.njsproj
@@ -94,5 +96,6 @@ docker-compose.override.yml
 .pnpm-debug.log
 
 # Misc
+*.md
 *.zip
 *.tar

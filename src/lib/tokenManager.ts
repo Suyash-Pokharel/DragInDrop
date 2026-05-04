@@ -13,6 +13,11 @@ const TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
 /**
+ * Instagram token refresh endpoint
+ */
+const INSTAGRAM_REFRESH_URL = "https://graph.instagram.com/refresh_access_token";
+
+/**
  * Token refresh buffer time in milliseconds (5 minutes)
  * Tokens will be refreshed if they expire within this window
  */
@@ -96,18 +101,25 @@ export async function refreshToken(
     };
   }
 
-  // Validate that we have a refresh token
-  if (!socialAccount.refreshToken) {
+  // Instagram uses access token for refresh, not a separate refresh token
+  // For other platforms, validate that we have a refresh token
+  if (socialAccount.platform !== "Instagram" && !socialAccount.refreshToken) {
     return {
       success: false,
       error: "No refresh token available",
     };
   }
 
-  // Decrypt the refresh token
+  // Decrypt the refresh token (or access token for Instagram)
   let decryptedRefreshToken: string;
   try {
-    decryptedRefreshToken = decryptToken(socialAccount.refreshToken);
+    if (socialAccount.platform === "Instagram") {
+      // Instagram uses the access token itself for refresh
+      decryptedRefreshToken = decryptToken(socialAccount.accessToken);
+    } else {
+      // Other platforms use a separate refresh token
+      decryptedRefreshToken = decryptToken(socialAccount.refreshToken!);
+    }
   } catch (error) {
     console.error("Failed to decrypt refresh token:", {
       userId: socialAccount.userId,
@@ -133,6 +145,12 @@ export async function refreshToken(
     clientKey = process.env.YOUTUBE_CLIENT_ID;
     clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
     tokenUrl = GOOGLE_TOKEN_URL;
+  } else if (socialAccount.platform === "Instagram") {
+    // Instagram doesn't use client credentials for token refresh
+    // It uses the access token itself with grant_type=ig_refresh_token
+    clientKey = undefined;
+    clientSecret = undefined;
+    tokenUrl = INSTAGRAM_REFRESH_URL;
   } else {
     console.error("Unsupported platform for token refresh:", socialAccount.platform);
     return {
@@ -141,7 +159,7 @@ export async function refreshToken(
     };
   }
 
-  if (!clientKey || !clientSecret) {
+  if (socialAccount.platform !== "Instagram" && (!clientKey || !clientSecret)) {
     console.error(`Missing ${socialAccount.platform} OAuth credentials`);
     return {
       success: false,
@@ -250,8 +268,8 @@ export async function refreshToken(
  */
 async function attemptTokenRefresh(
   platform: string,
-  clientKey: string,
-  clientSecret: string,
+  clientKey: string | undefined,
+  clientSecret: string | undefined,
   refreshToken: string,
   tokenUrl: string,
 ): Promise<{
@@ -266,44 +284,56 @@ async function attemptTokenRefresh(
   retryAfter?: number;
   isTimeout?: boolean;
 }> {
-  let params: URLSearchParams;
-
-  // Build request parameters based on platform
-  if (platform === "TikTok") {
-    params = new URLSearchParams({
-      client_key: clientKey,
-      client_secret: clientSecret,
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-    });
-  } else if (platform === "YouTube") {
-    params = new URLSearchParams({
-      client_id: clientKey,
-      client_secret: clientSecret,
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-    });
-  } else {
-    return {
-      success: false,
-      error: "Unsupported platform",
-    };
-  }
-
   // Requirement: 8.7 - Handle network timeouts
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
   let response: Response;
   try {
-    response = await fetch(tokenUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params.toString(),
-      signal: controller.signal,
-    });
+    if (platform === "Instagram") {
+      // Instagram uses GET request with access_token as query parameter
+      const url = new URL(tokenUrl);
+      url.searchParams.append("grant_type", "ig_refresh_token");
+      url.searchParams.append("access_token", refreshToken);
+
+      response = await fetch(url.toString(), {
+        method: "GET",
+        signal: controller.signal,
+      });
+    } else {
+      // TikTok and YouTube use POST with form data
+      let params: URLSearchParams;
+
+      if (platform === "TikTok") {
+        params = new URLSearchParams({
+          client_key: clientKey!,
+          client_secret: clientSecret!,
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        });
+      } else if (platform === "YouTube") {
+        params = new URLSearchParams({
+          client_id: clientKey!,
+          client_secret: clientSecret!,
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        });
+      } else {
+        return {
+          success: false,
+          error: "Unsupported platform",
+        };
+      }
+
+      response = await fetch(tokenUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params.toString(),
+        signal: controller.signal,
+      });
+    }
   } catch (fetchError) {
     clearTimeout(timeout);
 
@@ -353,11 +383,12 @@ async function attemptTokenRefresh(
   // Parse response based on platform
   // TikTok returns: access_token, refresh_token, expires_in
   // Google returns: access_token, expires_in (no new refresh_token)
+  // Instagram returns: access_token, expires_in (no refresh_token)
   return {
     success: true,
     tokens: {
       accessToken: data.access_token,
-      refreshToken: data.refresh_token, // Will be undefined for YouTube
+      refreshToken: data.refresh_token, // Will be undefined for YouTube and Instagram
       expiresIn: data.expires_in,
     },
   };
@@ -375,11 +406,15 @@ async function updateSocialAccountTokens(
   try {
     // Encrypt the new tokens
     let encryptedAccessToken: string;
-    let encryptedRefreshToken: string;
+    let encryptedRefreshToken: string | null = null;
 
     try {
       encryptedAccessToken = encryptToken(accessToken);
-      encryptedRefreshToken = encryptToken(refreshToken);
+      
+      // Instagram doesn't have a separate refresh token
+      if (socialAccount.platform !== "Instagram") {
+        encryptedRefreshToken = encryptToken(refreshToken);
+      }
     } catch (encryptionError) {
       // Requirement: 10.14 - Log encryption errors without logging plaintext tokens
       // Requirement: 10.15 - Never log plaintext tokens
@@ -401,14 +436,25 @@ async function updateSocialAccountTokens(
 
     // Update the database
     const prisma = getPrisma();
+    const updateData: {
+      accessToken: string;
+      refreshToken?: string | null;
+      expiresAt: Date;
+      updatedAt: Date;
+    } = {
+      accessToken: encryptedAccessToken,
+      expiresAt,
+      updatedAt: new Date(),
+    };
+
+    // Only update refreshToken for platforms that use it
+    if (socialAccount.platform !== "Instagram") {
+      updateData.refreshToken = encryptedRefreshToken;
+    }
+
     const updatedAccount = await prisma.socialAccount.update({
       where: { id: socialAccount.id },
-      data: {
-        accessToken: encryptedAccessToken,
-        refreshToken: encryptedRefreshToken,
-        expiresAt,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
 
     console.log("Token refreshed successfully:", {

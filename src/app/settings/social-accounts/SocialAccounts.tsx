@@ -113,6 +113,12 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
       setTimeout(() => {
         window.location.href = "/api/oauth/youtube/authorize";
       }, 0);
+    } else if (name === "Instagram") {
+      // For Instagram, redirect to OAuth authorization endpoint
+      setConnectingPlatform(name);
+      setTimeout(() => {
+        window.location.href = "/api/oauth/instagram/authorize";
+      }, 0);
     } else {
       // For other platforms, create mock connection for testing
       setMockConnectedPlatforms((prev) => {
@@ -131,13 +137,19 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
 
   const confirmDisconnect = async () => {
     if (platformToDisconnect) {
-      // Call disconnect API endpoint for TikTok and YouTube
-      if (platformToDisconnect === "TikTok" || platformToDisconnect === "YouTube") {
+      // Call disconnect API endpoint for TikTok, YouTube, and Instagram
+      if (
+        platformToDisconnect === "TikTok" ||
+        platformToDisconnect === "YouTube" ||
+        platformToDisconnect === "Instagram"
+      ) {
         try {
           const endpoint =
             platformToDisconnect === "TikTok"
               ? "/api/oauth/tiktok/disconnect"
-              : "/api/oauth/youtube/disconnect";
+              : platformToDisconnect === "YouTube"
+                ? "/api/oauth/youtube/disconnect"
+                : "/api/oauth/instagram/disconnect";
 
           const response = await fetch(endpoint, {
             method: "DELETE",
