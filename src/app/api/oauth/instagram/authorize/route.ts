@@ -102,12 +102,15 @@ export async function GET(request: NextRequest) {
     const responseType = "code";
 
     // Requirement: 1.4 - Construct Instagram OAuth authorization URL
-    const authUrl = new URL("https://api.instagram.com/oauth/authorize");
+    // Using Instagram API with Instagram Login (new endpoint as of July 2024)
+    const authUrl = new URL("https://www.instagram.com/oauth/authorize");
     authUrl.searchParams.set("client_id", appId);
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("scope", scope);
     authUrl.searchParams.set("response_type", responseType);
     authUrl.searchParams.set("state", csrfToken);
+    // Optional: force re-authentication to ensure fresh consent
+    authUrl.searchParams.set("force_reauth", "true");
 
     // Log authorization initiation with userId and timestamp
     // Requirement: 12.1 - Log authorization initiation with userId and timestamp
