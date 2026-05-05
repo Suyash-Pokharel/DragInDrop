@@ -97,8 +97,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Instagram OAuth parameters
-    // Requirement: 1.5 - Set scopes: instagram_business_basic,instagram_business_content_publish
-    const scope = "instagram_business_basic,instagram_business_content_publish";
+    // Requirement: 1.5 - Set scopes for Instagram Business/Creator accounts
+    // Core scopes: basic profile access and content publishing
+    // Optional scopes: messages, comments, insights (add as needed)
+    const scope = "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_insights";
     const responseType = "code";
 
     // Requirement: 1.4 - Construct Instagram OAuth authorization URL

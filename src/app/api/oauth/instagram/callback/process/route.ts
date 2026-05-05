@@ -376,14 +376,21 @@ export async function GET(request: NextRequest) {
 
     // Requirement: 2.14 - Validate account_type is either "BUSINESS" or "CREATOR"
     // Requirement: 2.15 - If account_type is "PERSONAL", redirect with error
-    if (
-      sanitizedProfile.account_type !== "BUSINESS" &&
-      sanitizedProfile.account_type !== "CREATOR"
-    ) {
+    // Note: Instagram API with Instagram Login returns "Business" or "Media_Creator"
+    // Instagram API with Facebook Login returns "BUSINESS" or "CREATOR"
+    // We need to handle both formats for compatibility
+    const accountType = sanitizedProfile.account_type?.toUpperCase();
+    const isValidAccount = 
+      accountType === "BUSINESS" || 
+      accountType === "CREATOR" || 
+      accountType === "MEDIA_CREATOR";
+
+    if (!isValidAccount) {
       console.log("[GET /api/oauth/instagram/callback] Invalid account type:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
         accountType: sanitizedProfile.account_type,
+        accountTypeUpperCase: accountType,
       });
 
       return NextResponse.redirect(
