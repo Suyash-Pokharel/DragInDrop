@@ -4,11 +4,11 @@ import { getPrisma } from "@/lib/prisma";
 import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
 
 /**
- * POST /api/oauth/threads/disconnect
+ * DELETE /api/oauth/threads/disconnect
  * Disconnects a user's Threads account by deactivating the SocialAccount
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
  */
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   // Rate limiting
   // Requirement: 1.7 - Apply per-IP rate limiting (10 requests per 15 minutes)
   const ip =
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       await perIpOAuthLimiter.consume(ip);
     }
   } catch {
-    console.error("[POST /api/oauth/threads/disconnect] Rate limit exceeded:", {
+    console.error("[DELETE /api/oauth/threads/disconnect] Rate limit exceeded:", {
       ip,
       timestamp: new Date().toISOString(),
     });
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   // Requirement: 4.4 - Return 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
-    console.error("[POST /api/oauth/threads/disconnect] Authentication failed:", {
+    console.error("[DELETE /api/oauth/threads/disconnect] Authentication failed:", {
       timestamp: new Date().toISOString(),
       error: "Unauthenticated request",
     });
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     await perUserOAuthLimiter.consume(user.id);
   } catch {
-    console.error("[POST /api/oauth/threads/disconnect] User rate limit exceeded:", {
+    console.error("[DELETE /api/oauth/threads/disconnect] User rate limit exceeded:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
     });
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Find the user's Threads SocialAccount
     // Requirement: 4.1 - Mark SocialAccount as inactive (isActive=false)
     // Requirement: 4.2 - Do not delete the SocialAccount record to preserve historical data
-    console.log("[POST /api/oauth/threads/disconnect] Finding SocialAccount:", {
+    console.log("[DELETE /api/oauth/threads/disconnect] Finding SocialAccount:", {
       userId: user.id,
       platform: "Threads",
       timestamp: new Date().toISOString(),
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Requirement: 4.5 - Return 404 if no active account found
     if (!socialAccount) {
-      console.log("[POST /api/oauth/threads/disconnect] No active account found:", {
+      console.log("[DELETE /api/oauth/threads/disconnect] No active account found:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
       });
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     // Deactivate the SocialAccount
     // Requirement: 4.1 - Mark SocialAccount as inactive (isActive=false)
     // Requirement: 4.2 - Do not delete the SocialAccount record to preserve historical data
-    console.log("[POST /api/oauth/threads/disconnect] Deactivating SocialAccount:", {
+    console.log("[DELETE /api/oauth/threads/disconnect] Deactivating SocialAccount:", {
       userId: user.id,
       socialAccountId: socialAccount.id,
       timestamp: new Date().toISOString(),
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Requirement: 4.7 - Log disconnection with userId, platform, and timestamp
-    console.log("[POST /api/oauth/threads/disconnect] Account disconnected successfully:", {
+    console.log("[DELETE /api/oauth/threads/disconnect] Account disconnected successfully:", {
       userId: user.id,
       platform: "Threads",
       timestamp: new Date().toISOString(),
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     // Requirement: 4.6 - Return 500 if database error occurs
-    console.error("[POST /api/oauth/threads/disconnect] Database error:", {
+    console.error("[DELETE /api/oauth/threads/disconnect] Database error:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",
@@ -130,4 +130,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Failed to disconnect account" }, { status: 500 });
   }
+}
+
+/**
+ * POST /api/oauth/threads/disconnect
+ * Disconnects a user's Threads account by deactivating the SocialAccount
+ * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
+ * 
+ * Note: This is kept for backward compatibility. Use DELETE method instead.
+ */
+export async function POST(request: NextRequest) {
+  return DELETE(request);
 }

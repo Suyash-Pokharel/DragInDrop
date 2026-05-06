@@ -76,7 +76,7 @@ export default function ConnectedPlatforms({ socialAccounts }: ConnectedPlatform
           <div>
             <h4 className="text-base font-bold text-text-main">No integrations yet</h4>
             <p className="text-sm text-text-secondary mt-1 max-w-md">
-              Connect your TikTok, YouTube, or Instagram accounts to start scheduling videos.
+              Connect your TikTok, YouTube, Instagram, or Threads accounts to start scheduling videos.
             </p>
           </div>
           <Link
