@@ -700,17 +700,19 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
     });
 
     const now = new Date();
-    const fiveMinutesInMs = 5 * 60 * 1000;
+    const fifteenMinutesInMs = 15 * 60 * 1000;
     const thirtySecondsInMs = 30 * 1000;
     const sixtySecondsInMs = 60 * 1000;
 
     for (const platformPost of publishingPosts) {
       try {
-        // Check if in PUBLISHING for >5 minutes → mark as FAILED with timeout error
+        // Check if in PUBLISHING for >15 minutes → mark as FAILED with timeout error
+        // Note: Using 15 minutes (same as Instagram) instead of 5 minutes from spec
+        // because containers can take longer to process in practice
         // Requirement: 6.10, 6.26
         const timeInPublishing = now.getTime() - platformPost.updatedAt.getTime();
 
-        if (timeInPublishing > fiveMinutesInMs) {
+        if (timeInPublishing > fifteenMinutesInMs) {
           console.error("[processPublishingPosts] Container processing timeout:", {
             userId: platformPost.Post.userId,
             postId: platformPost.postId,
@@ -724,13 +726,13 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
             where: { id: platformPost.id },
             data: {
               status: "FAILED",
-              errorMessage: "Container processing timeout (exceeded 5 minutes)",
+              errorMessage: "Container processing timeout (exceeded 15 minutes)",
               updatedAt: new Date(),
             },
           });
 
           errors.push(
-            `Post ${platformPost.postId}: Container processing timeout (exceeded 5 minutes)`,
+            `Post ${platformPost.postId}: Container processing timeout (exceeded 15 minutes)`,
           );
           continue;
         }
