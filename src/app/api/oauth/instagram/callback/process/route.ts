@@ -10,7 +10,7 @@ import { getPrisma } from "@/lib/prisma";
  * Handles OAuth 2.0 callback from Facebook Login for Business (Instagram Graph API)
  * Updated 2024: Instagram Basic Display API deprecated, now using Facebook Login for Business
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.17, 2.18, 2.19, 2.20, 10.4, 10.5, 10.6, 12.9
- * 
+ *
  * Note: Facebook Login for Business returns tokens in URL fragment (#), not query params
  * The client-side redirect will convert fragment to query params for server processing
  */
@@ -242,11 +242,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Request timeout. Please try again." }, { status: 504 });
       }
 
-      console.error("[GET /api/oauth/instagram/callback] Long-lived token exchange network error:", {
-        userId: user.id,
-        timestamp: new Date().toISOString(),
-        error: fetchError instanceof Error ? fetchError.message : "Unknown error",
-      });
+      console.error(
+        "[GET /api/oauth/instagram/callback] Long-lived token exchange network error:",
+        {
+          userId: user.id,
+          timestamp: new Date().toISOString(),
+          error: fetchError instanceof Error ? fetchError.message : "Unknown error",
+        },
+      );
       return NextResponse.json(
         { error: "Failed to exchange for long-lived token" },
         { status: 500 },
@@ -380,10 +383,8 @@ export async function GET(request: NextRequest) {
     // Instagram API with Facebook Login returns "BUSINESS" or "CREATOR"
     // We need to handle both formats for compatibility
     const accountType = sanitizedProfile.account_type?.toUpperCase();
-    const isValidAccount = 
-      accountType === "BUSINESS" || 
-      accountType === "CREATOR" || 
-      accountType === "MEDIA_CREATOR";
+    const isValidAccount =
+      accountType === "BUSINESS" || accountType === "CREATOR" || accountType === "MEDIA_CREATOR";
 
     if (!isValidAccount) {
       console.log("[GET /api/oauth/instagram/callback] Invalid account type:", {

@@ -410,7 +410,7 @@ async function updateSocialAccountTokens(
 
     try {
       encryptedAccessToken = encryptToken(accessToken);
-      
+
       // Instagram doesn't have a separate refresh token
       if (socialAccount.platform !== "Instagram") {
         encryptedRefreshToken = encryptToken(refreshToken);

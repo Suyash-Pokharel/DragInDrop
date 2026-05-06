@@ -24,13 +24,13 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/favicon.ico',
-        destination: '/icon',
+        source: "/favicon.ico",
+        destination: "/icon",
         permanent: true,
       },
       {
-        source: '/favicon.png',
-        destination: '/icon',
+        source: "/favicon.png",
+        destination: "/icon",
         permanent: true,
       },
     ];

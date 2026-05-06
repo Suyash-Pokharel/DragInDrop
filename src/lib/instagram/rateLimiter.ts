@@ -231,10 +231,7 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
     // Fall back to in-memory counter if Redis is unavailable
     // Requirement: 9.6
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error(
-      "[rateLimiter] Redis error, falling back to in-memory counter:",
-      errorMessage,
-    );
+    console.error("[rateLimiter] Redis error, falling back to in-memory counter:", errorMessage);
     incrementInMemoryCounter(userId, dateKey, expireAt);
   }
 }

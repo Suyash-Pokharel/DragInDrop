@@ -368,10 +368,9 @@ async function uploadToYouTube(
         platform: socialAccount.platform,
         error: refreshResult.error,
         timestamp: new Date().toISOString(),
-        hint:
-          refreshResult.error?.includes("invalid or expired")
-            ? "User needs to reconnect their YouTube account"
-            : "Check OAuth credentials and network connectivity",
+        hint: refreshResult.error?.includes("invalid or expired")
+          ? "User needs to reconnect their YouTube account"
+          : "Check OAuth credentials and network connectivity",
       });
 
       await updatePlatformPostStatus(

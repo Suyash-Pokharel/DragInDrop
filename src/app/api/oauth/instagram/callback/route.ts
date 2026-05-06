@@ -238,11 +238,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Request timeout. Please try again." }, { status: 504 });
       }
 
-      console.error("[GET /api/oauth/instagram/callback] Long-lived token exchange network error:", {
-        userId: user.id,
-        timestamp: new Date().toISOString(),
-        error: fetchError instanceof Error ? fetchError.message : "Unknown error",
-      });
+      console.error(
+        "[GET /api/oauth/instagram/callback] Long-lived token exchange network error:",
+        {
+          userId: user.id,
+          timestamp: new Date().toISOString(),
+          error: fetchError instanceof Error ? fetchError.message : "Unknown error",
+        },
+      );
       return NextResponse.json(
         { error: "Failed to exchange for long-lived token" },
         { status: 500 },
@@ -376,10 +379,8 @@ export async function GET(request: NextRequest) {
     // Instagram API with Facebook Login returns "BUSINESS" or "CREATOR"
     // We need to handle both formats for compatibility
     const accountType = sanitizedProfile.account_type?.toUpperCase();
-    const isValidAccount = 
-      accountType === "BUSINESS" || 
-      accountType === "CREATOR" || 
-      accountType === "MEDIA_CREATOR";
+    const isValidAccount =
+      accountType === "BUSINESS" || accountType === "CREATOR" || accountType === "MEDIA_CREATOR";
 
     if (!isValidAccount) {
       console.log("[GET /api/oauth/instagram/callback] Invalid account type:", {

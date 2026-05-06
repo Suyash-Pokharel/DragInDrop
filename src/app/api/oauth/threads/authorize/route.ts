@@ -5,13 +5,13 @@ import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
 import { validateHttps } from "@/lib/sanitize";
 
 /**
- * GET /api/oauth/instagram/authorize
- * Initiates Instagram OAuth 2.0 authorization flow
- * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 10.4, 10.5, 10.7, 10.11, 12.1
+ * GET /api/oauth/threads/authorize
+ * Initiates Threads OAuth 2.0 authorization flow
+ * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11
  */
 export async function GET(request: NextRequest) {
   // Rate limiting
-  // Requirement: 1.8 - Apply per-IP rate limiting (10 requests per 15 minutes)
+  // Requirement: 1.7 - Apply per-IP rate limiting (10 requests per 15 minutes)
   const ip =
     request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
 
@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
       await perIpOAuthLimiter.consume(ip);
     }
   } catch {
-    console.error("[GET /api/oauth/instagram/authorize] Rate limit exceeded:", {
+    console.error("[GET /api/oauth/threads/authorize] Rate limit exceeded:", {
       ip,
       timestamp: new Date().toISOString(),
     });
+    // Requirement: 1.9 - Return HTTP 429 when rate limit exceeded
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
       { status: 429 },
@@ -31,10 +32,9 @@ export async function GET(request: NextRequest) {
   }
 
   // Authenticate user
-  // Requirement: 1.12 - Return HTTP 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
-    console.error("[GET /api/oauth/instagram/authorize] Authentication failed:", {
+    console.error("[GET /api/oauth/threads/authorize] Authentication failed:", {
       timestamp: new Date().toISOString(),
       error: "Unauthenticated request",
     });
@@ -42,14 +42,15 @@ export async function GET(request: NextRequest) {
   }
 
   // Per-user rate limiting
-  // Requirement: 1.9 - Apply per-user rate limiting (5 requests per 15 minutes)
+  // Requirement: 1.8 - Apply per-user rate limiting (5 requests per 15 minutes)
   try {
     await perUserOAuthLimiter.consume(user.id);
   } catch {
-    console.error("[GET /api/oauth/instagram/authorize] User rate limit exceeded:", {
+    console.error("[GET /api/oauth/threads/authorize] User rate limit exceeded:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
     });
+    // Requirement: 1.9 - Return HTTP 429 when rate limit exceeded
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
       { status: 429 },
@@ -58,33 +59,33 @@ export async function GET(request: NextRequest) {
 
   try {
     // Validate OAuth configuration
-    // Requirement: 1.11 - Return HTTP 500 if credentials missing
-    const appId = process.env.INSTAGRAM_APP_ID;
-    const appSecret = process.env.INSTAGRAM_APP_SECRET;
+    // Requirement: 1.10 - Return HTTP 500 when OAuth credentials missing
+    const appId = process.env.THREADS_APP_ID;
+    const appSecret = process.env.THREADS_APP_SECRET;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!appId || !appSecret) {
-      console.error("[GET /api/oauth/instagram/authorize] Configuration error:", {
+      console.error("[GET /api/oauth/threads/authorize] Configuration error:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
-        error: "Missing INSTAGRAM_APP_ID or INSTAGRAM_APP_SECRET",
+        error: "Missing THREADS_APP_ID or THREADS_APP_SECRET",
       });
       return NextResponse.json({ error: "OAuth configuration error" }, { status: 500 });
     }
 
     // Generate cryptographically secure CSRF token
-    // Requirement: 1.2 - Generate cryptographically secure 32-byte CSRF token
+    // Requirement: 1.1 - Generate cryptographically secure 32-byte CSRF token using crypto.randomBytes()
     const csrfToken = randomBytes(32).toString("hex");
 
-    // Construct Instagram OAuth authorization URL
-    // Requirements: 1.4, 1.5, 1.6, 1.7, 1.10
-    const redirectUri = `${appUrl}/api/oauth/instagram/callback`;
+    // Construct Threads OAuth authorization URL
+    // Requirement: 1.3 - Construct authorization URL with client_id, redirect_uri, scope, response_type, state
+    const redirectUri = `${appUrl}/api/oauth/threads/callback`;
 
     // Validate HTTPS in production
-    // Requirement: 1.7 - Validate redirect_uri uses HTTPS in production
+    // Requirement: 1.5 - Validate redirect_uri uses HTTPS in production environments
     const isProduction = process.env.NODE_ENV === "production";
     if (!validateHttps(redirectUri, isProduction)) {
-      console.error("[GET /api/oauth/instagram/authorize] Invalid redirect URI protocol:", {
+      console.error("[GET /api/oauth/threads/authorize] Invalid redirect URI protocol:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
         redirectUri,
@@ -96,28 +97,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Instagram OAuth parameters
-    // Requirement: 1.5 - Set scopes for Instagram Business/Creator accounts
-    // Core scopes: basic profile access and content publishing
-    // Optional scopes: messages, comments, insights (add as needed)
-    const scope =
-      "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_insights";
+    // Requirement: 1.4 - Request scopes: threads_basic and threads_content_publish
+    const scope = "threads_basic,threads_content_publish";
     const responseType = "code";
 
-    // Requirement: 1.4 - Construct Instagram OAuth authorization URL
-    // Using Instagram API with Instagram Login (new endpoint as of July 2024)
-    const authUrl = new URL("https://www.instagram.com/oauth/authorize");
+    // Requirement: 1.6 - Redirect to https://threads.net/oauth/authorize
+    const authUrl = new URL("https://threads.net/oauth/authorize");
     authUrl.searchParams.set("client_id", appId);
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("scope", scope);
     authUrl.searchParams.set("response_type", responseType);
     authUrl.searchParams.set("state", csrfToken);
-    // Optional: force re-authentication to ensure fresh consent
-    authUrl.searchParams.set("force_reauth", "true");
 
     // Log authorization initiation with userId and timestamp
-    // Requirement: 12.1 - Log authorization initiation with userId and timestamp
-    console.log("[GET /api/oauth/instagram/authorize] Authorization initiated:", {
+    // Requirement: 1.11 - Log authorization initiation with userId and timestamp
+    console.log("[GET /api/oauth/threads/authorize] Authorization initiated:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
       redirectUri,
@@ -126,13 +120,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Create response with redirect
-    // Requirement: 1.10 - Redirect user to Instagram authorization URL
     const response = NextResponse.redirect(authUrl.toString());
 
     // Store CSRF token in httpOnly cookie with 10-minute expiration
-    // Requirement: 1.3 - Store CSRF token in httpOnly cookie with 10-minute expiration
+    // Requirement: 1.2 - Store CSRF token in httpOnly cookie with 10-minute expiration
     const maxAge = 10 * 60; // 10 minutes in seconds
-    response.cookies.set("instagram_oauth_state", csrfToken, {
+    response.cookies.set("threads_oauth_state", csrfToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -143,7 +136,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     // Log errors with user context
-    console.error("[GET /api/oauth/instagram/authorize] Unexpected error:", {
+    console.error("[GET /api/oauth/threads/authorize] Unexpected error:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",

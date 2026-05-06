@@ -10,9 +10,7 @@ import { getToken } from "next-auth/jwt";
 const PROTECTED_ROUTES = ["/dashboard", "/admin", "/calendar", "/settings"];
 
 function isProtectedRoute(pathname: string) {
-  return PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
+  return PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
 export async function middleware(req: NextRequest) {
@@ -63,10 +61,17 @@ export async function middleware(req: NextRequest) {
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   response.headers.set("Pragma", "no-cache");
   response.headers.set("Expires", "0");
-  
+
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/calendar/:path*", "/settings/:path*", "/createpassword", "/resetpassword"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/calendar/:path*",
+    "/settings/:path*",
+    "/createpassword",
+    "/resetpassword",
+  ],
 };

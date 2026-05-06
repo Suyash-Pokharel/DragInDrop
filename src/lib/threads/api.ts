@@ -1,10 +1,10 @@
 /**
- * Instagram API Integration Module
+ * Threads API Integration Module
  *
- * This module encapsulates all Instagram API interactions for video uploads using
- * Instagram's container-based publishing system. Videos are published as Reels.
+ * This module encapsulates all Threads API interactions for video uploads using
+ * Threads' container-based publishing system (similar to Instagram).
  *
- * Requirements: 6.5, 6.7, 6.8, 6.9, 6.11, 6.12, 7.1, 7.2, 7.3, 7.4
+ * Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10
  */
 
 /**
@@ -12,10 +12,9 @@
  */
 export interface CreateContainerParams {
   accessToken: string;
-  igUserId: string; // Instagram Business or Creator account ID
+  threadsUserId: string; // Threads user ID
   videoUrl: string; // Signed URL with authorization token
-  caption: string; // Combined title and description (max 2200 chars)
-  shareToFeed?: boolean; // Default true - share Reel to feed
+  text: string; // Caption (max 500 chars)
 }
 
 /**
@@ -25,7 +24,13 @@ export interface CreateContainerResponse {
   success: boolean;
   containerId?: string;
   error?: string;
-  errorCode?: string;
+  errorCode?:
+    | "bad_request"
+    | "auth_error"
+    | "rate_limit"
+    | "server_error"
+    | "timeout"
+    | "network_error";
 }
 
 /**
@@ -41,10 +46,16 @@ export interface PollContainerStatusParams {
  */
 export interface PollContainerStatusResponse {
   success: boolean;
-  statusCode?: "IN_PROGRESS" | "FINISHED" | "ERROR";
+  status?: "EXPIRED" | "ERROR" | "FINISHED" | "IN_PROGRESS" | "PUBLISHED";
   error?: string;
-  errorCode?: string;
-  errorMessage?: string; // Instagram's error message if status is ERROR
+  errorCode?:
+    | "bad_request"
+    | "auth_error"
+    | "rate_limit"
+    | "server_error"
+    | "timeout"
+    | "network_error";
+  errorMessage?: string; // Threads error_message if status is ERROR
 }
 
 /**
@@ -52,7 +63,7 @@ export interface PollContainerStatusResponse {
  */
 export interface PublishContainerParams {
   accessToken: string;
-  igUserId: string;
+  threadsUserId: string;
   containerId: string;
 }
 
@@ -63,13 +74,19 @@ export interface PublishContainerResponse {
   success: boolean;
   mediaId?: string;
   error?: string;
-  errorCode?: string;
+  errorCode?:
+    | "bad_request"
+    | "auth_error"
+    | "rate_limit"
+    | "server_error"
+    | "timeout"
+    | "network_error";
 }
 
 /**
- * Instagram API response for container creation
+ * Threads API response for container creation
  */
-interface InstagramContainerResponse {
+interface ThreadsContainerResponse {
   id?: string;
   error?: {
     message: string;
@@ -81,10 +98,11 @@ interface InstagramContainerResponse {
 }
 
 /**
- * Instagram API response for container status
+ * Threads API response for container status
  */
-interface InstagramStatusResponse {
-  status_code?: string;
+interface ThreadsStatusResponse {
+  status?: string;
+  error_message?: string;
   error?: {
     message: string;
     type: string;
@@ -95,9 +113,9 @@ interface InstagramStatusResponse {
 }
 
 /**
- * Instagram API response for container publish
+ * Threads API response for container publish
  */
-interface InstagramPublishResponse {
+interface ThreadsPublishResponse {
   id?: string;
   error?: {
     message: string;
@@ -111,13 +129,13 @@ interface InstagramPublishResponse {
 /**
  * Create a media container for video upload
  *
- * This function initiates a video upload to Instagram by creating a media container.
- * Instagram downloads and processes the video from the provided URL.
+ * This function initiates a video upload to Threads by creating a media container.
+ * Threads downloads and processes the video from the provided URL.
  *
  * @param {CreateContainerParams} params - Container creation parameters
  * @returns {Promise<CreateContainerResponse>} Container creation result with container ID or error
  *
- * Requirements: 6.5, 6.7, 6.8, 6.9
+ * Requirements: 11.1, 11.6, 11.8
  *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns bad_request error
@@ -128,26 +146,25 @@ interface InstagramPublishResponse {
  *
  * @example
  * const result = await createMediaContainer({
- *   accessToken: 'IGQWRPabc123...',
- *   igUserId: '17841400000000000',
+ *   accessToken: 'TH_TOKEN...',
+ *   threadsUserId: '123456789',
  *   videoUrl: 'https://s3.eu-central-003.backblazeb2.com/file/bucket/video.mp4?Authorization=...',
- *   caption: 'My Video Title\n\nMy video description',
- *   shareToFeed: true
+ *   text: 'My Video Title\n\nMy video description'
  * });
  */
 export async function createMediaContainer(
   params: CreateContainerParams,
 ): Promise<CreateContainerResponse> {
-  const { accessToken, igUserId, videoUrl, caption, shareToFeed = true } = params;
+  const { accessToken, threadsUserId, videoUrl, text } = params;
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 6.7
+    // Requirement: 11.6
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     // Construct the API URL
-    const url = new URL(`https://graph.instagram.com/v21.0/${igUserId}/media`);
+    const url = new URL(`https://graph.threads.net/v1.0/${threadsUserId}/threads`);
     url.searchParams.append("access_token", accessToken);
 
     const response = await fetch(url.toString(), {
@@ -156,10 +173,9 @@ export async function createMediaContainer(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        media_type: "REELS",
+        media_type: "VIDEO",
         video_url: videoUrl,
-        caption: caption,
-        share_to_feed: shareToFeed,
+        text: text,
       }),
       signal: controller.signal,
     });
@@ -167,10 +183,10 @@ export async function createMediaContainer(
     clearTimeout(timeoutId);
 
     // Parse response
-    const data: InstagramContainerResponse = await response.json();
+    const data: ThreadsContainerResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 6.8, 6.9
+    // Requirements: 11.5, 11.8
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -203,7 +219,7 @@ export async function createMediaContainer(
       if (response.status >= 500) {
         return {
           success: false,
-          error: data.error?.message || "Instagram server error",
+          error: data.error?.message || "Threads server error",
           errorCode: "server_error",
         };
       }
@@ -212,17 +228,17 @@ export async function createMediaContainer(
       return {
         success: false,
         error: data.error?.message || `HTTP ${response.status} error`,
-        errorCode: "unknown_error",
+        errorCode: "bad_request",
       };
     }
 
     // Extract container ID from successful response
-    // Requirement: 6.9
+    // Requirement: 11.4
     if (!data.id) {
       return {
         success: false,
         error: "No container ID in response",
-        errorCode: "invalid_response",
+        errorCode: "bad_request",
       };
     }
 
@@ -232,7 +248,7 @@ export async function createMediaContainer(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 7.4
+    // Requirements: 11.9, 11.10
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -252,7 +268,7 @@ export async function createMediaContainer(
     return {
       success: false,
       error: "Unknown error occurred",
-      errorCode: "unknown_error",
+      errorCode: "network_error",
     };
   }
 }
@@ -261,22 +277,37 @@ export async function createMediaContainer(
  * Poll the status of a media container
  *
  * This function checks the current processing status of a media container.
- * Instagram processes videos asynchronously, typically taking 30 seconds to 5 minutes.
+ * Threads processes videos asynchronously. Per Meta's API documentation,
+ * containers should be polled once per minute for no more than 5 minutes.
  *
  * @param {PollContainerStatusParams} params - Parameters including access token and container ID
  * @returns {Promise<PollContainerStatusResponse>} Status result with current processing status
  *
- * Requirements: 6.9, 6.10, 7.1, 7.2, 7.3, 7.4
+ * Requirements: 11.2, 11.7, 11.11, 11.12
  *
  * Status Values:
- * - IN_PROGRESS: Instagram is still processing the video
+ * - EXPIRED: Container not published within 24 hours
+ * - ERROR: Processing failed (includes error_message field)
  * - FINISHED: Video processing complete, ready to publish
- * - ERROR: Processing failed
+ * - IN_PROGRESS: Threads is still processing the video
+ * - PUBLISHED: Container has already been published
+ *
+ * Error Message Types (when status=ERROR):
+ * - FAILED_DOWNLOADING_VIDEO
+ * - FAILED_PROCESSING_AUDIO
+ * - FAILED_PROCESSING_VIDEO
+ * - INVALID_ASPECT_RATIO (or INVALID_ASPEC_RATIO - API typo)
+ * - INVALID_BIT_RATE
+ * - INVALID_DURATION
+ * - INVALID_FRAME_RATE
+ * - INVALID_AUDIO_CHANNELS
+ * - INVALID_AUDIO_CHANNEL_LAYOUT
+ * - UNKNOWN
  *
  * @example
  * const result = await pollContainerStatus({
- *   accessToken: 'IGQWRPabc123...',
- *   containerId: '17895695668004550'
+ *   accessToken: 'TH_TOKEN...',
+ *   containerId: 'container_123456'
  * });
  */
 export async function pollContainerStatus(
@@ -286,13 +317,13 @@ export async function pollContainerStatus(
 
   try {
     // Create abort controller for 10-second timeout
-    // Requirement: 6.7
+    // Requirement: 11.7
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     // Construct the API URL
-    const url = new URL(`https://graph.instagram.com/v21.0/${containerId}`);
-    url.searchParams.append("fields", "status_code");
+    const url = new URL(`https://graph.threads.net/v1.0/${containerId}`);
+    url.searchParams.append("fields", "status,error_message");
     url.searchParams.append("access_token", accessToken);
 
     const response = await fetch(url.toString(), {
@@ -303,10 +334,10 @@ export async function pollContainerStatus(
     clearTimeout(timeoutId);
 
     // Parse response
-    const data: InstagramStatusResponse = await response.json();
+    const data: ThreadsStatusResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 6.8, 6.9
+    // Requirements: 11.5, 11.8
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -339,7 +370,7 @@ export async function pollContainerStatus(
       if (response.status >= 500) {
         return {
           success: false,
-          error: data.error?.message || "Instagram server error",
+          error: data.error?.message || "Threads server error",
           errorCode: "server_error",
         };
       }
@@ -348,38 +379,39 @@ export async function pollContainerStatus(
       return {
         success: false,
         error: data.error?.message || `HTTP ${response.status} error`,
-        errorCode: "unknown_error",
+        errorCode: "bad_request",
       };
     }
 
     // Extract status from successful response
-    // Requirements: 6.9, 6.10
-    if (!data.status_code) {
+    // Requirements: 11.11, 11.12
+    if (!data.status) {
       return {
         success: false,
-        error: "No status_code in response",
-        errorCode: "invalid_response",
+        error: "No status in response",
+        errorCode: "bad_request",
       };
     }
 
-    const statusCode = data.status_code as PollContainerStatusResponse["statusCode"];
+    const status = data.status as PollContainerStatusResponse["status"];
 
-    // If status is ERROR, include the error message
-    if (statusCode === "ERROR") {
+    // If status is ERROR, include the error_message
+    // Requirement: 11.11
+    if (status === "ERROR") {
       return {
         success: true,
-        statusCode,
-        errorMessage: data.error?.message || "Container processing failed",
+        status,
+        errorMessage: data.error_message || "Container processing failed",
       };
     }
 
     return {
       success: true,
-      statusCode,
+      status,
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 7.4
+    // Requirements: 11.9, 11.10
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -399,42 +431,42 @@ export async function pollContainerStatus(
     return {
       success: false,
       error: "Unknown error occurred",
-      errorCode: "unknown_error",
+      errorCode: "network_error",
     };
   }
 }
 
 /**
- * Publish a media container to make it live on Instagram
+ * Publish a media container to make it live on Threads
  *
- * This function publishes a processed media container as a Reel on Instagram.
- * The container must have status_code "FINISHED" before publishing.
+ * This function publishes a processed media container on Threads.
+ * The container must have status "FINISHED" before publishing.
  *
  * @param {PublishContainerParams} params - Parameters including access token, user ID, and container ID
  * @returns {Promise<PublishContainerResponse>} Publish result with media ID or error
  *
- * Requirements: 6.11, 6.12, 7.1, 7.2, 7.3, 7.4
+ * Requirements: 11.3, 11.6, 11.8
  *
  * @example
  * const result = await publishContainer({
- *   accessToken: 'IGQWRPabc123...',
- *   igUserId: '17841400000000000',
- *   containerId: '17895695668004550'
+ *   accessToken: 'TH_TOKEN...',
+ *   threadsUserId: '123456789',
+ *   containerId: 'container_123456'
  * });
  */
 export async function publishContainer(
   params: PublishContainerParams,
 ): Promise<PublishContainerResponse> {
-  const { accessToken, igUserId, containerId } = params;
+  const { accessToken, threadsUserId, containerId } = params;
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 6.7
+    // Requirement: 11.6
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     // Construct the API URL
-    const url = new URL(`https://graph.instagram.com/v21.0/${igUserId}/media_publish`);
+    const url = new URL(`https://graph.threads.net/v1.0/${threadsUserId}/threads_publish`);
     url.searchParams.append("access_token", accessToken);
 
     const response = await fetch(url.toString(), {
@@ -451,10 +483,10 @@ export async function publishContainer(
     clearTimeout(timeoutId);
 
     // Parse response
-    const data: InstagramPublishResponse = await response.json();
+    const data: ThreadsPublishResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 6.8, 6.9
+    // Requirements: 11.5, 11.8
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -487,7 +519,7 @@ export async function publishContainer(
       if (response.status >= 500) {
         return {
           success: false,
-          error: data.error?.message || "Instagram server error",
+          error: data.error?.message || "Threads server error",
           errorCode: "server_error",
         };
       }
@@ -496,17 +528,17 @@ export async function publishContainer(
       return {
         success: false,
         error: data.error?.message || `HTTP ${response.status} error`,
-        errorCode: "unknown_error",
+        errorCode: "bad_request",
       };
     }
 
     // Extract media ID from successful response
-    // Requirement: 6.12
+    // Requirement: 11.4
     if (!data.id) {
       return {
         success: false,
         error: "No media ID in response",
-        errorCode: "invalid_response",
+        errorCode: "bad_request",
       };
     }
 
@@ -516,7 +548,7 @@ export async function publishContainer(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 7.4
+    // Requirements: 11.9, 11.10
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -536,7 +568,203 @@ export async function publishContainer(
     return {
       success: false,
       error: "Unknown error occurred",
-      errorCode: "unknown_error",
+      errorCode: "network_error",
+    };
+  }
+}
+
+/**
+ * Parameters for refreshing an access token
+ */
+export interface RefreshTokenParams {
+  encryptedAccessToken: string; // Encrypted access token to refresh
+}
+
+/**
+ * Response from refreshing an access token
+ */
+export interface RefreshTokenResponse {
+  success: boolean;
+  encryptedAccessToken?: string; // New encrypted access token
+  expiresAt?: Date; // New expiration timestamp
+  error?: string;
+  errorCode?:
+    | "bad_request"
+    | "auth_error"
+    | "rate_limit"
+    | "server_error"
+    | "timeout"
+    | "network_error";
+}
+
+/**
+ * Threads API response for token refresh
+ */
+interface ThreadsRefreshTokenResponse {
+  access_token?: string;
+  token_type?: string;
+  expires_in?: number; // Typically 5183944 seconds (~60 days)
+  error?: {
+    message: string;
+    type: string;
+    code: number;
+    error_subcode?: number;
+    fbtrace_id?: string;
+  };
+}
+
+/**
+ * Refresh a Threads access token
+ *
+ * This function refreshes an expiring Threads access token. Threads uses the
+ * access_token itself for refresh operations (no separate refresh_token).
+ * For users with public profiles, refreshing extends the permission grant for
+ * another 90 days. Private profile users must re-authorize after 90 days.
+ *
+ * @param {RefreshTokenParams} params - Parameters including encrypted access token
+ * @returns {Promise<RefreshTokenResponse>} Refresh result with new encrypted token and expiration
+ *
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.11, 3.12, 3.13
+ *
+ * Error Handling:
+ * - HTTP 400: Invalid request parameters → Returns bad_request error
+ * - HTTP 401/403: Token expired or invalid → Returns auth_error
+ * - HTTP 429: Rate limit exceeded → Returns rate_limit error
+ * - HTTP 5xx: Server error → Returns server_error
+ * - Network timeout: 10-second timeout → Returns timeout error
+ *
+ * @example
+ * const result = await refreshThreadsToken({
+ *   encryptedAccessToken: 'a1b2c3d4e5f6....:1234abcd....:5678efgh....'
+ * });
+ */
+export async function refreshThreadsToken(
+  params: RefreshTokenParams,
+): Promise<RefreshTokenResponse> {
+  const { encryptedAccessToken } = params;
+
+  // Import encryption functions
+  const { decryptToken, encryptToken } = await import("../encryption");
+
+  try {
+    // Decrypt the current access token
+    // Requirement: 3.3
+    const currentToken = decryptToken(encryptedAccessToken);
+
+    // Create abort controller for 10-second timeout
+    // Requirement: 3.7
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    // Construct the API URL
+    // Requirement: 3.2
+    const url = new URL("https://graph.threads.net/refresh_access_token");
+    url.searchParams.append("grant_type", "th_refresh_token");
+    url.searchParams.append("access_token", currentToken);
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    // Parse response
+    const data: ThreadsRefreshTokenResponse = await response.json();
+
+    // Handle HTTP error codes
+    // Requirement: 3.8
+    if (!response.ok) {
+      // HTTP 400: Invalid request
+      if (response.status === 400) {
+        return {
+          success: false,
+          error: data.error?.message || "Invalid request parameters",
+          errorCode: "bad_request",
+        };
+      }
+
+      // HTTP 401/403: Authentication error
+      if (response.status === 401 || response.status === 403) {
+        return {
+          success: false,
+          error: data.error?.message || "Token refresh failed - authentication error",
+          errorCode: "auth_error",
+        };
+      }
+
+      // HTTP 429: Rate limit exceeded
+      if (response.status === 429) {
+        return {
+          success: false,
+          error: "Rate limit exceeded",
+          errorCode: "rate_limit",
+        };
+      }
+
+      // HTTP 5xx: Server error
+      if (response.status >= 500) {
+        return {
+          success: false,
+          error: data.error?.message || "Threads server error",
+          errorCode: "server_error",
+        };
+      }
+
+      // Other errors
+      return {
+        success: false,
+        error: data.error?.message || `HTTP ${response.status} error`,
+        errorCode: "bad_request",
+      };
+    }
+
+    // Extract access_token, token_type, and expires_in from response
+    // Requirement: 3.4
+    if (!data.access_token || !data.expires_in) {
+      return {
+        success: false,
+        error: "Missing access_token or expires_in in response",
+        errorCode: "bad_request",
+      };
+    }
+
+    // Calculate new expiration timestamp
+    // Requirement: 3.5
+    const expiresAt = new Date(Date.now() + data.expires_in * 1000);
+
+    // Encrypt new access_token using AES-256-GCM
+    // Requirement: 3.6
+    const newEncryptedToken = encryptToken(data.access_token);
+
+    return {
+      success: true,
+      encryptedAccessToken: newEncryptedToken,
+      expiresAt,
+    };
+  } catch (error) {
+    // Handle timeout and network errors
+    // Requirements: 3.11, 3.12, 3.13
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        return {
+          success: false,
+          error: "Request timeout after 10 seconds",
+          errorCode: "timeout",
+        };
+      }
+
+      return {
+        success: false,
+        error: error.message,
+        errorCode: "network_error",
+      };
+    }
+
+    return {
+      success: false,
+      error: "Unknown error occurred",
+      errorCode: "network_error",
     };
   }
 }

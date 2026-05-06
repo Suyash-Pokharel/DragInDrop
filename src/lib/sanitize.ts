@@ -100,6 +100,19 @@ export function sanitizeInstagramProfile(profile: {
 }
 
 /**
+ * Sanitizes Threads user profile data
+ * @param profile - Threads user profile object
+ * @returns Sanitized profile data
+ */
+export function sanitizeThreadsProfile(profile: { id?: string; username?: string; name?: string }) {
+  return {
+    id: sanitizeString(profile.id, 100),
+    username: sanitizeString(profile.username, 100),
+    name: sanitizeString(profile.name, 100),
+  };
+}
+
+/**
  * Validates and sanitizes a URL
  * @param url - The URL to validate
  * @returns Sanitized URL or empty string if invalid
