@@ -509,8 +509,8 @@ async function uploadToYouTube(
         expiresAt: currentSocialAccount.expiresAt?.toISOString() || new Date().toISOString(),
         userId: post.userId,
       }),
-      // Requirement 9.4: Set 10-minute timeout (increased to handle large videos)
-      signal: AbortSignal.timeout(10 * 60 * 1000),
+      // Requirement 9.4: Set 20-minute timeout (increased to handle large videos with chunked upload)
+      signal: AbortSignal.timeout(20 * 60 * 1000),
     });
 
     // Parse response with error handling for incomplete JSON

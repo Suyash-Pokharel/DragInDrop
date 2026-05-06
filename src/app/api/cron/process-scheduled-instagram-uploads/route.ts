@@ -16,7 +16,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 import { Post, PlatformPost, SocialAccount, PlatformPostStatus, PostStatus } from "@prisma/client";
 import { decryptToken, encryptToken } from "@/lib/encryption";
-import { isTokenExpired } from "@/lib/tokenManager";
 import { checkUploadRateLimit, incrementUploadCounter } from "@/lib/instagram/rateLimiter";
 import { buildSignedVideoUrl } from "@/lib/backblaze/urlBuilder";
 import {
@@ -385,14 +384,14 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
           continue;
         }
 
-        // Check if the post has been in PUBLISHING status for more than 5 minutes
+        // Check if the post has been in PUBLISHING status for more than 15 minutes
         const now = new Date();
-        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+        const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
         const updatedAt = new Date(platformPost.updatedAt);
 
-        if (updatedAt < fiveMinutesAgo) {
-          // Requirement 6.22: If polling times out after 5 minutes, mark as FAILED
-          console.error("[processPublishingPosts] Polling timeout (5 minutes exceeded):", {
+        if (updatedAt < fifteenMinutesAgo) {
+          // Requirement 6.22: If polling times out after 15 minutes, mark as FAILED
+          console.error("[processPublishingPosts] Polling timeout (15 minutes exceeded):", {
             platformPostId: platformPost.id,
             postId: platformPost.postId,
             containerId: platformPost.publishId,
@@ -404,7 +403,7 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
             platformPost.id,
             "FAILED",
             undefined,
-            "Container processing timeout (5 minutes exceeded)",
+            "Container processing timeout (15 minutes exceeded)",
           );
 
           // Sync post status after marking as FAILED

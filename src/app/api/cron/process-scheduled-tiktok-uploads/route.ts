@@ -825,6 +825,35 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
     // Process each publishing post
     for (const platformPost of publishingPosts) {
       try {
+        // Check if the post has been in PUBLISHING status for more than 10 minutes
+        const now = new Date();
+        const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+        const updatedAt = new Date(platformPost.updatedAt);
+
+        if (updatedAt < tenMinutesAgo) {
+          // Safety timeout: If polling times out after 10 minutes, mark as FAILED
+          console.error("[processPublishingPosts] Polling timeout (10 minutes exceeded):", {
+            platformPostId: platformPost.id,
+            postId: platformPost.postId,
+            publishId: platformPost.publishId,
+            updatedAt: platformPost.updatedAt,
+            timestamp: new Date().toISOString(),
+          });
+
+          await updatePlatformPostStatus(
+            platformPost.id,
+            "FAILED",
+            undefined,
+            "Upload timeout (10 minutes exceeded)",
+          );
+
+          // Sync post status after marking as FAILED
+          await syncPostStatus(platformPost.postId);
+
+          errors.push(`Post ${platformPost.postId}: Upload timeout`);
+          continue;
+        }
+
         const result = await pollUploadStatus(platformPost, platformPost.SocialAccount);
 
         if (result.success && result.statusUpdated) {
