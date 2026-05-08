@@ -118,13 +118,7 @@ export function decryptToken(encryptedToken: string): string {
       encryptedTokenLength: encryptedToken?.length || 0,
     });
 
-    // Handle authentication tag verification failures
-    if (
-      error instanceof Error &&
-      error.message.includes("Unsupported state or unable to authenticate data")
-    ) {
-      throw new Error("Token decryption failed: invalid authentication tag");
-    }
-    throw error;
+    // Requirement 19.6: Throw error with message "Failed to decrypt token" on failure
+    throw new Error("Failed to decrypt token");
   }
 }

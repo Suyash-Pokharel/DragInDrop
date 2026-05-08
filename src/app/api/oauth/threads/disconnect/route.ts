@@ -136,7 +136,7 @@ export async function DELETE(request: NextRequest) {
  * POST /api/oauth/threads/disconnect
  * Disconnects a user's Threads account by deactivating the SocialAccount
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
- * 
+ *
  * Note: This is kept for backward compatibility. Use DELETE method instead.
  */
 export async function POST(request: NextRequest) {

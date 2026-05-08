@@ -125,6 +125,12 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
       setTimeout(() => {
         window.location.href = "/api/oauth/threads/authorize";
       }, 0);
+    } else if (name === "Facebook") {
+      // For Facebook Pages, redirect to OAuth authorization endpoint
+      setConnectingPlatform(name);
+      setTimeout(() => {
+        window.location.href = "/api/oauth/facebook-pages/authorize";
+      }, 0);
     } else {
       // For other platforms, create mock connection for testing
       setMockConnectedPlatforms((prev) => {
@@ -143,12 +149,13 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
 
   const confirmDisconnect = async () => {
     if (platformToDisconnect) {
-      // Call disconnect API endpoint for TikTok, YouTube, Instagram, and Threads
+      // Call disconnect API endpoint for TikTok, YouTube, Instagram, Threads, and Facebook
       if (
         platformToDisconnect === "TikTok" ||
         platformToDisconnect === "YouTube" ||
         platformToDisconnect === "Instagram" ||
-        platformToDisconnect === "Threads"
+        platformToDisconnect === "Threads" ||
+        platformToDisconnect === "Facebook"
       ) {
         try {
           const endpoint =
@@ -158,7 +165,9 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
                 ? "/api/oauth/youtube/disconnect"
                 : platformToDisconnect === "Instagram"
                   ? "/api/oauth/instagram/disconnect"
-                  : "/api/oauth/threads/disconnect";
+                  : platformToDisconnect === "Threads"
+                    ? "/api/oauth/threads/disconnect"
+                    : "/api/oauth/facebook-pages/disconnect";
 
           const response = await fetch(endpoint, {
             method: "DELETE",

@@ -206,9 +206,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    // Create a map of platform to socialAccountId for easy lookup
-    const platformToAccountMap = new Map(socialAccounts.map((sa) => [sa.platform, sa.id]));
-
     // Use Prisma transaction to ensure atomicity
     // Requirements: 2.3, 2.4, 2.5, 4.8
     const result = await prisma.$transaction(async (tx) => {
@@ -229,14 +226,16 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create PlatformPost records with status PENDING for each platform
+      // Create PlatformPost records with status PENDING for each connected social account
+      // Note: For Facebook Pages, users can only connect one Page at a time
+      // This creates one PlatformPost per SocialAccount (not per platform)
       const platformPosts = await Promise.all(
-        selectedPlatforms.map((platform) =>
+        socialAccounts.map((account) =>
           tx.platformPost.create({
             data: {
               id: crypto.randomUUID(),
               postId: post.id,
-              socialAccountId: platformToAccountMap.get(platform)!,
+              socialAccountId: account.id,
               status: "PENDING",
               createdAt: new Date(),
               updatedAt: new Date(),
