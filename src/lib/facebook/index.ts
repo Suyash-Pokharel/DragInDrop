@@ -24,11 +24,3 @@ export type {
   RefreshFacebookTokenParams,
   RefreshFacebookTokenResponse,
 } from "./api";
-
-// Export example functions for documentation/testing
-export {
-  exampleFacebookVideoUpload,
-  exampleTokenRefresh,
-  exampleErrorHandling,
-  exampleVideoValidation,
-} from "./example";
