@@ -19,25 +19,12 @@
     "create-admin": "dotenv -e .env.local -- tsx scripts/create-admin.ts",
     "postinstall": "prisma generate"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/engines",
-      "prisma",
-      "sharp",
-      "unrs-resolver"
-    ],
-    "overrides": {
-      "uuid": "^14.0.0",
-      "postcss": "^8.5.10",
-      "@hono/node-server": "^1.19.13",
-      "fast-xml-parser": "^5.7.0"
-    }
-  },
   "overrides": {
     "pg": "npm:@neondatabase/serverless@^1.0.0",
     "uuid": "^14.0.0",
     "postcss": "^8.5.10",
-    "@hono/node-server": "^1.19.13"
+    "@hono/node-server": "^1.19.13",
+    "fast-xml-parser": "^5.7.0"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1025.0",
