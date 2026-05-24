@@ -7,11 +7,10 @@ import { validateHttps } from "@/lib/sanitize";
 /**
  * GET /api/oauth/instagram/authorize
  * Initiates Instagram OAuth 2.0 authorization flow
- * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 10.4, 10.5, 10.7, 10.11, 12.1
  */
 export async function GET(request: NextRequest) {
   // Rate limiting
-  // Requirement: 1.8 - Apply per-IP rate limiting (10 requests per 15 minutes)
+  // Apply per-IP rate limiting (10 requests per 15 minutes)
   const ip =
     request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
 
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Authenticate user
-  // Requirement: 1.12 - Return HTTP 401 if user not authenticated
+  // Return HTTP 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[GET /api/oauth/instagram/authorize] Authentication failed:", {
@@ -42,7 +41,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Per-user rate limiting
-  // Requirement: 1.9 - Apply per-user rate limiting (5 requests per 15 minutes)
+  // Apply per-user rate limiting (5 requests per 15 minutes)
   try {
     await perUserOAuthLimiter.consume(user.id);
   } catch {
@@ -58,7 +57,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Validate OAuth configuration
-    // Requirement: 1.11 - Return HTTP 500 if credentials missing
+    // Return HTTP 500 if credentials missing
     const appId = process.env.INSTAGRAM_APP_ID;
     const appSecret = process.env.INSTAGRAM_APP_SECRET;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -73,15 +72,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate cryptographically secure CSRF token
-    // Requirement: 1.2 - Generate cryptographically secure 32-byte CSRF token
+    // Generate cryptographically secure 32-byte CSRF token
     const csrfToken = randomBytes(32).toString("hex");
 
     // Construct Instagram OAuth authorization URL
-    // Requirements: 1.4, 1.5, 1.6, 1.7, 1.10
     const redirectUri = `${appUrl}/api/oauth/instagram/callback`;
 
     // Validate HTTPS in production
-    // Requirement: 1.7 - Validate redirect_uri uses HTTPS in production
+    // Validate redirect_uri uses HTTPS in production
     const isProduction = process.env.NODE_ENV === "production";
     if (!validateHttps(redirectUri, isProduction)) {
       console.error("[GET /api/oauth/instagram/authorize] Invalid redirect URI protocol:", {
@@ -97,14 +95,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Instagram OAuth parameters
-    // Requirement: 1.5 - Set scopes for Instagram Business/Creator accounts
+    // Set scopes for Instagram Business/Creator accounts
     // Core scopes: basic profile access and content publishing
     // Optional scopes: messages, comments, insights (add as needed)
     const scope =
       "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_insights";
     const responseType = "code";
 
-    // Requirement: 1.4 - Construct Instagram OAuth authorization URL
+    // Construct Instagram OAuth authorization URL
     // Using Instagram API with Instagram Login (new endpoint as of July 2024)
     const authUrl = new URL("https://www.instagram.com/oauth/authorize");
     authUrl.searchParams.set("client_id", appId);
@@ -116,7 +114,7 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set("force_reauth", "true");
 
     // Log authorization initiation with userId and timestamp
-    // Requirement: 12.1 - Log authorization initiation with userId and timestamp
+    // Log authorization initiation with userId and timestamp
     console.log("[GET /api/oauth/instagram/authorize] Authorization initiated:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
@@ -126,11 +124,11 @@ export async function GET(request: NextRequest) {
     });
 
     // Create response with redirect
-    // Requirement: 1.10 - Redirect user to Instagram authorization URL
+    // Redirect user to Instagram authorization URL
     const response = NextResponse.redirect(authUrl.toString());
 
     // Store CSRF token in httpOnly cookie with 10-minute expiration
-    // Requirement: 1.3 - Store CSRF token in httpOnly cookie with 10-minute expiration
+    // Store CSRF token in httpOnly cookie with 10-minute expiration
     const maxAge = 10 * 60; // 10 minutes in seconds
     response.cookies.set("instagram_oauth_state", csrfToken, {
       httpOnly: true,

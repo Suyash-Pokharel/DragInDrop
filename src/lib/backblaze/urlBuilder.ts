@@ -4,7 +4,6 @@
  * This module generates temporary signed URLs for private Backblaze B2 videos,
  * allowing TikTok to download videos securely without making the bucket public.
  *
- * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9
  */
 
 /**
@@ -43,7 +42,6 @@ export interface SignedUrlResult {
  * @throws {Error} If any required environment variable is missing
  * @returns {BackblazeConfig} Validated Backblaze configuration
  *
- * Requirements: 12.4, 12.5, 12.6, 12.7, 12.8
  */
 export function getBackblazeConfig(): BackblazeConfig {
   const accountId = process.env.B2_ACCOUNT_ID;
@@ -80,7 +78,7 @@ export function getBackblazeConfig(): BackblazeConfig {
  * @returns {Promise<B2AuthResponse>} Authorization response with token and API URL
  * @throws {Error} If authorization fails
  *
- * Requirements: 13.1
+ * .1
  */
 export async function authorizeB2Account(
   accountId: string,
@@ -130,7 +128,7 @@ export async function authorizeB2Account(
  * @returns {Promise<string>} Download authorization token
  * @throws {Error} If getting download authorization fails
  *
- * Requirements: 13.1, 13.2
+ * .1, 13.2
  */
 export async function getDownloadAuthorization(params: {
   authorizationToken: string;
@@ -183,7 +181,6 @@ export async function getDownloadAuthorization(params: {
  * @returns {Promise<SignedUrlResult>} URL and expiration timestamp
  * @throws {Error} If videoFileKey is empty
  *
- * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9
  *
  * @example
  * const result = await buildSignedVideoUrl("uploads/user123/video.mp4");
@@ -192,7 +189,7 @@ export async function getDownloadAuthorization(params: {
  */
 export async function buildSignedVideoUrl(videoFileKey: string): Promise<SignedUrlResult> {
   // Validate videoFileKey is not empty
-  // Requirement: 13.6
+  // 
   if (!videoFileKey || videoFileKey.trim() === "") {
     throw new Error("videoFileKey cannot be empty");
   }
@@ -201,7 +198,7 @@ export async function buildSignedVideoUrl(videoFileKey: string): Promise<SignedU
   const config = getBackblazeConfig();
 
   // URL-encode the videoFileKey if it contains special characters
-  // Requirement: 13.7
+  // 
   // We need to encode each path segment separately to preserve forward slashes
   const encodedKey = videoFileKey
     .split("/")
@@ -210,11 +207,11 @@ export async function buildSignedVideoUrl(videoFileKey: string): Promise<SignedU
 
   // Construct URL using Cloudflare Worker endpoint
   // The Worker handles all B2 authentication automatically
-  // Requirements: 13.3, 13.5
+  // .3, 13.5
   const signedUrl = `https://${config.endpoint}/${encodedKey}`;
 
   // Cloudflare Worker caches for 1 hour, so we set expiration accordingly
-  // Requirement: 13.8
+  // 
   const expiresAt = new Date(Date.now() + 3600 * 1000);
 
   return {

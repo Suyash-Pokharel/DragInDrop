@@ -3,16 +3,11 @@ import crypto from "crypto";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { encryptToken } from "@/lib/encryption";
 import { getPrisma } from "@/lib/prisma";
+import { createNotification, formatSocialAccountConnected } from "@/lib/notifications";
 
-/**
- * POST /api/oauth/facebook-pages/select-page
- * Handles Page selection after OAuth callback and stores the selected Page's access token
- * This endpoint receives the user's Page selection, validates it, encrypts the token, and stores it in the database
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.1, 6.2, 6.3, 6.4, 6.5, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11
- */
 export async function POST(request: NextRequest) {
   // Authenticate user
-  // Requirement: 5.2 - Verify user authentication
+  // Verify user authentication
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[POST /api/oauth/facebook-pages/select-page] Authentication failed:", {
@@ -23,8 +18,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Parse request body
-    // Requirement: 5.2 - Accept POST request with pageId, pageName, pageAccessToken
     const body = await request.json();
     const { pageId, pageName, pageAccessToken } = body;
 
@@ -43,9 +36,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Requirement: 5.4 - Validate the pageId matches one of the Pages from the OAuth callback
-    // Requirement: 5.6 - Validate user owns the selected Page
-    // Requirement: 5.7 - Return HTTP 403 if validation fails
+    // Validate the pageId matches one of the Pages from the OAuth callback
+    // Validate user owns the selected Page
+    // Return HTTP 403 if validation fails
     //
     // Security Note: The validation is handled through the OAuth flow architecture:
     // 1. The callback endpoint retrieves Pages from Facebook's API using the user's authorized token
@@ -61,7 +54,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         tokenLength: typeof pageAccessToken === "string" ? pageAccessToken.length : 0,
       });
-      // Requirement: 5.7 - Return HTTP 403 if validation fails
+      // Return HTTP 403 if validation fails
       return NextResponse.json({ error: "Invalid Page access token format" }, { status: 403 });
     }
 
@@ -72,7 +65,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         pageId,
       });
-      // Requirement: 5.7 - Return HTTP 403 if validation fails
+      // Return HTTP 403 if validation fails
       return NextResponse.json({ error: "Invalid Page ID format" }, { status: 403 });
     }
 
@@ -83,9 +76,9 @@ export async function POST(request: NextRequest) {
       pageName,
     });
 
-    // Requirement: 7.1 - Encrypt Page access_token using AES-256-GCM
-    // Requirement: 7.2 - Generate unique 12-byte initialization vector
-    // Requirement: 7.3 - Prepend IV and authentication tag to encrypted token
+    // Encrypt Page access_token using AES-256-GCM
+    // Generate unique 12-byte initialization vector
+    // Prepend IV and authentication tag to encrypted token
     console.log("[POST /api/oauth/facebook-pages/select-page] Encrypting Page access token:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
@@ -102,15 +95,15 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: encryptionError instanceof Error ? encryptionError.message : "Unknown error",
       });
-      // Requirement: 7.9 - Handle database save failures (return HTTP 500)
+      // Handle database save failures (return HTTP 500)
       return NextResponse.json({ error: "Failed to save Page connection" }, { status: 500 });
     }
 
-    // Requirement: 7.4 - Upsert SocialAccount record with platform="FacebookPage"
-    // Requirement: 7.5 - Set platformAccountId=Page ID, platformUsername=Page name
-    // Requirement: 7.6 - Set expiresAt to NULL (never-expiring token)
-    // Requirement: 7.7 - Set refreshToken to NULL (Facebook Page tokens don't use refresh tokens)
-    // Requirement: 7.8 - Set isActive to true
+    // Upsert SocialAccount record with platform="FacebookPage"
+    // Set platformAccountId=Page ID, platformUsername=Page name
+    // Set expiresAt to NULL (never-expiring token)
+    // Set refreshToken to NULL (Facebook Page tokens don't use refresh tokens)
+    // Set isActive to true
     console.log("[POST /api/oauth/facebook-pages/select-page] Saving SocialAccount:", {
       userId: user.id,
       platform: "FacebookPage",
@@ -122,9 +115,9 @@ export async function POST(request: NextRequest) {
 
     let socialAccount;
     try {
-      // Requirement: 6.1 - Store Page access_token as never-expiring token
-      // Requirement: 6.2 - Set expiresAt to NULL indicating never-expiring token
-      // Requirement: 6.3 - Do NOT attempt to exchange Page token (already never-expiring)
+      // Store Page access_token as never-expiring token
+      // Set expiresAt to NULL indicating never-expiring token
+      // Do NOT attempt to exchange Page token (already never-expiring)
       socialAccount = await prisma.socialAccount.upsert({
         where: {
           userId_platform_platformAccountId: {
@@ -136,9 +129,9 @@ export async function POST(request: NextRequest) {
         update: {
           platformUsername: pageName,
           accessToken: encryptedAccessToken,
-          refreshToken: null, // Requirement: 7.7 - Facebook Page tokens don't use refresh tokens
-          expiresAt: null, // Requirement: 7.6 - Never-expiring token
-          isActive: true, // Requirement: 7.8 - Set isActive to true
+          refreshToken: null, // Facebook Page tokens don't use refresh tokens
+          expiresAt: null, // Never-expiring token
+          isActive: true, // Set isActive to true
           updatedAt: new Date(),
         },
         create: {
@@ -148,16 +141,16 @@ export async function POST(request: NextRequest) {
           platformAccountId: pageId,
           platformUsername: pageName,
           accessToken: encryptedAccessToken,
-          refreshToken: null, // Requirement: 7.7 - Facebook Page tokens don't use refresh tokens
-          expiresAt: null, // Requirement: 7.6 - Never-expiring token
-          isActive: true, // Requirement: 7.8 - Set isActive to true
+          refreshToken: null, // Facebook Page tokens don't use refresh tokens
+          expiresAt: null, // Never-expiring token
+          isActive: true, // Set isActive to true
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       });
 
-      // Requirement: 7.10 - Log successful connection with userId, platform, and timestamp
-      // Requirement: 6.4 - Log token storage with expiration status (never-expiring)
+      // Log successful connection with userId, platform, and timestamp
+      // Log token storage with expiration status (never-expiring)
       console.log(
         "[POST /api/oauth/facebook-pages/select-page] SocialAccount saved successfully:",
         {
@@ -169,8 +162,36 @@ export async function POST(request: NextRequest) {
           timestamp: new Date().toISOString(),
         },
       );
+
+      // Create notification for successful account connection
+      try {
+        const { title, description } = formatSocialAccountConnected("Facebook Page", pageName);
+        await createNotification(user.id, title, description, "SOCIAL_ACCOUNT_CONNECTED");
+        console.log(
+          "[POST /api/oauth/facebook-pages/select-page] Notification created successfully:",
+          {
+            userId: user.id,
+            platform: "FacebookPage",
+            timestamp: new Date().toISOString(),
+          },
+        );
+      } catch (notificationError) {
+        // Log error but don't fail OAuth flow
+        console.error(
+          "[POST /api/oauth/facebook-pages/select-page] Failed to create notification:",
+          {
+            userId: user.id,
+            platform: "FacebookPage",
+            timestamp: new Date().toISOString(),
+            error:
+              notificationError instanceof Error
+                ? notificationError.message
+                : "Unknown error",
+          },
+        );
+      }
     } catch (dbError) {
-      // Requirement: 7.9 - Handle database save failures (return HTTP 500)
+      // Handle database save failures (return HTTP 500)
       console.error("[POST /api/oauth/facebook-pages/select-page] Database error:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
@@ -180,7 +201,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to save Page connection" }, { status: 500 });
     }
 
-    // Requirement: 7.11 - Return success response with socialAccountId
+    // Return success response with socialAccountId
     return NextResponse.json(
       {
         success: true,

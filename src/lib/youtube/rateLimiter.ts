@@ -4,7 +4,6 @@
  * This module enforces YouTube API rate limits using Redis to track usage across
  * distributed serverless instances. Rate limits are enforced per user per day.
  *
- * Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7
  */
 
 import { getRedis } from "../redis";
@@ -27,7 +26,7 @@ export interface RateLimitResult {
 
 /**
  * Default rate limit configuration
- * Requirement: 11.2
+ * 
  */
 const DEFAULT_CONFIG: RateLimitConfig = {
   maxUploadsPerDay: 6, // 10,000 quota units / 1600 per upload = ~6 uploads/day
@@ -63,12 +62,12 @@ function getMidnightUTC(): number {
  * Check if a user has exceeded the upload rate limit
  *
  * This function checks if the user has remaining upload quota for the current day.
- * Rate limit: 6 uploads per user per day (Requirement 11.2)
+ * Rate limit: 6 uploads per user per day (
  *
  * @param {string} userId - The user ID to check
  * @returns {Promise<RateLimitResult>} Rate limit check result
  *
- * Requirements: 11.1, 11.2, 11.4, 11.6
+ * .1, 11.2, 11.4, 11.6
  *
  * @example
  * const result = await checkUploadRateLimit('user123');
@@ -81,9 +80,9 @@ function getMidnightUTC(): number {
 export async function checkUploadRateLimit(userId: string): Promise<RateLimitResult> {
   const redis = getRedis();
   const dateKey = getDateKey();
-  const key = `youtube:upload:${userId}:${dateKey}`; // Requirement: 11.4
+  const key = `youtube:upload:${userId}:${dateKey}`; // 
   const limit = DEFAULT_CONFIG.maxUploadsPerDay;
-  const resetAt = new Date(getMidnightUTC() * 1000); // Requirement: 11.5
+  const resetAt = new Date(getMidnightUTC() * 1000); // 
 
   try {
     // Get current count
@@ -91,7 +90,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
     const count = countStr ? parseInt(countStr, 10) : 0;
 
     // Check if limit exceeded
-    // Requirement: 11.2 - Enforce limit: 6 uploads per user per day
+    //  Enforce limit: 6 uploads per user per day
     if (count >= limit) {
       return {
         allowed: false,
@@ -100,7 +99,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
       };
     }
 
-    // Requirement: 11.7 - Return {allowed: boolean, remaining: number, resetAt: Date}
+    //  Return {allowed: boolean, remaining: number, resetAt: Date}
     return {
       allowed: true,
       remaining: limit - count,
@@ -108,7 +107,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
     };
   } catch (error) {
     // Log error but allow operation to proceed (fail open)
-    // Requirement: 11.1 - Use Redis for distributed rate limiting
+    //  Use Redis for distributed rate limiting
     console.error("[YouTube rateLimiter] Error checking upload rate limit:", error);
     return {
       allowed: true,
@@ -122,12 +121,10 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
  * Increment the upload counter for a user
  *
  * This function increments the upload counter and sets expiration to midnight UTC.
- * The counter resets automatically at midnight UTC (Requirement 11.5).
+ * The counter resets automatically at midnight UTC (
  *
  * @param {string} userId - The user ID to increment
  * @returns {Promise<void>}
- *
- * Requirements: 11.3, 11.4, 11.5, 11.6
  *
  * Redis Key Format: youtube:upload:{userId}:{YYYYMMDD}
  * Expiration: Midnight UTC
@@ -139,15 +136,15 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
   try {
     const redis = getRedis();
     const dateKey = getDateKey();
-    const key = `youtube:upload:${userId}:${dateKey}`; // Requirement: 11.4
-    const expireAt = getMidnightUTC(); // Requirement: 11.5
+    const key = `youtube:upload:${userId}:${dateKey}`; // 
+    const expireAt = getMidnightUTC(); // 
 
     // Increment counter
-    // Requirement: 11.3 - Implement incrementUploadCounter function
+    //  Implement incrementUploadCounter function
     await redis.incr(key);
 
     // Set expiration to midnight UTC
-    // Requirement: 11.5 - Set key expiration to midnight UTC
+    // Set key expiration to midnight UTC
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Log error but don't throw (fail silently for counter increments)

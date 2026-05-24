@@ -4,7 +4,6 @@
  * This module enforces TikTok API rate limits using Redis to track usage across
  * distributed serverless instances. Rate limits are enforced per user per day.
  *
- * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
  */
 
 import { getRedis } from "../redis";
@@ -28,7 +27,6 @@ export interface RateLimitResult {
 
 /**
  * Default rate limit configuration
- * Requirement: 9.2, 9.3
  */
 const DEFAULT_CONFIG: RateLimitConfig = {
   maxUploadsPerDay: 10,
@@ -65,12 +63,10 @@ function getMidnightUTC(): number {
  * Check if a user has exceeded the upload rate limit
  *
  * This function checks if the user has remaining upload quota for the current day.
- * Rate limit: 10 uploads per user per day (Requirement 9.2)
+ * Rate limit: 10 uploads per user per day (
  *
  * @param {string} userId - The user ID to check
  * @returns {Promise<RateLimitResult>} Rate limit check result
- *
- * Requirements: 9.1, 9.2, 9.4
  *
  * @example
  * const result = await checkUploadRateLimit('user123');
@@ -121,12 +117,11 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
  * Check if a user has exceeded the status poll rate limit
  *
  * This function checks if the user has remaining status poll quota for the current day.
- * Rate limit: 100 status polls per user per day (Requirement 9.3)
+ * Rate limit: 100 status polls per user per day (
  *
  * @param {string} userId - The user ID to check
  * @returns {Promise<RateLimitResult>} Rate limit check result
  *
- * Requirements: 9.1, 9.3, 9.4
  *
  * @example
  * const result = await checkStatusPollRateLimit('user123');
@@ -177,12 +172,11 @@ export async function checkStatusPollRateLimit(userId: string): Promise<RateLimi
  * Increment the upload counter for a user
  *
  * This function increments the upload counter and sets expiration to midnight UTC.
- * The counter resets automatically at midnight UTC (Requirement 9.6).
+ * The counter resets automatically at midnight UTC (
  *
  * @param {string} userId - The user ID to increment
  * @returns {Promise<void>}
  *
- * Requirements: 9.4, 9.5, 9.6
  *
  * Redis Key Format: tiktok:upload:{userId}:{YYYYMMDD}
  * Expiration: Midnight UTC
@@ -201,7 +195,7 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
     await redis.incr(key);
 
     // Set expiration to midnight UTC
-    // Requirement: 9.6
+    // 
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Log error but don't throw (fail silently for counter increments)
@@ -214,12 +208,11 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
  * Increment the status poll counter for a user
  *
  * This function increments the status poll counter and sets expiration to midnight UTC.
- * The counter resets automatically at midnight UTC (Requirement 9.6).
+ * The counter resets automatically at midnight UTC (
  *
  * @param {string} userId - The user ID to increment
  * @returns {Promise<void>}
  *
- * Requirements: 9.4, 9.5, 9.6
  *
  * Redis Key Format: tiktok:poll:{userId}:{YYYYMMDD}
  * Expiration: Midnight UTC
@@ -238,7 +231,7 @@ export async function incrementStatusPollCounter(userId: string): Promise<void> 
     await redis.incr(key);
 
     // Set expiration to midnight UTC
-    // Requirement: 9.6
+    // 
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Log error but don't throw (fail silently for counter increments)

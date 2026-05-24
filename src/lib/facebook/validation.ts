@@ -4,8 +4,6 @@
  * This module validates video requirements for Facebook Pages uploads.
  * It checks video format, file size, and caption length according to
  * Facebook's specifications and application-level constraints.
- *
- * Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.9
  */
 
 /**
@@ -37,8 +35,6 @@ export interface PostForValidation {
  * @param {PostForValidation} post - Post data to validate
  * @returns {ValidationResult} Validation result with success status and error message
  *
- * Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.9
- *
  * @example
  * const result = validateVideoForFacebook({
  *   videoFileKey: 'my-video.mp4',
@@ -48,22 +44,22 @@ export interface PostForValidation {
  * });
  */
 export function validateVideoForFacebook(post: PostForValidation): ValidationResult {
-  // Requirement 16.1, 16.2: Validate video format is MP4 or MOV (file extension check)
+  // Validate video format is MP4 or MOV (file extension check)
   const videoFileKey = post.videoFileKey.toLowerCase();
   const isValidFormat = videoFileKey.endsWith(".mp4") || videoFileKey.endsWith(".mov");
 
   if (!isValidFormat) {
-    // Requirement 16.2: Return error "Video format must be MP4 or MOV" for invalid format
+    //  Return error "Video format must be MP4 or MOV" for invalid format
     return {
       valid: false,
       error: "Video format must be MP4 or MOV",
     };
   }
 
-  // Requirement 16.3, 16.4: Validate video file size does not exceed 250 MB (application-level limit)
+  //  Validate video file size does not exceed 250 MB (application-level limit)
   const maxSize = 250 * 1024 * 1024; // 250 MB in bytes
   if (post.videoFileSize > maxSize) {
-    // Requirement 16.4: Return error with explanation about application-level limit
+    //  Return error with explanation about application-level limit
     return {
       valid: false,
       error:
@@ -71,13 +67,13 @@ export function validateVideoForFacebook(post: PostForValidation): ValidationRes
     };
   }
 
-  // Requirement 16.5, 16.6, 16.7, 16.8: Validate caption length and format
+  // Validate caption length and format
   // Format caption as title concatenated with description using double newline separator
   const caption = post.description ? `${post.title}\n\n${post.description}` : post.title; // Use title only when description is empty
 
-  // Requirement 16.5, 16.6: Validate caption length does not exceed 2,200 characters
+  //  16.6: Validate caption length does not exceed 2,200 characters
   if (caption.length > 2200) {
-    // Requirement 16.6: Return error "Caption exceeds 2,200 character limit" for long captions
+    //  Return error "Caption exceeds 2,200 character limit" for long captions
     return {
       valid: false,
       error: "Caption exceeds 2,200 character limit",
@@ -100,8 +96,6 @@ export function validateVideoForFacebook(post: PostForValidation): ValidationRes
  * @param {string} [description] - Video description (optional)
  * @returns {string} Formatted caption
  *
- * Requirements: 16.7, 16.8
- *
  * @example
  * const caption1 = formatCaptionForFacebook('My Title', 'My description');
  * // Returns: 'My Title\n\nMy description'
@@ -110,8 +104,8 @@ export function validateVideoForFacebook(post: PostForValidation): ValidationRes
  * // Returns: 'My Title'
  */
 export function formatCaptionForFacebook(title: string, description?: string): string {
-  // Requirement 16.7: Format caption as title concatenated with description using double newline separator
-  // Requirement 16.8: Use title only as caption when description is empty
+  // Format caption as title concatenated with description using double newline separator
+  // Use title only as caption when description is empty
   return description ? `${title}\n\n${description}` : title;
 }
 
@@ -241,7 +235,7 @@ export function validateCaptionLength(title: string, description?: string): Vali
  * @param {string} postId - Post ID
  * @param {string} validationError - Specific validation error message
  *
- * Requirement 16.9: Log validation failures with userId, postId, and specific validation error
+ * Log validation failures with userId, postId, and specific validation error
  */
 export function logValidationFailure(
   userId: string,

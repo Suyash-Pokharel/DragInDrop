@@ -4,11 +4,9 @@
  * This endpoint is triggered by cron-job.org every 5 minutes to process scheduled
  * TikTok uploads. It handles:
  * - Querying scheduled posts within the scheduling window
- * - Uploading videos to TikTok (implemented in Task 6.2)
- * - Polling upload status (implemented in Task 6.3)
- * - Updating database records (implemented in Task 6.4)
- *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4
+ * - Uploading videos to TikTok 
+ * - Polling upload status
+ * - Updating database records
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -24,6 +22,11 @@ import {
 } from "@/lib/tiktok/rateLimiter";
 import { buildSignedVideoUrl } from "@/lib/backblaze/urlBuilder";
 import { uploadVideo, pollStatus, UploadVideoResponse, PollStatusResponse } from "@/lib/tiktok/api";
+import {
+  createNotification,
+  formatUploadSuccess,
+  formatUploadFailed,
+} from "@/lib/notifications";
 
 /**
  * Summary of processing results
@@ -63,8 +66,6 @@ interface StatusResult {
  *
  * @param {NextRequest} request - The incoming request
  * @returns {boolean} True if the secret is valid, false otherwise
- *
- * Requirements: 3.2, 3.3
  *
  * @example
  * if (!verifyCronSecret(request)) {
@@ -111,8 +112,6 @@ function verifyCronSecret(request: NextRequest): boolean {
  *
  * @returns {{ start: Date; end: Date }} The start and end of the scheduling window
  *
- * Requirements: 4.1, 4.2, 4.3
- *
  * @example
  * const window = getSchedulingWindow();
  * // If current time is 10:30:00
@@ -135,17 +134,15 @@ function getSchedulingWindow(): { start: Date; end: Date } {
  * Main handler for processing scheduled TikTok uploads. This endpoint:
  * 1. Verifies the CRON_SECRET for authentication
  * 2. Queries for scheduled posts within the scheduling window
- * 3. Processes uploads and status polling (to be implemented in Tasks 6.2-6.6)
+ * 3. Processes uploads and status polling
  * 4. Returns a summary of operations
- *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4
  *
  * @param {NextRequest} request - The incoming request from cron-job.org
  * @returns {Promise<NextResponse>} Response with processing summary or error
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify CRON_SECRET
-  // Requirements: 3.2, 3.3
+  // .2, 3.3
   if (!verifyCronSecret(request)) {
     console.error("[process-scheduled-tiktok-uploads] Unauthorized request:", {
       timestamp: new Date().toISOString(),
@@ -154,7 +151,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Requirement 11.1: Log cron execution start with timestamp
+  //  Log cron execution start with timestamp
   console.log("[process-scheduled-tiktok-uploads] Cron execution started:", {
     timestamp: new Date().toISOString(),
   });
@@ -164,7 +161,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const window = getSchedulingWindow();
 
     // Query for scheduled posts within the scheduling window
-    // Requirements: 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4
     const scheduledPosts = await prisma.post.findMany({
       where: {
         status: "SCHEDULED",
@@ -190,10 +186,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     // Filter to only include posts with TikTok PlatformPost records
-    // Requirement: 3.5
+    // 
     const postsToProcess = scheduledPosts.filter((post) => post.PlatformPost.length > 0);
 
-    // Requirement 11.2: Log count of posts found in scheduling window
+    //  Log count of posts found in scheduling window
     console.log("[process-scheduled-tiktok-uploads] Found posts to process:", {
       timestamp: new Date().toISOString(),
       windowStart: window.start.toISOString(),
@@ -211,19 +207,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // Process scheduled posts for upload
-    // Requirement: 6.2 - Implement upload processing logic
+    //  - Implement upload processing logic
     const uploadResult = await processScheduledPosts(postsToProcess);
     result.uploaded = uploadResult.uploaded;
     result.errors.push(...uploadResult.errors);
 
     // Process publishing posts for status polling
-    // Requirement: 6.3 - Implement status polling logic
+    //  - Implement status polling logic
     const pollResult = await processPublishingPosts();
     result.polled = pollResult.polled;
     result.errors.push(...pollResult.errors);
 
     // Sync Post status for all processed posts
-    // Requirement: 10.1, 10.2, 10.3, 10.4, 10.5
     const postIds = new Set<string>();
     for (const post of postsToProcess) {
       postIds.add(post.id);
@@ -261,22 +256,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Requirement 11.1: Log cron execution end with timestamp
+    //  Log cron execution end with timestamp
     console.log("[process-scheduled-tiktok-uploads] Cron execution completed:", {
       timestamp: new Date().toISOString(),
       result,
     });
 
     // Return HTTP 200 with summary
-    // Requirement: 3.7
+    // 
     return NextResponse.json({
       success: true,
       ...result,
     });
   } catch (error) {
     // Return HTTP 500 on database errors
-    // Requirement: 3.8
-    // Requirement 11.5: Log all errors with full context
+    // 
+    //  Log all errors with full context
     console.error("[process-scheduled-tiktok-uploads] Database error:", {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",
@@ -304,10 +299,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * 5. Calling TikTok API to initiate upload
  * 6. Updating the database with the publish_id and status
  *
- * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7,
- *               6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11,
- *               9.2, 9.4, 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8
- *
  * @param posts - Array of posts with PlatformPost and SocialAccount data
  * @returns ProcessResult with upload count and errors
  */
@@ -328,7 +319,7 @@ async function processScheduledPosts(
 
         if (result.success) {
           uploaded++;
-          // Requirement 11.4: Log TikTok API response with status code and publish_id
+          //  Log TikTok API response with status code and publish_id
           console.log("[processScheduledPosts] Upload successful:", {
             userId: post.userId,
             postId: post.id,
@@ -348,7 +339,7 @@ async function processScheduledPosts(
         } else {
           // Fatal error - add to errors array
           errors.push(`Post ${post.id}: ${result.error}`);
-          // Requirement 11.5: Log all errors with full context
+          //  Log all errors with full context
           console.error("[processScheduledPosts] Upload failed:", {
             userId: post.userId,
             postId: post.id,
@@ -360,7 +351,7 @@ async function processScheduledPosts(
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         errors.push(`Post ${post.id}: ${errorMessage}`);
-        // Requirement 11.5: Log all errors with full context (userId, postId, error message, stack trace)
+        //  Log all errors with full context (userId, postId, error message, stack trace)
         console.error("[processScheduledPosts] Unexpected error:", {
           userId: post.userId,
           postId: post.id,
@@ -386,8 +377,6 @@ async function processScheduledPosts(
  * - HTTP 5xx: Increment retryCount, mark as FAILED if > 3
  * - Network timeout: Increment retryCount, mark as FAILED if > 3
  *
- * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 15.2, 15.3
- *
  * @param post - The Post record
  * @param platformPost - The PlatformPost record
  * @param socialAccount - The SocialAccount record
@@ -404,9 +393,9 @@ async function handleUploadError(
   const errorCode = uploadResult.errorCode || "unknown_error";
   const errorMessage = uploadResult.error || "TikTok API error";
 
-  // Requirement 7.1: HTTP 400 - Mark as FAILED with error message (no retry)
+  //  HTTP 400 - Mark as FAILED with error message (no retry)
   if (errorCode === "bad_request") {
-    // Requirement 11.5: Log all errors with full context
+    //  Log all errors with full context
     console.error("[handleUploadError] Bad request error (HTTP 400):", {
       userId: post.userId,
       postId: post.id,
@@ -417,15 +406,18 @@ async function handleUploadError(
 
     await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
 
+    // Create notification for failed upload
+    await createFailedUploadNotificationById(post.id, errorMessage);
+
     return {
       success: false,
       error: errorMessage,
     };
   }
 
-  // Requirement 7.2: HTTP 401/403 - Attempt token refresh and retry once
+  //  HTTP 401/403 - Attempt token refresh and retry once
   if (errorCode === "auth_error") {
-    // Requirement 11.7: Log token refresh attempts
+    //  Log token refresh attempts
     console.warn(
       "[handleUploadError] Authentication error (HTTP 401/403), attempting token refresh:",
       {
@@ -439,7 +431,7 @@ async function handleUploadError(
     const refreshResult = await refreshToken(socialAccount);
 
     if (!refreshResult.success) {
-      // Requirement 11.7: Log token refresh results
+      //  Log token refresh results
       console.error("[handleUploadError] Token refresh failed after auth error:", {
         userId: post.userId,
         postId: post.id,
@@ -447,21 +439,25 @@ async function handleUploadError(
         timestamp: new Date().toISOString(),
       });
 
+      const authError = "Token refresh failed after authentication error";
       await updatePlatformPostStatus(
         platformPost.id,
         "FAILED",
         undefined,
-        "Token refresh failed after authentication error",
+        authError,
       );
+
+      // Create notification for failed upload
+      await createFailedUploadNotificationById(post.id, authError);
 
       return {
         success: false,
-        error: "Token refresh failed after authentication error",
+        error: authError,
       };
     }
 
     // Retry upload once with refreshed token
-    // Requirement 11.7: Log token refresh results
+    //  Log token refresh results
     console.log("[handleUploadError] Retrying upload with refreshed token:", {
       userId: post.userId,
       postId: post.id,
@@ -474,7 +470,7 @@ async function handleUploadError(
     return await uploadToTikTok(post, platformPost, refreshResult.updatedAccount!);
   }
 
-  // Requirement 7.3: HTTP 429 - Log error and skip until next cron run
+  //  HTTP 429 - Log error and skip until next cron run
   if (errorCode === "rate_limit") {
     console.warn("[handleUploadError] TikTok API rate limit exceeded (HTTP 429):", {
       userId: post.userId,
@@ -492,12 +488,12 @@ async function handleUploadError(
     };
   }
 
-  // Requirements 7.4, 7.5: HTTP 5xx or timeout - Increment retryCount
+  //  HTTP 5xx or timeout - Increment retryCount
   if (errorCode === "server_error" || errorCode === "timeout" || errorCode === "network_error") {
     const currentRetryCount = platformPost.retryCount;
     const newRetryCount = currentRetryCount + 1;
 
-    // Requirement 11.5: Log all errors with full context
+    //  Log all errors with full context
     console.warn("[handleUploadError] Retryable error occurred:", {
       userId: post.userId,
       postId: post.id,
@@ -518,9 +514,9 @@ async function handleUploadError(
       },
     });
 
-    // Requirement 7.4: If retryCount > 3, mark as FAILED
+    //  If retryCount > 3, mark as FAILED
     if (newRetryCount > 3) {
-      // Requirement 11.5: Log all errors with full context
+      //  Log all errors with full context
       console.error("[handleUploadError] Max retries exceeded:", {
         userId: post.userId,
         postId: post.id,
@@ -529,20 +525,24 @@ async function handleUploadError(
         timestamp: new Date().toISOString(),
       });
 
+      const maxRetriesError = `${errorMessage} (max retries exceeded)`;
       await updatePlatformPostStatus(
         platformPost.id,
         "FAILED",
         undefined,
-        `${errorMessage} (max retries exceeded)`,
+        maxRetriesError,
       );
+
+      // Create notification for failed upload
+      await createFailedUploadNotificationById(post.id, maxRetriesError);
 
       return {
         success: false,
-        error: `${errorMessage} (max retries exceeded)`,
+        error: maxRetriesError,
       };
     }
 
-    // Requirement 7.6: Leave status as PENDING for retry on next cron run
+    //  Leave status as PENDING for retry on next cron run
     console.log("[handleUploadError] Will retry on next cron run:", {
       userId: post.userId,
       postId: post.id,
@@ -559,7 +559,7 @@ async function handleUploadError(
   }
 
   // Unknown error - treat as non-retryable
-  // Requirement 11.5: Log all errors with full context
+  //  Log all errors with full context
   console.error("[handleUploadError] Unknown error type:", {
     userId: post.userId,
     postId: post.id,
@@ -570,6 +570,9 @@ async function handleUploadError(
   });
 
   await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
+
+  // Create notification for failed upload
+  await createFailedUploadNotificationById(post.id, errorMessage);
 
   return {
     success: false,
@@ -589,9 +592,6 @@ async function handleUploadError(
  * 6. Update database with publish_id and status
  * 7. Increment rate limit counter
  *
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.1, 6.2, 6.3, 6.4, 6.5,
- *               6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 9.2, 9.4
- *
  * @param post - The Post record
  * @param platformPost - The PlatformPost record
  * @param socialAccount - The SocialAccount record with encrypted tokens
@@ -603,11 +603,11 @@ async function uploadToTikTok(
   socialAccount: SocialAccount,
 ): Promise<UploadResult> {
   // Step 1: Check if access token is expired and refresh if needed
-  // Requirements: 5.3, 5.4, 5.5, 5.6, 5.7
+  // .3, 5.4, 5.5, 5.6, 5.7
   let currentSocialAccount = socialAccount;
 
   if (isTokenExpired(socialAccount)) {
-    // Requirement 11.7: Log token refresh attempts
+    //  Log token refresh attempts
     console.log("[uploadToTikTok] Token expired, refreshing:", {
       userId: post.userId,
       postId: post.id,
@@ -620,19 +620,23 @@ async function uploadToTikTok(
 
     if (!refreshResult.success) {
       // Token refresh failed - mark as FAILED
-      // Requirement: 5.7
-      await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, "Token refresh failed");
+      // 
+      const tokenError = "Token refresh failed";
+      await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, tokenError);
+
+      // Create notification for failed upload
+      await createFailedUploadNotificationById(post.id, tokenError);
 
       return {
         success: false,
-        error: "Token refresh failed",
+        error: tokenError,
       };
     }
 
     // Use the updated account with new tokens
     currentSocialAccount = refreshResult.updatedAccount!;
 
-    // Requirement 11.7: Log token refresh results
+    //  Log token refresh results
     console.log("[uploadToTikTok] Token refreshed successfully:", {
       userId: post.userId,
       postId: post.id,
@@ -642,13 +646,13 @@ async function uploadToTikTok(
   }
 
   // Step 2: Decrypt access token
-  // Requirement: 5.2
-  // Requirement 11.6: NEVER log plaintext access tokens
+  // 
+  //  NEVER log plaintext access tokens
   let accessToken: string;
   try {
     accessToken = decryptToken(currentSocialAccount.accessToken);
   } catch (error) {
-    // Requirement 11.5: Log all errors with full context
+    //  Log all errors with full context
     console.error("[uploadToTikTok] Failed to decrypt access token:", {
       userId: post.userId,
       postId: post.id,
@@ -656,21 +660,24 @@ async function uploadToTikTok(
       timestamp: new Date().toISOString(),
     });
 
+    const decryptError = "Failed to decrypt access token";
     await updatePlatformPostStatus(
       platformPost.id,
       "FAILED",
       undefined,
-      "Failed to decrypt access token",
+      decryptError,
     );
+
+    // Create notification for failed upload
+    await createFailedUploadNotificationById(post.id, decryptError);
 
     return {
       success: false,
-      error: "Failed to decrypt access token",
+      error: decryptError,
     };
   }
 
   // Step 3: Check upload rate limit
-  // Requirements: 9.2, 9.4
   const rateLimitResult = await checkUploadRateLimit(post.userId);
 
   if (!rateLimitResult.allowed) {
@@ -690,7 +697,6 @@ async function uploadToTikTok(
   }
 
   // Step 4: Generate signed Backblaze URL
-  // Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8
   let signedUrl: string;
   try {
     const urlResult = await buildSignedVideoUrl(post.videoFileKey);
@@ -712,22 +718,25 @@ async function uploadToTikTok(
       timestamp: new Date().toISOString(),
     });
 
+    const urlError = "Failed to generate signed video URL";
     await updatePlatformPostStatus(
       platformPost.id,
       "FAILED",
       undefined,
-      "Failed to generate signed video URL",
+      urlError,
     );
+
+    // Create notification for failed upload
+    await createFailedUploadNotificationById(post.id, urlError);
 
     return {
       success: false,
-      error: "Failed to generate signed video URL",
+      error: urlError,
     };
   }
 
   // Step 5: Call TikTok API to upload video
-  // Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11
-  // Requirement 11.3: Log each TikTok API request with userId, postId, endpoint
+  //  Log each TikTok API request with userId, postId, endpoint
   console.log("[uploadToTikTok] Calling TikTok API:", {
     userId: post.userId,
     postId: post.id,
@@ -750,7 +759,7 @@ async function uploadToTikTok(
     disableStitch: false,
   });
 
-  // Requirement 11.4: Log each TikTok API response with status code and publish_id
+  //  Log each TikTok API response with status code and publish_id
   console.log("[uploadToTikTok] TikTok API response:", {
     userId: post.userId,
     postId: post.id,
@@ -763,16 +772,14 @@ async function uploadToTikTok(
 
   if (!uploadResult.success) {
     // Handle TikTok API errors with appropriate retry logic
-    // Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 15.2, 15.3
     return await handleUploadError(post, platformPost, socialAccount, uploadResult);
   }
 
   // Step 6: Update database with publish_id and status
-  // Requirements: 6.10, 6.11
   await updatePlatformPostStatus(platformPost.id, "PUBLISHING", uploadResult.publishId);
 
   // Step 7: Increment upload rate limit counter
-  // Requirement: 9.4
+  // 
   await incrementUploadCounter(post.userId);
 
   return {
@@ -788,8 +795,6 @@ async function uploadToTikTok(
  * TikTok API for their current status. Based on the status, it updates the database
  * accordingly.
  *
- * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 9.3, 9.4
- *
  * @returns ProcessResult with polled count and errors
  */
 async function processPublishingPosts(): Promise<{ polled: number; errors: string[] }> {
@@ -799,7 +804,7 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
 
   try {
     // Query for PlatformPost records with status=PUBLISHING and platform=TikTok
-    // Requirement: 8.1
+    // 
     const publishingPosts = await prisma.platformPost.findMany({
       where: {
         status: "PUBLISHING",
@@ -840,12 +845,16 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
             timestamp: new Date().toISOString(),
           });
 
+          const timeoutError = "Upload timeout (10 minutes exceeded)";
           await updatePlatformPostStatus(
             platformPost.id,
             "FAILED",
             undefined,
-            "Upload timeout (10 minutes exceeded)",
+            timeoutError,
           );
+
+          // Create notification for failed upload
+          await createFailedUploadNotification(platformPost, timeoutError);
 
           // Sync post status after marking as FAILED
           await syncPostStatus(platformPost.postId);
@@ -858,7 +867,7 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
 
         if (result.success && result.statusUpdated) {
           polled++;
-          // Requirement 11.4: Log TikTok API response with status code
+          //  Log TikTok API response with status code
           console.log("[processPublishingPosts] Status poll successful:", {
             userId: platformPost.Post.userId,
             postId: platformPost.postId,
@@ -878,7 +887,7 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
         } else if (!result.success) {
           // Fatal error - add to errors array
           errors.push(`Post ${platformPost.postId}: ${result.error}`);
-          // Requirement 11.5: Log all errors with full context
+          //  Log all errors with full context
           console.error("[processPublishingPosts] Status poll failed:", {
             userId: platformPost.Post.userId,
             postId: platformPost.postId,
@@ -890,7 +899,7 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         errors.push(`Post ${platformPost.postId}: ${errorMessage}`);
-        // Requirement 11.5: Log all errors with full context (userId, postId, error message, stack trace)
+        //  Log all errors with full context (userId, postId, error message, stack trace)
         console.error("[processPublishingPosts] Unexpected error:", {
           userId: platformPost.Post.userId,
           postId: platformPost.postId,
@@ -920,8 +929,6 @@ async function processPublishingPosts(): Promise<{ polled: number; errors: strin
  * This function updates a PlatformPost record with new status, publishId, platformPostId,
  * platformUrl, and error message. It uses a database transaction to ensure atomic updates.
  *
- * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 14.1, 14.2, 14.3, 14.4
- *
  * @param platformPostId - The ID of the PlatformPost to update
  * @param status - The new status to set
  * @param publishId - Optional TikTok publish_id
@@ -942,7 +949,6 @@ async function updatePlatformPostStatus(
 
   try {
     // Use transaction for atomic update
-    // Requirement: 14.1, 14.2
     await prisma.$transaction(async (tx) => {
       const updateData: {
         status: PlatformPostStatus;
@@ -1001,7 +1007,6 @@ async function updatePlatformPostStatus(
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    // Requirement: 14.3, 14.4
     console.error("[updatePlatformPostStatus] Transaction failed:", {
       platformPostId,
       status,
@@ -1022,8 +1027,6 @@ async function updatePlatformPostStatus(
  * - Any PUBLISHING → PUBLISHING
  * - Mix of PUBLISHED and FAILED → PARTIALLY_PUBLISHED
  *
- * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 14.1, 14.2, 14.3, 14.4
- *
  * @param postId - The ID of the Post to synchronize
  * @returns Promise<void>
  */
@@ -1032,7 +1035,6 @@ async function syncPostStatus(postId: string): Promise<void> {
 
   try {
     // Use transaction for atomic read and update
-    // Requirement: 14.1, 14.2
     await prisma.$transaction(async (tx) => {
       // Get all PlatformPost records for this Post
       const platformPosts = await tx.platformPost.findMany({
@@ -1052,26 +1054,25 @@ async function syncPostStatus(postId: string): Promise<void> {
       const statuses = platformPosts.map((pp) => pp.status);
 
       // Calculate Post status based on PlatformPost statuses
-      // Requirements: 10.1, 10.2, 10.3, 10.4
       let newPostStatus: PostStatus;
 
       // All published → PUBLISHED
-      // Requirement: 10.1
+      // 
       if (statuses.every((s) => s === "PUBLISHED")) {
         newPostStatus = "PUBLISHED";
       }
       // All failed → FAILED
-      // Requirement: 10.3
+      // 
       else if (statuses.every((s) => s === "FAILED")) {
         newPostStatus = "FAILED";
       }
       // Any publishing → PUBLISHING
-      // Requirement: 10.4
+      // 
       else if (statuses.some((s) => s === "PUBLISHING")) {
         newPostStatus = "PUBLISHING";
       }
       // Mix of published and failed → PARTIALLY_PUBLISHED
-      // Requirement: 10.2
+      // 
       else if (statuses.some((s) => s === "PUBLISHED") && statuses.some((s) => s === "FAILED")) {
         newPostStatus = "PARTIALLY_PUBLISHED";
       }
@@ -1081,7 +1082,7 @@ async function syncPostStatus(postId: string): Promise<void> {
       }
 
       // Update Post status and updatedAt timestamp
-      // Requirement: 10.5
+      // 
       await tx.post.update({
         where: { id: postId },
         data: {
@@ -1099,7 +1100,6 @@ async function syncPostStatus(postId: string): Promise<void> {
       });
     });
   } catch (error) {
-    // Requirement: 14.3, 14.4
     console.error("[syncPostStatus] Transaction failed:", {
       postId,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -1123,8 +1123,6 @@ async function syncPostStatus(postId: string): Promise<void> {
  * Note: For status polling, we don't mark as FAILED on errors because the upload
  * may still be processing. We just skip and retry on the next cron run.
  *
- * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 15.2, 15.3
- *
  * @param platformPost - The PlatformPost record
  * @param socialAccount - The SocialAccount record
  * @param pollResult - The failed poll result
@@ -1138,9 +1136,9 @@ async function handlePollError(
   const errorCode = pollResult.errorCode || "unknown_error";
   const errorMessage = pollResult.error || "TikTok API error";
 
-  // Requirement 7.1: HTTP 400 - Log error and skip (invalid publishId)
+  //  HTTP 400 - Log error and skip (invalid publishId)
   if (errorCode === "bad_request") {
-    // Requirement 11.5: Log all errors with full context
+    //  Log all errors with full context
     console.error("[handlePollError] Bad request error (HTTP 400):", {
       userId: platformPost.Post.userId,
       postId: platformPost.postId,
@@ -1158,9 +1156,9 @@ async function handlePollError(
     };
   }
 
-  // Requirement 7.2: HTTP 401/403 - Attempt token refresh and retry once
+  //  HTTP 401/403 - Attempt token refresh and retry once
   if (errorCode === "auth_error") {
-    // Requirement 11.7: Log token refresh attempts
+    //  Log token refresh attempts
     console.warn(
       "[handlePollError] Authentication error (HTTP 401/403), attempting token refresh:",
       {
@@ -1174,7 +1172,7 @@ async function handlePollError(
     const refreshResult = await refreshToken(socialAccount);
 
     if (!refreshResult.success) {
-      // Requirement 11.7: Log token refresh results
+      //  Log token refresh results
       console.error("[handlePollError] Token refresh failed after auth error:", {
         userId: platformPost.Post.userId,
         postId: platformPost.postId,
@@ -1190,7 +1188,7 @@ async function handlePollError(
     }
 
     // Retry poll once with refreshed token
-    // Requirement 11.7: Log token refresh results
+    //  Log token refresh results
     console.log("[handlePollError] Retrying poll with refreshed token:", {
       userId: platformPost.Post.userId,
       postId: platformPost.postId,
@@ -1202,7 +1200,7 @@ async function handlePollError(
     return await pollUploadStatus(platformPost, refreshResult.updatedAccount!);
   }
 
-  // Requirement 7.3: HTTP 429 - Log error and skip until next cron run
+  //  HTTP 429 - Log error and skip until next cron run
   if (errorCode === "rate_limit") {
     console.warn("[handlePollError] TikTok API rate limit exceeded (HTTP 429):", {
       userId: platformPost.Post.userId,
@@ -1219,9 +1217,9 @@ async function handlePollError(
     };
   }
 
-  // Requirements 7.4, 7.5, 7.6: HTTP 5xx, timeout, or network error - Skip and retry on next cron run
+  // HTTP 5xx, timeout, or network error - Skip and retry on next cron run
   if (errorCode === "server_error" || errorCode === "timeout" || errorCode === "network_error") {
-    // Requirement 11.5: Log all errors with full context
+    //  Log all errors with full context
     console.warn("[handlePollError] Retryable error occurred:", {
       userId: platformPost.Post.userId,
       postId: platformPost.postId,
@@ -1240,7 +1238,7 @@ async function handlePollError(
   }
 
   // Unknown error - skip and retry
-  // Requirement 11.5: Log all errors with full context
+  //  Log all errors with full context
   console.error("[handlePollError] Unknown error type:", {
     userId: platformPost.Post.userId,
     postId: platformPost.postId,
@@ -1268,8 +1266,6 @@ async function handlePollError(
  * 5. Update database based on status
  * 6. Increment rate limit counter
  *
- * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 9.3, 9.4
- *
  * @param platformPost - The PlatformPost record with publishId
  * @param socialAccount - The SocialAccount record with encrypted tokens
  * @returns StatusResult indicating success or failure
@@ -1282,7 +1278,7 @@ async function pollUploadStatus(
   let currentSocialAccount = socialAccount;
 
   if (isTokenExpired(socialAccount)) {
-    // Requirement 11.7: Log token refresh attempts
+    //  Log token refresh attempts
     console.log("[pollUploadStatus] Token expired, refreshing:", {
       userId: platformPost.Post.userId,
       postId: platformPost.postId,
@@ -1306,7 +1302,7 @@ async function pollUploadStatus(
     // Use the updated account with new tokens
     currentSocialAccount = refreshResult.updatedAccount!;
 
-    // Requirement 11.7: Log token refresh results
+    //  Log token refresh results
     console.log("[pollUploadStatus] Token refreshed successfully:", {
       userId: platformPost.Post.userId,
       postId: platformPost.postId,
@@ -1316,12 +1312,12 @@ async function pollUploadStatus(
   }
 
   // Step 2: Decrypt access token
-  // Requirement 11.6: NEVER log plaintext access tokens
+  //  NEVER log plaintext access tokens
   let accessToken: string;
   try {
     accessToken = decryptToken(currentSocialAccount.accessToken);
   } catch (error) {
-    // Requirement 11.5: Log all errors with full context
+    //  Log all errors with full context
     console.error("[pollUploadStatus] Failed to decrypt access token:", {
       userId: platformPost.Post.userId,
       postId: platformPost.postId,
@@ -1343,7 +1339,6 @@ async function pollUploadStatus(
   }
 
   // Step 3: Check status poll rate limit
-  // Requirements: 9.3, 9.4
   const rateLimitResult = await checkStatusPollRateLimit(platformPost.Post.userId);
 
   if (!rateLimitResult.allowed) {
@@ -1363,9 +1358,8 @@ async function pollUploadStatus(
   }
 
   // Step 4: Call TikTok API to poll status
-  // Requirements: 8.2, 8.3, 8.4, 8.5
   if (!platformPost.publishId) {
-    // Requirement 11.5: Log all errors with full context
+    //  Log all errors with full context
     console.error("[pollUploadStatus] Missing publishId:", {
       userId: platformPost.Post.userId,
       postId: platformPost.postId,
@@ -1379,7 +1373,7 @@ async function pollUploadStatus(
     };
   }
 
-  // Requirement 11.3: Log each TikTok API request with userId, postId, endpoint
+  //  Log each TikTok API request with userId, postId, endpoint
   console.log("[pollUploadStatus] Calling TikTok API:", {
     userId: platformPost.Post.userId,
     postId: platformPost.postId,
@@ -1394,7 +1388,7 @@ async function pollUploadStatus(
     publishId: platformPost.publishId,
   });
 
-  // Requirement 11.4: Log each TikTok API response with status code
+  //  Log each TikTok API response with status code
   console.log("[pollUploadStatus] TikTok API response:", {
     userId: platformPost.Post.userId,
     postId: platformPost.postId,
@@ -1407,16 +1401,14 @@ async function pollUploadStatus(
 
   if (!pollResult.success) {
     // Handle TikTok API errors with appropriate retry logic
-    // Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 15.2, 15.3
     return await handlePollError(platformPost, socialAccount, pollResult);
   }
 
   // Step 5: Update database based on status
-  // Requirements: 8.3, 8.4, 8.5
   let statusUpdated = false;
 
   if (pollResult.status === "PUBLISH_COMPLETE") {
-    // Requirement: 8.3
+    // 
     // Extract TikTok post ID and construct URL
     let tiktokPostId: string | undefined;
     let tiktokUrl: string | undefined;
@@ -1457,13 +1449,17 @@ async function pollUploadStatus(
       tiktokUrl,
       timestamp: new Date().toISOString(),
     });
+
+    // Create notification for successful upload
+    await createSuccessUploadNotification(platformPost);
   } else if (pollResult.status === "FAILED") {
-    // Requirement: 8.4
+    // 
+    const failReason = pollResult.failReason || "TikTok processing failed";
     await updatePlatformPostStatus(
       platformPost.id,
       "FAILED",
       undefined,
-      pollResult.failReason || "TikTok processing failed",
+      failReason,
     );
     statusUpdated = true;
 
@@ -1475,11 +1471,14 @@ async function pollUploadStatus(
       failReason: pollResult.failReason,
       timestamp: new Date().toISOString(),
     });
+
+    // Create notification for failed upload
+    await createFailedUploadNotification(platformPost, failReason);
   } else if (
     pollResult.status === "PROCESSING_DOWNLOAD" ||
     pollResult.status === "PROCESSING_UPLOAD"
   ) {
-    // Requirement: 8.5
+    // 
     // Leave status as PUBLISHING - no update needed
     console.log("[pollUploadStatus] Post still processing:", {
       userId: platformPost.Post.userId,
@@ -1492,11 +1491,132 @@ async function pollUploadStatus(
   }
 
   // Step 6: Increment status poll rate limit counter
-  // Requirement: 9.4
+  // 
   await incrementStatusPollCounter(platformPost.Post.userId);
 
   return {
     success: true,
     statusUpdated,
   };
+}
+
+/**
+ * Create a notification for a failed upload
+ *
+ * This helper function creates a notification when an upload fails.
+ * It wraps the notification creation in a try-catch to ensure that
+ * notification failures don't break the upload processing flow.
+ *
+ * @param platformPost - The PlatformPost with Post data
+ * @param errorMessage - The error message describing the failure
+ */
+async function createFailedUploadNotification(
+  platformPost: PlatformPost & { Post: Post },
+  errorMessage: string
+): Promise<void> {
+  try {
+    const notificationContent = formatUploadFailed(
+      platformPost.Post.title,
+      "TikTok",
+      errorMessage
+    );
+    await createNotification(
+      platformPost.Post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_FAILED"
+    );
+  } catch (notificationError) {
+    console.error("[createFailedUploadNotification] Failed to create failure notification:", {
+      platformPostId: platformPost.id,
+      postId: platformPost.postId,
+      userId: platformPost.Post.userId,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Create a notification for a successful upload
+ *
+ * This helper function creates a notification when an upload succeeds.
+ * It wraps the notification creation in a try-catch to ensure that
+ * notification failures don't break the upload processing flow.
+ *
+ * @param platformPost - The PlatformPost with Post data
+ */
+async function createSuccessUploadNotification(
+  platformPost: PlatformPost & { Post: Post }
+): Promise<void> {
+  try {
+    const notificationContent = formatUploadSuccess(
+      platformPost.Post.title,
+      "TikTok"
+    );
+    await createNotification(
+      platformPost.Post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_SUCCESS"
+    );
+  } catch (notificationError) {
+    console.error("[createSuccessUploadNotification] Failed to create success notification:", {
+      platformPostId: platformPost.id,
+      postId: platformPost.postId,
+      userId: platformPost.Post.userId,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Create a notification for a failed upload using postId
+ *
+ * This helper function creates a notification when an upload fails.
+ * It queries the Post by ID to get the title and userId.
+ * It wraps the notification creation in a try-catch to ensure that
+ * notification failures don't break the upload processing flow.
+ *
+ * @param postId - The ID of the Post
+ * @param errorMessage - The error message describing the failure
+ */
+async function createFailedUploadNotificationById(
+  postId: string,
+  errorMessage: string
+): Promise<void> {
+  try {
+    const prisma = getPrisma();
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true, title: true, userId: true },
+    });
+
+    if (!post) {
+      console.error("[createFailedUploadNotificationById] Post not found:", {
+        postId,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const notificationContent = formatUploadFailed(
+      post.title,
+      "TikTok",
+      errorMessage
+    );
+    await createNotification(
+      post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_FAILED"
+    );
+  } catch (notificationError) {
+    console.error("[createFailedUploadNotificationById] Failed to create failure notification:", {
+      postId,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
 }

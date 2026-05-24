@@ -155,7 +155,6 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
 
   /**
    * Handle field changes and update state
-   * Requirements: 8.2, 1.3, 2.4, 3.4, 4.3
    */
   const handleFieldChange = (field: keyof PreferencesState, value: string) => {
     setPreferences((prev) => ({
@@ -166,7 +165,6 @@ export default function Preferences({ initialPreferences }: PreferencesProps) {
 
   /**
    * Handle save preferences with timezone validation
-   * Requirements: 7.1, 7.2
    */
   const handleSave = async () => {
     // Clear previous messages

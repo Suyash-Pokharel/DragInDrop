@@ -82,12 +82,12 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
       return;
     }
 
-    // Requirement 3.8 - Set isSubmitting to true during request
+    // Set isSubmitting to true during request
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      // Requirement 4.4 - Include session token in request headers (handled by Next.js automatically)
+      // Include session token in request headers (handled by Next.js automatically)
       // Send raw datetime-local string to API - server will convert to UTC using user's timezone
       const scheduledForISO = postScheduledFor;
 
@@ -101,8 +101,8 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         selectedPlatforms,
       });
 
-      // Requirement 3.2 - Make POST request to /api/posts endpoint
-      // Requirement 4.4 - Gather all required data from context/props
+      // Make POST request to /api/posts endpoint
+      // Gather all required data from context/props
       const response = await fetch("/api/posts", {
         method: "POST",
         headers: {
@@ -119,14 +119,14 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         }),
       });
 
-      // Requirement 5.1 - Handle 401 errors with redirect to login
+      // Handle 401 errors with redirect to login
       if (response.status === 401) {
         router.push("/login");
         return;
       }
 
-      // Requirement 5.3 - Display validation errors from API response
-      // Requirement 5.4 - Display server errors with generic message
+      // Display validation errors from API response
+      // Display server errors with generic message
       if (!response.ok) {
         const error = await response.json();
 
@@ -162,10 +162,10 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         console.error("Error refreshing dashboard:", refreshError);
       }
 
-      // Requirement 3.3 - Show success message
+      // Show success message
       setSuccessMessage("Video has been scheduled successfully");
 
-      // Requirement 3.4, 3.5 - Close modals and clear state after showing success
+      // 3.5 - Close modals and clear state after showing success
       setTimeout(() => {
         setShowModal(false);
         setTimeout(() => {
@@ -174,15 +174,15 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         }, 250);
       }, 2000); // Show success message for 2 seconds before closing
     } catch (error) {
-      // Requirement 5.2 - Display network errors with retry option
+      // Display network errors with retry option
       if (error instanceof TypeError && error.message.includes("fetch")) {
         setSubmitError("Network error. Please check your connection and try again.");
       } else {
-        // Requirement 3.6 - Display error message
+        // Display error message
         setSubmitError(error instanceof Error ? error.message : "An error occurred");
       }
     } finally {
-      // Requirement 6.4 - Set isSubmitting to false after request completes
+      // Set isSubmitting to false after request completes
       setIsSubmitting(false);
     }
   };
@@ -345,14 +345,14 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
         </div>
 
         <div className="flex flex-col gap-2 p-5 border-t border-border/60 bg-surface/40 backdrop-blur-md mt-auto">
-          {/* Requirement 3.3 - Display success message */}
+          {/* Display success message */}
           {successMessage && (
             <div className="text-sm text-[#10b981] bg-[#10b981]/10 border border-[#10b981]/20 rounded-md px-3 py-2">
               {successMessage}
             </div>
           )}
 
-          {/* Requirement 3.6, 5.5 - Display error message with retry option */}
+          {/* 5.5 - Display error message with retry option */}
           {submitError && (
             <div className="flex items-start justify-between gap-2 text-sm text-error bg-error/10 border border-error/20 rounded-md px-3 py-2">
               <span className="flex-1">{submitError}</span>
@@ -402,7 +402,7 @@ export default function SelectPlatform({ onClose }: SelectPlatformProps) {
                   : "bg-primary hover:bg-secondary shadow-md hover:shadow-lg"
               }`}
             >
-              {/* Requirement 3.8, 3.9 - Disable button and show loading spinner when submitting */}
+              {/* 3.9 - Disable button and show loading spinner when submitting */}
               {isSubmitting ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />

@@ -4,11 +4,6 @@
  * This module validates all required environment variables for scheduled uploads (TikTok, YouTube, Instagram, and Facebook Pages)
  * and other critical application functionality. It should be called at application startup to catch
  * configuration issues early.
- *
- * TikTok Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10, 12.11
- * YouTube Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9
- * Instagram Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8
- * Facebook Pages Requirements: 1.10, 2.5, 3.2, 4.5, 10.1, 11.1, 12.1, 13.1, 19.2
  */
 
 /**
@@ -32,31 +27,26 @@ interface EnvValidationResult {
 /**
  * Required environment variables for scheduled uploads (TikTok, YouTube, Instagram, and Facebook Pages)
  *
- * TikTok Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10, 12.11
- * YouTube Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9
- * Instagram Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8
- * Facebook Pages Requirements: 1.10, 2.5, 3.2, 4.5, 10.1, 11.1, 12.1, 13.1, 19.2
- * Facebook Pages Requirements: 1.10, 2.5, 3.2, 4.5, 10.1, 11.1, 12.1
  */
 const REQUIRED_ENV_VARS = [
-  "CRON_SECRET", // TikTok Requirement: 12.1, YouTube Requirement: 13.1, Instagram Requirement: 15.5, Facebook Pages Requirement: 13.1
-  "WORKER_SECRET", // YouTube Requirement: 13.2
-  "RENDER_WORKER_URL", // YouTube Requirement: 13.3
-  "TIKTOK_CLIENT_KEY", // TikTok Requirement: 12.2
-  "TIKTOK_CLIENT_SECRET", // TikTok Requirement: 12.3
-  "YOUTUBE_CLIENT_ID", // YouTube Requirement: 13.4
-  "YOUTUBE_CLIENT_SECRET", // YouTube Requirement: 13.5
-  "INSTAGRAM_APP_ID", // Instagram Requirement: 15.1
-  "INSTAGRAM_APP_SECRET", // Instagram Requirement: 15.2
-  "FACEBOOK_APP_ID", // Facebook Pages Requirements: 1.10, 2.5, 3.2, 4.5, 10.1
-  "FACEBOOK_APP_SECRET", // Facebook Pages Requirements: 1.10, 2.5, 3.2, 4.5
-  "B2_ACCOUNT_ID", // TikTok Requirement: 12.4, Instagram Requirement: 15.6
-  "B2_APPLICATION_KEY", // TikTok Requirement: 12.5, Instagram Requirement: 15.6
-  "B2_BUCKET_ID", // TikTok Requirement: 12.6
-  "B2_BUCKET_NAME", // TikTok Requirement: 12.7, Instagram Requirement: 15.6
-  "B2_ENDPOINT_URL", // TikTok Requirement: 12.8, YouTube Requirement: 13.6, Instagram Requirement: 15.6
-  "OAUTH_ENCRYPTION_KEY", // TikTok Requirement: 12.9, YouTube Requirement: 13.7, Instagram Requirement: 15.4, Facebook Pages Requirement: 19.2
-  "REDIS_URL", // TikTok Requirement: 12.10, YouTube Requirement: 13.8, Instagram Requirement: 15.7
+  "CRON_SECRET", 
+  "WORKER_SECRET",
+  "RENDER_WORKER_URL", 
+  "TIKTOK_CLIENT_KEY", 
+  "TIKTOK_CLIENT_SECRET", 
+  "YOUTUBE_CLIENT_ID", 
+  "YOUTUBE_CLIENT_SECRET",
+  "INSTAGRAM_APP_ID", 
+  "INSTAGRAM_APP_SECRET",
+  "FACEBOOK_APP_ID", 
+  "FACEBOOK_APP_SECRET", 
+  "B2_ACCOUNT_ID",
+  "B2_APPLICATION_KEY", 
+  "B2_BUCKET_ID", 
+  "B2_BUCKET_NAME",
+  "B2_ENDPOINT_URL",
+  "OAUTH_ENCRYPTION_KEY", 
+  "REDIS_URL",
 ] as const;
 
 /**
@@ -97,7 +87,7 @@ function validateEnvVar(varName: string, required: boolean = true): ValidationRe
       break;
 
     case "WORKER_SECRET":
-      // YouTube Requirement: 13.2 - Validate WORKER_SECRET for authenticating Upload_Worker requests
+      //  Validate WORKER_SECRET for authenticating Upload_Worker requests
       if (value.length < 32) {
         return {
           variable: varName,
@@ -108,7 +98,7 @@ function validateEnvVar(varName: string, required: boolean = true): ValidationRe
       break;
 
     case "RENDER_WORKER_URL":
-      // YouTube Requirement: 13.3 - Validate RENDER_WORKER_URL is a valid URL
+      //  Validate RENDER_WORKER_URL is a valid URL
       if (!value.startsWith("http://") && !value.startsWith("https://")) {
         return {
           variable: varName,
@@ -181,10 +171,6 @@ function validateEnvVar(varName: string, required: boolean = true): ValidationRe
  * It returns a detailed validation result with errors and warnings.
  *
  * @returns {EnvValidationResult} Validation result with errors and warnings
- *
- * TikTok Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10, 12.11
- * YouTube Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9
- * Instagram Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8
  */
 export function validateEnvironment(): EnvValidationResult {
   const errors: ValidationResult[] = [];
@@ -220,11 +206,6 @@ export function validateEnvironment(): EnvValidationResult {
  * environment variables are properly configured.
  *
  * @throws {Error} If any required environment variables are missing or invalid
- *
- * TikTok Requirement: 12.11
- * YouTube Requirement: 13.9
- * Instagram Requirement: 15.8
- * Facebook Pages Requirement: 13.1
  *
  * @example
  * // In your application startup code:

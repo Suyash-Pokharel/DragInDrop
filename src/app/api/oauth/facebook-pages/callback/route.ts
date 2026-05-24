@@ -8,11 +8,10 @@ import { ensureAuth } from "@/lib/ensureAuth";
  * Step 1: Authorization code → Short-lived user token (1-2 hours)
  * Step 2: Short-lived user token → Long-lived user token (60 days)
  * Step 3: Long-lived user token → Never-expiring Page tokens with permission validation
- * Requirements: 2.1, 2.2, 2.3, 2.4, 2.11, 2.12, 2.13, 2.14, 3.1-3.8, 4.1-4.11
  */
 export async function GET(request: NextRequest) {
   // Authenticate user
-  // Requirement: 2.14 - Return HTTP 401 if user not authenticated
+  //  Return HTTP 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[GET /api/oauth/facebook-pages/callback] Authentication failed:", {
@@ -26,7 +25,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Extract query parameters
-    // Requirement: 2.1 - Extract authorization code and state parameter from query string
+    //  Extract authorization code and state parameter from query string
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const state = searchParams.get("state");
@@ -35,7 +34,7 @@ export async function GET(request: NextRequest) {
     const errorDescription = searchParams.get("error_description");
 
     // Handle user authorization denial
-    // Requirement: 2.13 - Handle user denial: redirect to settings with error message
+    //  Handle user denial: redirect to settings with error message
     if (error) {
       console.log("[GET /api/oauth/facebook-pages/callback] Authorization denied:", {
         userId: user.id,
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate authorization code is present
-    // Requirement: 2.4 - Return HTTP 400 if state parameter is invalid or missing
+    //  Return HTTP 400 if state parameter is invalid or missing
     if (!code) {
       console.error("[GET /api/oauth/facebook-pages/callback] Missing authorization code:", {
         userId: user.id,
@@ -60,12 +59,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Retrieve CSRF token from httpOnly cookie
-    // Requirement: 2.2 - Retrieve CSRF token from httpOnly cookie
+    //  Retrieve CSRF token from httpOnly cookie
     const storedState = request.cookies.get("facebook_pages_oauth_state")?.value;
 
     // Validate state parameter matches stored CSRF token
-    // Requirement: 2.3 - Validate state parameter matches stored CSRF token
-    // Requirement: 2.4 - Return HTTP 400 if state parameter is invalid or missing
+    //  Validate state parameter matches stored CSRF token
+    //  Return HTTP 400 if state parameter is invalid or missing
     if (!state || !storedState || state !== storedState) {
       console.error("[GET /api/oauth/facebook-pages/callback] Invalid state parameter:", {
         userId: user.id,
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
         stateStored: !!storedState,
         stateMatch: state === storedState,
       });
-      // Requirement: 2.12 - Log CSRF token validation failures with timestamp
+      //  Log CSRF token validation failures with timestamp
       return NextResponse.json({ error: "Invalid state parameter" }, { status: 400 });
     }
 
@@ -91,7 +90,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Validate OAuth configuration
-    // Requirement: 2.6 - Include client_id and client_secret in token exchange
+    //  Include client_id and client_secret in token exchange
     const clientId = process.env.FACEBOOK_APP_ID;
     const clientSecret = process.env.FACEBOOK_APP_SECRET;
 
@@ -108,7 +107,7 @@ export async function GET(request: NextRequest) {
     const redirectUri = `${appUrl}/api/oauth/facebook-pages/callback`;
 
     // Step 1: Exchange authorization code for short-lived user token
-    // Requirements: 2.5, 2.6, 2.7, 2.8, 2.9, 2.10 - Exchange code for short-lived user token
+    // Exchange code for short-lived user token
     console.log(
       "[GET /api/oauth/facebook-pages/callback] Step 1: Exchanging authorization code for short-lived user token:",
       {
@@ -119,10 +118,10 @@ export async function GET(request: NextRequest) {
       },
     );
 
-    // Requirement: 2.5 - POST to https://graph.facebook.com/v25.0/oauth/access_token
+    //  POST to https://graph.facebook.com/v25.0/oauth/access_token
     const tokenUrl = "https://graph.facebook.com/v25.0/oauth/access_token";
 
-    // Requirement: 2.6 - Include client_id, client_secret, redirect_uri, code parameters
+    //  Include client_id, client_secret, redirect_uri, code parameters
     const tokenParams = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
@@ -130,7 +129,7 @@ export async function GET(request: NextRequest) {
       code: code,
     });
 
-    // Requirement: 2.7 - Set 10-second timeout for token exchange request
+    //  Set 10-second timeout for token exchange request
     const tokenController = new AbortController();
     const tokenTimeout = setTimeout(() => tokenController.abort(), 10000);
 
@@ -147,7 +146,7 @@ export async function GET(request: NextRequest) {
     } catch (fetchError) {
       clearTimeout(tokenTimeout);
 
-      // Requirement: 2.8 - Handle timeout errors (return HTTP 504)
+      //  Handle timeout errors (return HTTP 504)
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/facebook-pages/callback] Token exchange timeout:", {
           userId: user.id,
@@ -162,7 +161,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: fetchError instanceof Error ? fetchError.message : "Unknown error",
       });
-      // Requirement: 2.9 - Handle exchange failures (return HTTP 500)
+      //  Handle exchange failures (return HTTP 500)
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
         { status: 500 },
@@ -180,7 +179,7 @@ export async function GET(request: NextRequest) {
         error: errorData,
       });
 
-      // Requirement: 2.9 - Handle exchange failures (return HTTP 500)
+      //  Handle exchange failures (return HTTP 500)
       return NextResponse.json(
         { error: "Failed to exchange authorization code for tokens" },
         { status: 500 },
@@ -190,7 +189,7 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenResponse.json();
     const { access_token: shortLivedToken } = tokenData;
 
-    // Requirement: 2.10 - Extract access_token from response (short-lived, 1-2 hours)
+    //  Extract access_token from response (short-lived, 1-2 hours)
     if (!shortLivedToken) {
       console.error("[GET /api/oauth/facebook-pages/callback] Invalid token response:", {
         userId: user.id,
@@ -203,7 +202,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Requirement: 2.10 - Log token exchange with userId and timestamp
+    //  Log token exchange with userId and timestamp
     console.log(
       "[GET /api/oauth/facebook-pages/callback] Step 1 complete: Short-lived user token obtained:",
       {
@@ -214,7 +213,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 2: Exchange short-lived user token for long-lived user token
-    // Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8 - Exchange for long-lived user token
+    // Exchange for long-lived user token
     console.log(
       "[GET /api/oauth/facebook-pages/callback] Step 2: Exchanging short-lived token for long-lived user token:",
       {
@@ -223,10 +222,10 @@ export async function GET(request: NextRequest) {
       },
     );
 
-    // Requirement: 3.1 - GET to https://graph.facebook.com/v25.0/oauth/access_token
+    //  GET to https://graph.facebook.com/v25.0/oauth/access_token
     const longLivedTokenUrl = "https://graph.facebook.com/v25.0/oauth/access_token";
 
-    // Requirement: 3.2 - Include grant_type=fb_exchange_token, client_id, client_secret, fb_exchange_token
+    //  Include grant_type=fb_exchange_token, client_id, client_secret, fb_exchange_token
     const longLivedTokenParams = new URLSearchParams({
       grant_type: "fb_exchange_token",
       client_id: clientId,
@@ -234,7 +233,7 @@ export async function GET(request: NextRequest) {
       fb_exchange_token: shortLivedToken,
     });
 
-    // Requirement: 3.3 - Set 10-second timeout for exchange request
+    //  Set 10-second timeout for exchange request
     const longLivedController = new AbortController();
     const longLivedTimeout = setTimeout(() => longLivedController.abort(), 10000);
 
@@ -247,7 +246,7 @@ export async function GET(request: NextRequest) {
     } catch (fetchError) {
       clearTimeout(longLivedTimeout);
 
-      // Requirement: 3.6 - Handle timeout errors (return HTTP 504)
+      //  Handle timeout errors (return HTTP 504)
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error(
           "[GET /api/oauth/facebook-pages/callback] Long-lived token exchange timeout:",
@@ -268,7 +267,7 @@ export async function GET(request: NextRequest) {
           error: fetchError instanceof Error ? fetchError.message : "Unknown error",
         },
       );
-      // Requirement: 3.7 - Handle exchange failures (return HTTP 500)
+      //  Handle exchange failures (return HTTP 500)
       return NextResponse.json(
         { error: "Failed to exchange for long-lived user token" },
         { status: 500 },
@@ -286,7 +285,7 @@ export async function GET(request: NextRequest) {
         error: errorData,
       });
 
-      // Requirement: 3.7 - Handle exchange failures (return HTTP 500)
+      //  Handle exchange failures (return HTTP 500)
       return NextResponse.json(
         { error: "Failed to exchange for long-lived user token" },
         { status: 500 },
@@ -296,7 +295,7 @@ export async function GET(request: NextRequest) {
     const longLivedTokenData = await longLivedResponse.json();
     const { access_token: longLivedToken, expires_in: expiresIn } = longLivedTokenData;
 
-    // Requirement: 3.4 - Extract access_token and expires_in from response (typically 60 days)
+    //  Extract access_token and expires_in from response (typically 60 days)
     if (!longLivedToken || !expiresIn) {
       console.error("[GET /api/oauth/facebook-pages/callback] Invalid long-lived token response:", {
         userId: user.id,
@@ -310,10 +309,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Requirement: 3.5 - Calculate expiration timestamp as current_time + expires_in seconds
+    //  Calculate expiration timestamp as current_time + expires_in seconds
     const expirationTimestamp = new Date(Date.now() + expiresIn * 1000);
 
-    // Requirement: 3.8 - Log long-lived token exchange with expiration timestamp
+    //  Log long-lived token exchange with expiration timestamp
     console.log(
       "[GET /api/oauth/facebook-pages/callback] Step 2 complete: Long-lived user token obtained:",
       {
@@ -326,24 +325,23 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 3: Retrieve Page access tokens with permission validation
-    // Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11
     console.log("[GET /api/oauth/facebook-pages/callback] Step 3: Retrieving Page access tokens:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
     });
 
-    // Requirement: 4.1 - GET to https://graph.facebook.com/v25.0/me/accounts
+    //  GET to https://graph.facebook.com/v25.0/me/accounts
     const pagesUrl = "https://graph.facebook.com/v25.0/me/accounts";
 
-    // Requirement: 4.2 - Include long-lived user access_token in request
-    // Requirement: 4.4 - Extract list of Pages with id, name, access_token, tasks fields
-    // Also include category field for UI display (Task 2.6 requirement)
+    //  Include long-lived user access_token in request
+    //  Extract list of Pages with id, name, access_token, tasks fields
+    // Also include category field for UI display 
     const pagesParams = new URLSearchParams({
       access_token: longLivedToken,
       fields: "id,name,access_token,tasks,category",
     });
 
-    // Requirement: 4.3 - Set 10-second timeout for Pages request
+    //  Set 10-second timeout for Pages request
     const pagesController = new AbortController();
     const pagesTimeout = setTimeout(() => pagesController.abort(), 10000);
 
@@ -356,7 +354,7 @@ export async function GET(request: NextRequest) {
     } catch (fetchError) {
       clearTimeout(pagesTimeout);
 
-      // Requirement: 4.4 - Handle timeout errors (return HTTP 504)
+      //  Handle timeout errors (return HTTP 504)
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.error("[GET /api/oauth/facebook-pages/callback] Pages request timeout:", {
           userId: user.id,
@@ -371,7 +369,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         error: fetchError instanceof Error ? fetchError.message : "Unknown error",
       });
-      // Requirement: 4.5 - Handle Pages request failures (return HTTP 500)
+      //  Handle Pages request failures (return HTTP 500)
       return NextResponse.json({ error: "Failed to retrieve Facebook Pages" }, { status: 500 });
     } finally {
       clearTimeout(pagesTimeout);
@@ -386,22 +384,22 @@ export async function GET(request: NextRequest) {
         error: errorData,
       });
 
-      // Requirement: 4.5 - Handle Pages request failures (return HTTP 500)
+      //  Handle Pages request failures (return HTTP 500)
       return NextResponse.json({ error: "Failed to retrieve Facebook Pages" }, { status: 500 });
     }
 
     const pagesData = await pagesResponse.json();
     const allPages = pagesData.data || [];
 
-    // Requirement: 4.10 - Log count of Pages retrieved
+    //  Log count of Pages retrieved
     console.log("[GET /api/oauth/facebook-pages/callback] Pages retrieved:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
       totalPages: allPages.length,
     });
 
-    // Requirement: 4.6 - Filter Pages where user has ADMIN or EDITOR role
-    // Requirement: 4.7 - Filter Pages where tasks array includes "CREATE_CONTENT" permission
+    //  Filter Pages where user has ADMIN or EDITOR role
+    //  Filter Pages where tasks array includes "CREATE_CONTENT" permission
     interface FacebookPage {
       id: string;
       name: string;
@@ -415,7 +413,7 @@ export async function GET(request: NextRequest) {
       const hasCreateContentPermission = page.tasks && page.tasks.includes("CREATE_CONTENT");
 
       if (!hasCreateContentPermission) {
-        // Requirement: 4.11 - Log Pages filtered due to missing CREATE_CONTENT permission
+        //  Log Pages filtered due to missing CREATE_CONTENT permission
         console.log(
           "[GET /api/oauth/facebook-pages/callback] Page filtered due to missing CREATE_CONTENT permission:",
           {
@@ -431,7 +429,7 @@ export async function GET(request: NextRequest) {
       return hasCreateContentPermission;
     });
 
-    // Requirement: 4.8 - Return HTTP 400 with descriptive error if no manageable Pages found
+    //  Return HTTP 400 with descriptive error if no manageable Pages found
     if (manageablePages.length === 0) {
       console.error("[GET /api/oauth/facebook-pages/callback] No manageable Pages found:", {
         userId: user.id,
@@ -459,13 +457,13 @@ export async function GET(request: NextRequest) {
       },
     );
 
-    // Requirement: 4.9 - Store available Pages data in session or temporary storage for Page selection
+    //  Store available Pages data in session or temporary storage for Page selection
     // We'll encode the Pages data in the redirect URL for the Page selection UI
     const pagesDataEncoded = encodeURIComponent(JSON.stringify(manageablePages));
 
     // Clear CSRF token cookie after successful validation
-    // Requirement: 2.11 - Clear CSRF token cookie after successful validation
-    // Requirement: 4.10 - Redirect to Page selection UI with available Pages data
+    //  Clear CSRF token cookie after successful validation
+    //  Redirect to Page selection UI with available Pages data
     const response = NextResponse.redirect(
       `${appUrl}/settings/social-accounts/select-facebook-page?pages=${pagesDataEncoded}`,
     );

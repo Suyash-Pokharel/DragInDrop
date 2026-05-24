@@ -7,11 +7,10 @@ import { validateHttps } from "@/lib/sanitize";
 /**
  * GET /api/oauth/tiktok/authorize
  * Initiates TikTok OAuth 2.0 authorization flow
- * Requirements: 1.1, 8.3, 10.13
  */
 export async function GET(request: NextRequest) {
   // Rate limiting
-  // Requirement: 10.13 - Apply rate limiting to OAuth endpoints
+  //  Apply rate limiting to OAuth endpoints
   const ip =
     request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
 
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Authenticate user
-  // Requirement: 8.3 - Return 401 if user not authenticated
+  //  Return 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[GET /api/oauth/tiktok/authorize] Authentication failed:", {
@@ -57,7 +56,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Validate OAuth configuration
-    // Requirement: 8.4 - Return 500 if credentials missing
+    //  Return 500 if credentials missing
     const clientKey = process.env.TIKTOK_CLIENT_KEY;
     const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -72,7 +71,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate cryptographically secure CSRF token
-    // Requirements: 1.2, 10.1 - Generate secure random CSRF token
+    //  Generate secure random CSRF token
     const csrfToken = randomBytes(32).toString("hex");
 
     // Generate PKCE code_verifier and code_challenge
@@ -81,11 +80,10 @@ export async function GET(request: NextRequest) {
     const codeChallenge = createHash("sha256").update(codeVerifier).digest("base64url");
 
     // Construct TikTok authorization URL
-    // Requirements: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 10.9
     const redirectUri = `${appUrl}/api/oauth/tiktok/callback`;
 
     // Validate HTTPS in production
-    // Requirement: 10.9 - Ensure HTTPS in production
+    //  Ensure HTTPS in production
     const isProduction = process.env.NODE_ENV === "production";
     if (!validateHttps(redirectUri, isProduction)) {
       console.error("[GET /api/oauth/tiktok/authorize] Invalid redirect URI protocol:", {
@@ -123,11 +121,11 @@ export async function GET(request: NextRequest) {
     });
 
     // Create response with redirect
-    // Requirement: 1.8 - Redirect user to TikTok authorization page
+    //  Redirect user to TikTok authorization page
     const response = NextResponse.redirect(authUrl.toString());
 
     // Store CSRF token in secure cookie with 10-minute expiration
-    // Requirements: 1.3, 10.2 - Store CSRF token with expiration
+    //  Store CSRF token with expiration
     const maxAge = 10 * 60; // 10 minutes in seconds
     response.cookies.set("tiktok_oauth_state", csrfToken, {
       httpOnly: true,
@@ -148,7 +146,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
-    // Requirement: 8.8 - Log errors with user context
+    //  Log errors with user context
     console.error("[GET /api/oauth/tiktok/authorize] Unexpected error:", {
       userId: user.id,
       timestamp: new Date().toISOString(),

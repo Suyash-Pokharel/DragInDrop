@@ -5,7 +5,6 @@ import { getPrisma } from "@/lib/prisma";
 /**
  * GET /api/user/connected-platforms
  * Fetches the list of connected social platforms for the authenticated user
- * Requirements: 5.1, 5.2, 5.8
  */
 export async function GET() {
   try {

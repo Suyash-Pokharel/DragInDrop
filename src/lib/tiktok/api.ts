@@ -4,7 +4,6 @@
  * This module encapsulates all TikTok API interactions for video uploads and status polling
  * using TikTok's Content Posting API v2 with the PULL_FROM_URL method.
  *
- * Requirements: 6.2, 6.8, 6.9, 8.2, 8.3, 8.4, 8.5, 15.1, 15.2
  */
 
 /**
@@ -89,8 +88,6 @@ export interface TikTokStatusResponse {
  * @param {UploadVideoParams} params - Upload parameters including access token, video URL, and post settings
  * @returns {Promise<UploadVideoResponse>} Upload result with publish_id or error details
  *
- * Requirements: 6.2, 6.8, 6.9, 15.1, 15.2
- *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns error
  * - HTTP 401/403: Token expired → Returns auth error
@@ -119,7 +116,7 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 15.1
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -151,7 +148,6 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
     const data: TikTokUploadResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 6.8, 6.9
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -198,7 +194,7 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
     }
 
     // Extract publish_id from successful response
-    // Requirement: 6.9
+    //
     if (!data.data?.publish_id) {
       return {
         success: false,
@@ -213,7 +209,7 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 15.2
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -247,8 +243,6 @@ export async function uploadVideo(params: UploadVideoParams): Promise<UploadVide
  * @param {PollStatusParams} params - Parameters including access token and publish_id
  * @returns {Promise<PollStatusResponse>} Status result with current upload status or error details
  *
- * Requirements: 8.2, 8.3, 8.4, 8.5, 15.1, 15.2
- *
  * Status Values:
  * - PROCESSING_DOWNLOAD: TikTok is downloading video from URL
  * - PROCESSING_UPLOAD: TikTok is processing the video
@@ -266,7 +260,7 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 15.1
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -288,7 +282,6 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
     const data: TikTokStatusResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 8.2, 8.3, 8.4, 8.5
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -335,7 +328,6 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
     }
 
     // Extract status from successful response
-    // Requirements: 8.3, 8.4, 8.5
     if (!data.data?.status) {
       return {
         success: false,
@@ -354,7 +346,7 @@ export async function pollStatus(params: PollStatusParams): Promise<PollStatusRe
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 15.2
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {

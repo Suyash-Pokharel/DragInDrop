@@ -3,8 +3,6 @@
  *
  * This module encapsulates all Threads API interactions for video uploads using
  * Threads' container-based publishing system (similar to Instagram).
- *
- * Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10
  */
 
 /**
@@ -135,8 +133,6 @@ interface ThreadsPublishResponse {
  * @param {CreateContainerParams} params - Container creation parameters
  * @returns {Promise<CreateContainerResponse>} Container creation result with container ID or error
  *
- * Requirements: 11.1, 11.6, 11.8
- *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns bad_request error
  * - HTTP 401/403: Token expired or invalid → Returns auth_error
@@ -159,7 +155,6 @@ export async function createMediaContainer(
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 11.6
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -186,7 +181,6 @@ export async function createMediaContainer(
     const data: ThreadsContainerResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 11.5, 11.8
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -233,7 +227,6 @@ export async function createMediaContainer(
     }
 
     // Extract container ID from successful response
-    // Requirement: 11.4
     if (!data.id) {
       return {
         success: false,
@@ -248,7 +241,7 @@ export async function createMediaContainer(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirements: 11.9, 11.10
+    // , 11.10
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -283,7 +276,6 @@ export async function createMediaContainer(
  * @param {PollContainerStatusParams} params - Parameters including access token and container ID
  * @returns {Promise<PollContainerStatusResponse>} Status result with current processing status
  *
- * Requirements: 11.2, 11.7, 11.11, 11.12
  *
  * Status Values:
  * - EXPIRED: Container not published within 24 hours
@@ -317,7 +309,6 @@ export async function pollContainerStatus(
 
   try {
     // Create abort controller for 10-second timeout
-    // Requirement: 11.7
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -337,7 +328,6 @@ export async function pollContainerStatus(
     const data: ThreadsStatusResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 11.5, 11.8
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -384,7 +374,6 @@ export async function pollContainerStatus(
     }
 
     // Extract status from successful response
-    // Requirements: 11.11, 11.12
     if (!data.status) {
       return {
         success: false,
@@ -396,7 +385,6 @@ export async function pollContainerStatus(
     const status = data.status as PollContainerStatusResponse["status"];
 
     // If status is ERROR, include the error_message
-    // Requirement: 11.11
     if (status === "ERROR") {
       return {
         success: true,
@@ -411,7 +399,6 @@ export async function pollContainerStatus(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirements: 11.9, 11.10
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -445,8 +432,6 @@ export async function pollContainerStatus(
  * @param {PublishContainerParams} params - Parameters including access token, user ID, and container ID
  * @returns {Promise<PublishContainerResponse>} Publish result with media ID or error
  *
- * Requirements: 11.3, 11.6, 11.8
- *
  * @example
  * const result = await publishContainer({
  *   accessToken: 'TH_TOKEN...',
@@ -461,7 +446,6 @@ export async function publishContainer(
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 11.6
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -486,7 +470,6 @@ export async function publishContainer(
     const data: ThreadsPublishResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 11.5, 11.8
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -533,7 +516,6 @@ export async function publishContainer(
     }
 
     // Extract media ID from successful response
-    // Requirement: 11.4
     if (!data.id) {
       return {
         success: false,
@@ -548,7 +530,6 @@ export async function publishContainer(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirements: 11.9, 11.10
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -624,8 +605,6 @@ interface ThreadsRefreshTokenResponse {
  * @param {RefreshTokenParams} params - Parameters including encrypted access token
  * @returns {Promise<RefreshTokenResponse>} Refresh result with new encrypted token and expiration
  *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.11, 3.12, 3.13
- *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns bad_request error
  * - HTTP 401/403: Token expired or invalid → Returns auth_error
@@ -648,16 +627,13 @@ export async function refreshThreadsToken(
 
   try {
     // Decrypt the current access token
-    // Requirement: 3.3
     const currentToken = decryptToken(encryptedAccessToken);
 
     // Create abort controller for 10-second timeout
-    // Requirement: 3.7
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     // Construct the API URL
-    // Requirement: 3.2
     const url = new URL("https://graph.threads.net/refresh_access_token");
     url.searchParams.append("grant_type", "th_refresh_token");
     url.searchParams.append("access_token", currentToken);
@@ -673,7 +649,6 @@ export async function refreshThreadsToken(
     const data: ThreadsRefreshTokenResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirement: 3.8
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -720,7 +695,6 @@ export async function refreshThreadsToken(
     }
 
     // Extract access_token, token_type, and expires_in from response
-    // Requirement: 3.4
     if (!data.access_token || !data.expires_in) {
       return {
         success: false,
@@ -730,11 +704,9 @@ export async function refreshThreadsToken(
     }
 
     // Calculate new expiration timestamp
-    // Requirement: 3.5
     const expiresAt = new Date(Date.now() + data.expires_in * 1000);
 
     // Encrypt new access_token using AES-256-GCM
-    // Requirement: 3.6
     const newEncryptedToken = encryptToken(data.access_token);
 
     return {
@@ -744,7 +716,6 @@ export async function refreshThreadsToken(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirements: 3.11, 3.12, 3.13
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {

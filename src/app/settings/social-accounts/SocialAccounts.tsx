@@ -254,33 +254,39 @@ export default function SocialAccounts({ initialConnectedPlatforms }: SocialAcco
                   </div>
                 </div>
 
-                <button
-                  onClick={() =>
-                    isConnected ? handleForgetClick(platform.name) : handleConnect(platform.name)
-                  }
-                  disabled={connectingPlatform === platform.name}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 border ${
-                    isConnected
-                      ? "bg-surface border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                      : "bg-surface border-green-500 text-green-500 hover:bg-green-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  }`}
-                >
-                  {connectingPlatform === platform.name ? (
-                    <>
-                      <span>Connecting...</span>
-                    </>
-                  ) : isConnected ? (
-                    <>
-                      <Unlink className="w-4 h-4" />
-                      <span>Forget</span>
-                    </>
-                  ) : (
-                    <>
-                      <Link2 className="w-4 h-4" />
-                      <span>Connect</span>
-                    </>
-                  )}
-                </button>
+                {platform.name === "X" || platform.name === "LinkedIn" ? (
+                  <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold border bg-surface/50 border-border/60 text-text-secondary cursor-not-allowed">
+                    <span>Coming Soon</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() =>
+                      isConnected ? handleForgetClick(platform.name) : handleConnect(platform.name)
+                    }
+                    disabled={connectingPlatform === platform.name}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 border ${
+                      isConnected
+                        ? "bg-surface border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        : "bg-surface border-green-500 text-green-500 hover:bg-green-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    }`}
+                  >
+                    {connectingPlatform === platform.name ? (
+                      <>
+                        <span>Connecting...</span>
+                      </>
+                    ) : isConnected ? (
+                      <>
+                        <Unlink className="w-4 h-4" />
+                        <span>Forget</span>
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="w-4 h-4" />
+                        <span>Connect</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             );
           })}

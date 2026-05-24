@@ -6,7 +6,6 @@ import { getPrisma } from "@/lib/prisma";
 
 /**
  * Zod schema for preferences validation
- * Requirements: 9.5, 7.1
  */
 const preferencesSchema = z.object({
   dateFormat: z.enum(["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"], {
@@ -23,7 +22,6 @@ const preferencesSchema = z.object({
 
 /**
  * Validates if a timezone is a valid IANA identifier
- * Requirements: 9.5
  */
 function isValidTimezone(tz: string): boolean {
   try {
@@ -37,7 +35,6 @@ function isValidTimezone(tz: string): boolean {
 /**
  * GET /api/user/preferences
  * Retrieves the authenticated user's preferences or returns default values if none exist
- * Requirements: 9.1, 9.3, 6.1
  */
 export async function GET() {
   try {
@@ -84,7 +81,6 @@ export async function GET() {
 /**
  * POST /api/user/preferences
  * Creates or updates the authenticated user's preferences
- * Requirements: 9.2, 9.4, 9.5, 7.1, 7.3, 7.5
  */
 export async function POST(request: NextRequest) {
   try {

@@ -64,10 +64,13 @@
     --shadow-color: hsla(205, 30%, 0%, 0.5);
   }
 
+  html {
+    overflow-x: hidden;
+  }
+
   /* Apply defaults to body */
   body {
     @apply bg-background text-text-main antialiased transition-colors duration-300;
-    overflow-x: hidden;
   }
 }
 

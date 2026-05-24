@@ -4,7 +4,6 @@
  * This module encapsulates all Facebook Pages API interactions for video uploads using
  * Facebook's resumable upload system. Videos are published directly to Facebook Pages.
  *
- * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10
  */
 
 /**
@@ -152,8 +151,6 @@ interface FacebookTokenRefreshResponse {
  * @param {InitializeUploadSessionParams} params - Upload session initialization parameters
  * @returns {Promise<InitializeUploadSessionResponse>} Upload session initialization result with session ID or error
  *
- * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9
- *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns bad_request error
  * - HTTP 401/403: Token expired or invalid → Returns auth_error
@@ -177,7 +174,7 @@ export async function initializeUploadSession(
 
   try {
     // Create abort controller for 10-second timeout
-    // Requirement: 10.5
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -204,7 +201,6 @@ export async function initializeUploadSession(
     const data: FacebookUploadSessionResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 10.6, 10.7
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -251,7 +247,7 @@ export async function initializeUploadSession(
     }
 
     // Extract upload session ID from successful response
-    // Requirement: 10.8
+    //
     if (!data.upload_session_id) {
       return {
         success: false,
@@ -266,7 +262,7 @@ export async function initializeUploadSession(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 10.9
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -300,7 +296,7 @@ export async function initializeUploadSession(
  * @param {UploadVideoFileParams} params - Parameters including access token, session ID, and video data
  * @returns {Promise<UploadVideoFileResponse>} Upload result with file handle or error
  *
- * Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9
+ *.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9
  *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns bad_request error
@@ -323,7 +319,7 @@ export async function uploadVideoFile(
 
   try {
     // Create abort controller for 60-second timeout
-    // Requirement: 11.5
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -346,7 +342,6 @@ export async function uploadVideoFile(
     const data: FacebookFileUploadResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 11.6, 11.7
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -393,7 +388,7 @@ export async function uploadVideoFile(
     }
 
     // Extract file handle from successful response
-    // Requirement: 11.8
+    //
     if (!data.file_handle) {
       return {
         success: false,
@@ -408,7 +403,7 @@ export async function uploadVideoFile(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 11.9
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -442,7 +437,6 @@ export async function uploadVideoFile(
  * @param {PublishVideoParams} params - Parameters including access token, page ID, file handle, and description
  * @returns {Promise<PublishVideoResponse>} Publish result with video ID and platform URL or error
  *
- * Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10
  *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns bad_request error
@@ -464,7 +458,7 @@ export async function publishVideo(params: PublishVideoParams): Promise<PublishV
 
   try {
     // Create abort controller for 10-second timeout
-    // Requirement: 12.5
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -491,7 +485,6 @@ export async function publishVideo(params: PublishVideoParams): Promise<PublishV
     const data: FacebookPublishResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 12.6, 12.7
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -538,7 +531,7 @@ export async function publishVideo(params: PublishVideoParams): Promise<PublishV
     }
 
     // Extract video ID from successful response
-    // Requirement: 12.9
+    //
     if (!data.id) {
       return {
         success: false,
@@ -548,7 +541,7 @@ export async function publishVideo(params: PublishVideoParams): Promise<PublishV
     }
 
     // Construct platform URL
-    // Requirement: 12.10
+    //
     const platformUrl = `https://www.facebook.com/${pageId}/videos/${data.id}`;
 
     return {
@@ -558,7 +551,7 @@ export async function publishVideo(params: PublishVideoParams): Promise<PublishV
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 12.8
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {

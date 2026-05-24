@@ -17,7 +17,6 @@ interface FacebookPage {
 /**
  * Client Component for Facebook Page Selection
  * Displays available Pages and allows user to select one to connect
- * Requirements: 5.1, 5.2, 5.3, 5.9
  */
 export default function SelectFacebookPageClient() {
   const searchParams = useSearchParams();
@@ -43,7 +42,7 @@ export default function SelectFacebookPageClient() {
         parseError =
           "No manageable Pages found. Please ensure you have ADMIN or EDITOR role with CREATE_CONTENT permission.";
       } else {
-        // Requirement: 5.1 - Display list of Pages with id and name
+        //  Display list of Pages with id and name
         pages = decodedPages;
       }
     } catch (error) {
@@ -56,7 +55,7 @@ export default function SelectFacebookPageClient() {
 
   // Handle Page selection
   const handleSelectPage = (pageId: string) => {
-    // Requirement: 5.3 - Allow user to select one Page to connect at a time
+    //  Allow user to select one Page to connect at a time
     setSelectedPageId(pageId);
     setConnectionError(null);
   };
@@ -79,7 +78,7 @@ export default function SelectFacebookPageClient() {
     setConnectionError(null);
 
     try {
-      // Requirement: 5.3 - Call /api/oauth/facebook-pages/select-page endpoint with selected Page data
+      //  Call /api/oauth/facebook-pages/select-page endpoint with selected Page data
       const response = await fetch("/api/oauth/facebook-pages/select-page", {
         method: "POST",
         headers: {
@@ -95,7 +94,7 @@ export default function SelectFacebookPageClient() {
       const data = await response.json();
 
       if (response.ok) {
-        // Requirement: 5.9 - Handle success response and redirect to settings page
+        //  Handle success response and redirect to settings page
         setSuccess(true);
 
         // Redirect to settings page after a short delay
@@ -103,13 +102,13 @@ export default function SelectFacebookPageClient() {
           router.push("/settings/social-accounts?success=Facebook Page connected successfully");
         }, 1500);
       } else {
-        // Requirement: 5.9 - Handle error responses and display error messages
+        //  Handle error responses and display error messages
         setConnectionError(data.error || "Failed to connect Page. Please try again.");
         setIsConnecting(false);
       }
     } catch (fetchError) {
       console.error("Failed to connect Page:", fetchError);
-      // Requirement: 5.9 - Handle error responses and display error messages
+      //  Handle error responses and display error messages
       setConnectionError("Network error. Please check your connection and try again.");
       setIsConnecting(false);
     }

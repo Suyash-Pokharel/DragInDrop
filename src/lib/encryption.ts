@@ -59,8 +59,8 @@ export function encryptToken(token: string): string {
     // Return in format: iv:authTag:encryptedData (all hex-encoded)
     return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
   } catch (error) {
-    // Requirement: 10.14 - Log encryption errors without logging plaintext tokens
-    // Requirement: 10.15 - Never log plaintext tokens
+    // Log encryption errors without logging plaintext tokens
+    // Never log plaintext tokens
     console.error("[encryptToken] Token encryption failed:", {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown encryption error",
@@ -110,15 +110,15 @@ export function decryptToken(encryptedToken: string): string {
 
     return decrypted;
   } catch (error) {
-    // Requirement: 10.14 - Log decryption errors without logging plaintext tokens
-    // Requirement: 10.15 - Never log plaintext tokens
+    // Log decryption errors without logging plaintext tokens
+    // Never log plaintext tokens
     console.error("[decryptToken] Token decryption failed:", {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown decryption error",
       encryptedTokenLength: encryptedToken?.length || 0,
     });
 
-    // Requirement 19.6: Throw error with message "Failed to decrypt token" on failure
+    // Throw error with message "Failed to decrypt token" on failure
     throw new Error("Failed to decrypt token");
   }
 }

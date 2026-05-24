@@ -3,8 +3,6 @@
  *
  * This module encapsulates all Instagram API interactions for video uploads using
  * Instagram's container-based publishing system. Videos are published as Reels.
- *
- * Requirements: 6.5, 6.7, 6.8, 6.9, 6.11, 6.12, 7.1, 7.2, 7.3, 7.4
  */
 
 /**
@@ -117,7 +115,7 @@ interface InstagramPublishResponse {
  * @param {CreateContainerParams} params - Container creation parameters
  * @returns {Promise<CreateContainerResponse>} Container creation result with container ID or error
  *
- * Requirements: 6.5, 6.7, 6.8, 6.9
+ *.5, 6.7, 6.8, 6.9
  *
  * Error Handling:
  * - HTTP 400: Invalid request parameters → Returns bad_request error
@@ -142,7 +140,7 @@ export async function createMediaContainer(
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 6.7
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -170,7 +168,6 @@ export async function createMediaContainer(
     const data: InstagramContainerResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 6.8, 6.9
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -217,7 +214,7 @@ export async function createMediaContainer(
     }
 
     // Extract container ID from successful response
-    // Requirement: 6.9
+    //
     if (!data.id) {
       return {
         success: false,
@@ -232,7 +229,7 @@ export async function createMediaContainer(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 7.4
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -266,8 +263,6 @@ export async function createMediaContainer(
  * @param {PollContainerStatusParams} params - Parameters including access token and container ID
  * @returns {Promise<PollContainerStatusResponse>} Status result with current processing status
  *
- * Requirements: 6.9, 6.10, 7.1, 7.2, 7.3, 7.4
- *
  * Status Values:
  * - IN_PROGRESS: Instagram is still processing the video
  * - FINISHED: Video processing complete, ready to publish
@@ -286,7 +281,7 @@ export async function pollContainerStatus(
 
   try {
     // Create abort controller for 10-second timeout
-    // Requirement: 6.7
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -306,7 +301,7 @@ export async function pollContainerStatus(
     const data: InstagramStatusResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 6.8, 6.9
+    //.8, 6.9
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -353,7 +348,6 @@ export async function pollContainerStatus(
     }
 
     // Extract status from successful response
-    // Requirements: 6.9, 6.10
     if (!data.status_code) {
       return {
         success: false,
@@ -379,7 +373,7 @@ export async function pollContainerStatus(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 7.4
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
@@ -413,7 +407,6 @@ export async function pollContainerStatus(
  * @param {PublishContainerParams} params - Parameters including access token, user ID, and container ID
  * @returns {Promise<PublishContainerResponse>} Publish result with media ID or error
  *
- * Requirements: 6.11, 6.12, 7.1, 7.2, 7.3, 7.4
  *
  * @example
  * const result = await publishContainer({
@@ -429,7 +422,7 @@ export async function publishContainer(
 
   try {
     // Create abort controller for 30-second timeout
-    // Requirement: 6.7
+    //
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -454,7 +447,6 @@ export async function publishContainer(
     const data: InstagramPublishResponse = await response.json();
 
     // Handle HTTP error codes
-    // Requirements: 6.8, 6.9
     if (!response.ok) {
       // HTTP 400: Invalid request
       if (response.status === 400) {
@@ -501,7 +493,7 @@ export async function publishContainer(
     }
 
     // Extract media ID from successful response
-    // Requirement: 6.12
+    //
     if (!data.id) {
       return {
         success: false,
@@ -516,7 +508,7 @@ export async function publishContainer(
     };
   } catch (error) {
     // Handle timeout and network errors
-    // Requirement: 7.4
+    //
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {

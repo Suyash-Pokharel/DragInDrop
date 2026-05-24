@@ -6,8 +6,6 @@
  * - Querying scheduled posts within the scheduling window
  * - Delegating upload jobs to Render.com worker
  * - Updating database records based on worker response
- *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -15,7 +13,12 @@ import { getPrisma } from "@/lib/prisma";
 import { Post, PlatformPost, SocialAccount, PlatformPostStatus, PostStatus } from "@prisma/client";
 import { decryptToken } from "@/lib/encryption";
 import { isTokenExpired, refreshToken } from "@/lib/tokenManager";
-import { checkUploadRateLimit, incrementUploadCounter } from "@/lib/youtube/rateLimiter";
+import { checkUploadRateLimit } from "@/lib/youtube/rateLimiter";
+import {
+  createNotification,
+  formatUploadSuccess,
+  formatUploadFailed,
+} from "@/lib/notifications";
 
 /**
  * Summary of processing results
@@ -45,8 +48,6 @@ interface UploadResult {
  *
  * @param {NextRequest} request - The incoming request
  * @returns {boolean} True if the secret is valid, false otherwise
- *
- * Requirements: 3.2, 3.3
  *
  * @example
  * if (!verifyCronSecret(request)) {
@@ -82,8 +83,6 @@ function verifyCronSecret(request: NextRequest): boolean {
  *
  * @returns {{ start: Date; end: Date }} The start and end of the scheduling window
  *
- * Requirements: 4.1, 4.2, 4.3
- *
  * @example
  * const window = getSchedulingWindow();
  * // If current time is 10:30:00
@@ -109,14 +108,11 @@ function getSchedulingWindow(): { start: Date; end: Date } {
  * 3. Delegates upload jobs to Render.com worker
  * 4. Returns a summary of operations
  *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4
- *
  * @param {NextRequest} request - The incoming request from cron-job.org
  * @returns {Promise<NextResponse>} Response with processing summary or error
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify CRON_SECRET
-  // Requirements: 3.2, 3.3
   if (!verifyCronSecret(request)) {
     console.error("[process-scheduled-youtube-uploads] Unauthorized request:", {
       timestamp: new Date().toISOString(),
@@ -125,7 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Requirement 12.1: Log cron execution start with timestamp
+  //  Log cron execution start with timestamp
   console.log("[process-scheduled-youtube-uploads] Cron execution started:", {
     timestamp: new Date().toISOString(),
   });
@@ -135,7 +131,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const window = getSchedulingWindow();
 
     // Query for scheduled posts within the scheduling window
-    // Requirements: 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4
     const scheduledPosts = await prisma.post.findMany({
       where: {
         status: "SCHEDULED",
@@ -161,10 +156,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     // Filter to only include posts with YouTube PlatformPost records
-    // Requirement: 3.5
+    // 
     const postsToProcess = scheduledPosts.filter((post) => post.PlatformPost.length > 0);
 
-    // Requirement 12.2: Log count of posts found in scheduling window
+    //  Log count of posts found in scheduling window
     console.log("[process-scheduled-youtube-uploads] Found posts to process:", {
       timestamp: new Date().toISOString(),
       windowStart: window.start.toISOString(),
@@ -181,13 +176,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // Process scheduled posts for upload
-    // Requirement: 9.1-9.9 - Delegate to Render.com worker
+    // Delegate to Render.com worker
     const uploadResult = await processScheduledPosts(postsToProcess);
     result.uploaded = uploadResult.uploaded;
     result.errors.push(...uploadResult.errors);
 
     // Sync Post status for all processed posts
-    // Requirement: 10.1, 10.2, 10.3, 10.4, 10.5
     const postIds = new Set<string>();
     for (const post of postsToProcess) {
       postIds.add(post.id);
@@ -206,22 +200,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Requirement 12.1: Log cron execution end with timestamp
+    //  Log cron execution end with timestamp
     console.log("[process-scheduled-youtube-uploads] Cron execution completed:", {
       timestamp: new Date().toISOString(),
       result,
     });
 
     // Return HTTP 200 with summary
-    // Requirement: 3.7
+    // 
     return NextResponse.json({
       success: true,
       ...result,
     });
   } catch (error) {
     // Return HTTP 500 on database errors
-    // Requirement: 3.8
-    // Requirement 12.5: Log all errors with full context
+    // 
+    //  Log all errors with full context
     console.error("[process-scheduled-youtube-uploads] Database error:", {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",
@@ -247,10 +241,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * 3. Checking upload rate limits
  * 4. Delegating upload job to Render.com worker
  * 5. Updating the database with the result
- *
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 9.1, 9.2, 9.3, 9.4, 9.5,
- *               9.6, 9.7, 9.8, 9.9, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7
- *
  * @param posts - Array of posts with PlatformPost and SocialAccount data
  * @returns ProcessResult with upload count and errors
  */
@@ -271,7 +261,7 @@ async function processScheduledPosts(
 
         if (result.success) {
           uploaded++;
-          // Requirement 12.4: Log worker response with video ID
+          //  Log worker response with video ID
           console.log("[processScheduledPosts] Upload successful:", {
             userId: post.userId,
             postId: post.id,
@@ -292,7 +282,7 @@ async function processScheduledPosts(
         } else {
           // Fatal error - add to errors array
           errors.push(`Post ${post.id}: ${result.error}`);
-          // Requirement 12.5: Log all errors with full context
+          //  Log all errors with full context
           console.error("[processScheduledPosts] Upload failed:", {
             userId: post.userId,
             postId: post.id,
@@ -304,7 +294,7 @@ async function processScheduledPosts(
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         errors.push(`Post ${post.id}: ${errorMessage}`);
-        // Requirement 12.5: Log all errors with full context (userId, postId, error message, stack trace)
+        //  Log all errors with full context (userId, postId, error message, stack trace)
         console.error("[processScheduledPosts] Unexpected error:", {
           userId: post.userId,
           postId: post.id,
@@ -331,9 +321,6 @@ async function processScheduledPosts(
  * 5. Update database with result
  * 6. Increment rate limit counter
  *
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 9.1, 9.2, 9.3, 9.4, 9.5,
- *               9.6, 9.7, 9.8, 9.9, 11.1, 11.2, 11.3
- *
  * @param post - The Post record
  * @param platformPost - The PlatformPost record
  * @param socialAccount - The SocialAccount record with encrypted tokens
@@ -345,7 +332,6 @@ async function uploadToYouTube(
   socialAccount: SocialAccount,
 ): Promise<UploadResult> {
   // Step 1: Check if access token is expired and refresh if needed
-  // Requirements: 5.3, 5.4, 5.5, 5.6, 5.7
   let currentSocialAccount = socialAccount;
 
   if (isTokenExpired(socialAccount)) {
@@ -361,7 +347,7 @@ async function uploadToYouTube(
 
     if (!refreshResult.success) {
       // Token refresh failed - mark as FAILED
-      // Requirement: 5.7
+      // 
       console.error("[uploadToYouTube] Token refresh failed:", {
         userId: post.userId,
         postId: post.id,
@@ -398,8 +384,8 @@ async function uploadToYouTube(
   }
 
   // Step 2: Decrypt access token and refresh token
-  // Requirement: 5.2
-  // Requirement 12.6: NEVER log plaintext access tokens
+  // 
+  //  NEVER log plaintext access tokens
   let accessToken: string;
   let refreshTokenDecrypted: string;
   try {
@@ -412,7 +398,7 @@ async function uploadToYouTube(
 
     refreshTokenDecrypted = decryptToken(currentSocialAccount.refreshToken);
   } catch (error) {
-    // Requirement 12.5: Log all errors with full context
+    //  Log all errors with full context
     console.error("[uploadToYouTube] Failed to decrypt tokens:", {
       userId: post.userId,
       postId: post.id,
@@ -434,7 +420,6 @@ async function uploadToYouTube(
   }
 
   // Step 3: Check upload rate limit
-  // Requirements: 11.1, 11.2, 11.3
   const rateLimitResult = await checkUploadRateLimit(post.userId);
 
   if (!rateLimitResult.allowed) {
@@ -454,7 +439,6 @@ async function uploadToYouTube(
   }
 
   // Step 4: Delegate upload job to Render.com worker
-  // Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9
   const workerUrl = process.env.RENDER_WORKER_URL;
   const workerSecret = process.env.WORKER_SECRET;
 
@@ -478,7 +462,7 @@ async function uploadToYouTube(
     };
   }
 
-  // Requirement 12.3: Log worker request with userId, postId, endpoint
+  //  Log worker request with userId, postId, endpoint
   console.log("[uploadToYouTube] Calling Render.com worker:", {
     userId: post.userId,
     postId: post.id,
@@ -488,7 +472,7 @@ async function uploadToYouTube(
   });
 
   try {
-    // Requirement 9.1, 9.2, 9.3: Send HTTP POST to worker with authentication
+    //  Send HTTP POST to worker with authentication
     const response = await fetch(`${workerUrl}/upload`, {
       method: "POST",
       headers: {
@@ -508,7 +492,7 @@ async function uploadToYouTube(
         expiresAt: currentSocialAccount.expiresAt?.toISOString() || new Date().toISOString(),
         userId: post.userId,
       }),
-      // Requirement 9.4: Set 20-minute timeout (increased to handle large videos with chunked upload)
+      //  Set 20-minute timeout (increased to handle large videos with chunked upload)
       signal: AbortSignal.timeout(20 * 60 * 1000),
     });
 
@@ -561,7 +545,7 @@ async function uploadToYouTube(
       };
     }
 
-    // Requirement 12.4: Log worker response
+    //  Log worker response
     console.log("[uploadToYouTube] Worker response:", {
       userId: post.userId,
       postId: post.id,
@@ -573,7 +557,7 @@ async function uploadToYouTube(
     });
 
     if (response.ok && responseData.success) {
-      // Requirement 9.5: Update status to PUBLISHED on success
+      //  Update status to PUBLISHED on success
       await updatePlatformPostStatus(
         platformPost.id,
         "PUBLISHED",
@@ -583,8 +567,7 @@ async function uploadToYouTube(
       );
 
       // Increment rate limit counter
-      // Requirement 11.3
-      await incrementUploadCounter(post.userId);
+      //  incrementUploadCounter(post.userId);
 
       return {
         success: true,
@@ -592,11 +575,10 @@ async function uploadToYouTube(
         videoUrl: responseData.videoUrl,
       };
     } else {
-      // Requirement 9.6: Update status to FAILED on error
+      //  Update status to FAILED on error
       const errorMessage = responseData.error || "Worker upload failed";
 
       // Check if this is a retryable error
-      // Requirement 15.1, 15.2, 15.3
       if (response.status >= 500 || responseData.errorCode === "timeout") {
         // Retryable error - increment retry count
         const currentRetryCount = platformPost.retryCount;
@@ -611,7 +593,7 @@ async function uploadToYouTube(
           },
         });
 
-        // Requirement 15.3: If retryCount > 3, mark as FAILED
+        //  If retryCount > 3, mark as FAILED
         if (newRetryCount > 3) {
           await updatePlatformPostStatus(
             platformPost.id,
@@ -626,7 +608,7 @@ async function uploadToYouTube(
           };
         }
 
-        // Requirement 15.2: Leave status as PENDING for retry
+        //  Leave status as PENDING for retry
         console.log("[uploadToYouTube] Will retry on next cron run:", {
           userId: post.userId,
           postId: post.id,
@@ -642,8 +624,7 @@ async function uploadToYouTube(
         };
       } else {
         // Non-retryable error - mark as FAILED immediately
-        // Requirement 15.5
-        await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
+        //  updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
 
         return {
           success: false,
@@ -652,7 +633,7 @@ async function uploadToYouTube(
       }
     }
   } catch (error) {
-    // Requirement 9.7: Handle timeout errors
+    //  Handle timeout errors
     if (error instanceof Error && error.name === "TimeoutError") {
       // Increment retry count
       const currentRetryCount = platformPost.retryCount;
@@ -726,8 +707,7 @@ async function uploadToYouTube(
  *
  * This function updates a PlatformPost record with new status, videoId,
  * platformUrl, and error message. It uses a database transaction to ensure atomic updates.
- *
- * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 14.1, 14.2, 14.3, 14.4
+ * After updating the status, it creates appropriate notifications for PUBLISHED or FAILED statuses.
  *
  * @param platformPostId - The ID of the PlatformPost to update
  * @param status - The new status to set
@@ -747,7 +727,7 @@ async function updatePlatformPostStatus(
 
   try {
     // Use transaction for atomic update
-    // Requirement: 14.1, 14.2
+    // , 14.2
     await prisma.$transaction(async (tx) => {
       const updateData: {
         status: PlatformPostStatus;
@@ -798,8 +778,15 @@ async function updatePlatformPostStatus(
       hasError: !!errorMessage,
       timestamp: new Date().toISOString(),
     });
+
+    // Create notification after updating status
+    // Requirement 18.1, 18.2: Create notifications for PUBLISHED and FAILED statuses
+    if (status === "PUBLISHED") {
+      await createSuccessUploadNotificationById(platformPostId);
+    } else if (status === "FAILED") {
+      await createFailedUploadNotificationById(platformPostId, errorMessage || "Upload failed");
+    }
   } catch (error) {
-    // Requirement: 14.3, 14.4
     console.error("[updatePlatformPostStatus] Transaction failed:", {
       platformPostId,
       status,
@@ -820,8 +807,6 @@ async function updatePlatformPostStatus(
  * - Any PUBLISHING → PUBLISHING
  * - Mix of PUBLISHED and FAILED → PARTIALLY_PUBLISHED
  *
- * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 14.1, 14.2, 14.3, 14.4
- *
  * @param postId - The ID of the Post to synchronize
  * @returns Promise<void>
  */
@@ -830,7 +815,6 @@ async function syncPostStatus(postId: string): Promise<void> {
 
   try {
     // Use transaction for atomic read and update
-    // Requirement: 14.1, 14.2
     await prisma.$transaction(async (tx) => {
       // Get all PlatformPost records for this Post
       const platformPosts = await tx.platformPost.findMany({
@@ -850,26 +834,26 @@ async function syncPostStatus(postId: string): Promise<void> {
       const statuses = platformPosts.map((pp) => pp.status);
 
       // Calculate Post status based on PlatformPost statuses
-      // Requirements: 10.1, 10.2, 10.3, 10.4
+      // .1, 10.2, 10.3, 10.4
       let newPostStatus: PostStatus;
 
       // All published → PUBLISHED
-      // Requirement: 10.1
+      // 
       if (statuses.every((s) => s === "PUBLISHED")) {
         newPostStatus = "PUBLISHED";
       }
       // All failed → FAILED
-      // Requirement: 10.3
+      // 
       else if (statuses.every((s) => s === "FAILED")) {
         newPostStatus = "FAILED";
       }
       // Any publishing → PUBLISHING
-      // Requirement: 10.4
+      // 
       else if (statuses.some((s) => s === "PUBLISHING")) {
         newPostStatus = "PUBLISHING";
       }
       // Mix of published and failed → PARTIALLY_PUBLISHED
-      // Requirement: 10.2
+      // 
       else if (statuses.some((s) => s === "PUBLISHED") && statuses.some((s) => s === "FAILED")) {
         newPostStatus = "PARTIALLY_PUBLISHED";
       }
@@ -879,7 +863,7 @@ async function syncPostStatus(postId: string): Promise<void> {
       }
 
       // Update Post status and updatedAt timestamp
-      // Requirement: 10.5
+      // 
       await tx.post.update({
         where: { id: postId },
         data: {
@@ -897,7 +881,6 @@ async function syncPostStatus(postId: string): Promise<void> {
       });
     });
   } catch (error) {
-    // Requirement: 14.3, 14.4
     console.error("[syncPostStatus] Transaction failed:", {
       postId,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -905,5 +888,138 @@ async function syncPostStatus(postId: string): Promise<void> {
       timestamp: new Date().toISOString(),
     });
     throw error;
+  }
+}
+
+/**
+ * Create a success notification for a YouTube upload
+ *
+ * This function queries the PlatformPost and related Post to retrieve the post title,
+ * then creates a notification using the formatUploadSuccess helper.
+ * Errors are logged but do not propagate to avoid failing the upload processing.
+ *
+ * Requirement 18.1, 18.3: Create UPLOAD_SUCCESS notification with post title and platform
+ * Requirement 18.4: Wrap in try-catch to log errors without failing upload processing
+ *
+ * @param platformPostId - The ID of the PlatformPost that was successfully uploaded
+ * @returns Promise<void>
+ */
+async function createSuccessUploadNotificationById(
+  platformPostId: string
+): Promise<void> {
+  try {
+    const prisma = getPrisma();
+
+    // Query PlatformPost with related Post to get post title and userId
+    const platformPost = await prisma.platformPost.findUnique({
+      where: { id: platformPostId },
+      include: {
+        Post: true,
+      },
+    });
+
+    if (!platformPost) {
+      console.error("[createSuccessUploadNotificationById] PlatformPost not found:", {
+        platformPostId,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // Format notification content using helper
+    const notificationContent = formatUploadSuccess(
+      platformPost.Post.title,
+      "YouTube"
+    );
+
+    // Create notification
+    await createNotification(
+      platformPost.Post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_SUCCESS"
+    );
+
+    console.log("[createSuccessUploadNotificationById] Success notification created:", {
+      platformPostId,
+      postId: platformPost.postId,
+      userId: platformPost.Post.userId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (notificationError) {
+    // Log error but do not throw to avoid failing upload processing
+    console.error("[createSuccessUploadNotificationById] Failed to create success notification:", {
+      platformPostId,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Create a failure notification for a YouTube upload
+ *
+ * This function queries the PlatformPost and related Post to retrieve the post title,
+ * then creates a notification using the formatUploadFailed helper.
+ * Errors are logged but do not propagate to avoid failing the upload processing.
+ *
+ * Requirement 18.2, 18.3: Create UPLOAD_FAILED notification with post title, platform, and error
+ * Requirement 18.4: Wrap in try-catch to log errors without failing upload processing
+ *
+ * @param platformPostId - The ID of the PlatformPost that failed to upload
+ * @param errorMessage - The error message describing the failure
+ * @returns Promise<void>
+ */
+async function createFailedUploadNotificationById(
+  platformPostId: string,
+  errorMessage: string
+): Promise<void> {
+  try {
+    const prisma = getPrisma();
+
+    // Query PlatformPost with related Post to get post title and userId
+    const platformPost = await prisma.platformPost.findUnique({
+      where: { id: platformPostId },
+      include: {
+        Post: true,
+      },
+    });
+
+    if (!platformPost) {
+      console.error("[createFailedUploadNotificationById] PlatformPost not found:", {
+        platformPostId,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // Format notification content using helper
+    const notificationContent = formatUploadFailed(
+      platformPost.Post.title,
+      "YouTube",
+      errorMessage
+    );
+
+    // Create notification
+    await createNotification(
+      platformPost.Post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_FAILED"
+    );
+
+    console.log("[createFailedUploadNotificationById] Failure notification created:", {
+      platformPostId,
+      postId: platformPost.postId,
+      userId: platformPost.Post.userId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (notificationError) {
+    // Log error but do not throw to avoid failing upload processing
+    console.error("[createFailedUploadNotificationById] Failed to create failure notification:", {
+      platformPostId,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
   }
 }

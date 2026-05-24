@@ -4,12 +4,10 @@
  * This endpoint is triggered by cron-job.org every 5 minutes to process scheduled
  * Instagram uploads. It handles:
  * - Querying scheduled posts within the scheduling window
- * - Uploading videos to Instagram (to be implemented in Task 6.2)
- * - Polling container status (to be implemented in Task 6.3)
- * - Publishing containers (to be implemented in Task 6.4)
- * - Updating database records (to be implemented in Task 6.6)
- *
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 12.3, 12.4
+ * - Uploading videos to Instagram 
+ * - Polling container status
+ * - Publishing containers
+ * - Updating database records
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -24,6 +22,11 @@ import {
   pollContainerStatus,
   publishContainer,
 } from "@/lib/instagram/api";
+import {
+  createNotification,
+  formatUploadSuccess,
+  formatUploadFailed,
+} from "@/lib/notifications";
 
 /**
  * Summary of processing results
@@ -42,8 +45,6 @@ interface ProcessResult {
  *
  * @param {NextRequest} request - The incoming request
  * @returns {boolean} True if the secret is valid, false otherwise
- *
- * Requirements: 5.2, 5.7
  *
  * @example
  * if (!verifyCronSecret(request)) {
@@ -90,8 +91,7 @@ function verifyCronSecret(request: NextRequest): boolean {
  *
  * @returns {{ start: Date; end: Date }} The start and end of the scheduling window
  *
- * Requirements: 5.4
- *
+ * 
  * @example
  * const window = getSchedulingWindow();
  * // If current time is 10:30:00
@@ -114,17 +114,14 @@ function getSchedulingWindow(): { start: Date; end: Date } {
  * Main handler for processing scheduled Instagram uploads. This endpoint:
  * 1. Verifies the CRON_SECRET for authentication
  * 2. Queries for scheduled posts within the scheduling window
- * 3. Processes uploads and status polling (to be implemented in Tasks 6.2-6.6)
+ * 3. Processes uploads and status polling
  * 4. Returns a summary of operations
- *
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 12.3, 12.4
  *
  * @param {NextRequest} request - The incoming request from cron-job.org
  * @returns {Promise<NextResponse>} Response with processing summary or error
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify CRON_SECRET
-  // Requirements: 5.2, 5.7
   if (!verifyCronSecret(request)) {
     console.error("[process-scheduled-instagram-uploads] Unauthorized request:", {
       timestamp: new Date().toISOString(),
@@ -143,7 +140,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const window = getSchedulingWindow();
 
     // Query for scheduled posts within the scheduling window
-    // Requirements: 5.3, 5.4, 5.5, 5.6
+    //  5.4, 5.5, 5.6
     const scheduledPosts = await prisma.post.findMany({
       where: {
         status: "SCHEDULED",
@@ -169,10 +166,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     // Filter to only include posts with Instagram PlatformPost records
-    // Requirement: 5.5
     const postsToProcess = scheduledPosts.filter((post) => post.PlatformPost.length > 0);
 
-    // Requirement 12.4: Log count of posts found in scheduling window
+    // Log count of posts found in scheduling window
     console.log("[process-scheduled-instagram-uploads] Found posts to process:", {
       timestamp: new Date().toISOString(),
       windowStart: window.start.toISOString(),
@@ -189,32 +185,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // Process scheduled posts for upload
-    // Task 6.2 - Implement upload processing logic
+    // Implement upload processing logic
     const uploadResult = await processScheduledPosts(postsToProcess);
     result.uploaded = uploadResult.uploaded;
     result.errors.push(...uploadResult.errors);
 
     // Process publishing posts for status polling and publishing
-    // Task 6.3 - Implement container status polling logic
+    // Implement container status polling logic
     const publishingResult = await processPublishingPosts();
     result.errors.push(...publishingResult.errors);
 
-    // Requirement 12.3: Log cron execution end with timestamp
+    // Log cron execution end with timestamp
     console.log("[process-scheduled-instagram-uploads] Cron execution completed:", {
       timestamp: new Date().toISOString(),
       result,
     });
 
     // Return HTTP 200 with summary
-    // Requirement: 5.6
     return NextResponse.json({
       success: true,
       ...result,
     });
   } catch (error) {
     // Return HTTP 500 on database errors
-    // Requirement: 5.8
-    // Requirement 12.7: Log all errors with full context
+    // Log all errors with full context
     console.error("[process-scheduled-instagram-uploads] Database error:", {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",
@@ -253,10 +247,6 @@ interface UploadResult {
  * 6. Calling Instagram API to create media container
  * 7. Updating the database with the container ID and status
  *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 6.1, 6.2, 6.3,
- *               6.4, 6.5, 6.6, 6.17, 6.18, 6.19, 11.1, 11.2, 11.3, 11.4,
- *               11.5, 11.6, 11.7, 12.5, 12.6
- *
  * @param posts - Array of posts with PlatformPost and SocialAccount data
  * @returns ProcessResult with upload count and errors
  */
@@ -277,7 +267,7 @@ async function processScheduledPosts(
 
         if (result.success) {
           uploaded++;
-          // Requirement 12.6: Log Instagram API response with status code and container ID
+          // Log Instagram API response with status code and container ID
           console.log("[processScheduledPosts] Upload successful:", {
             userId: post.userId,
             postId: post.id,
@@ -297,7 +287,7 @@ async function processScheduledPosts(
         } else {
           // Fatal error - add to errors array
           errors.push(`Post ${post.id}: ${result.error}`);
-          // Requirement 12.7: Log all errors with full context
+          // Log all errors with full context
           console.error("[processScheduledPosts] Upload failed:", {
             userId: post.userId,
             postId: post.id,
@@ -309,7 +299,7 @@ async function processScheduledPosts(
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         errors.push(`Post ${post.id}: ${errorMessage}`);
-        // Requirement 12.7: Log all errors with full context (userId, postId, error message, stack trace)
+        // Log all errors with full context (userId, postId, error message, stack trace)
         console.error("[processScheduledPosts] Unexpected error:", {
           userId: post.userId,
           postId: post.id,
@@ -334,8 +324,6 @@ async function processScheduledPosts(
  * 3. If status is "FINISHED", proceeding to publish step
  * 4. If status is "ERROR", marking as FAILED
  * 5. If polling times out after 5 minutes, marking as FAILED
- *
- * Requirements: 6.9, 6.10, 6.21, 6.22
  *
  * @returns ProcessResult with error count
  */
@@ -380,6 +368,10 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
             undefined,
             "No container ID found",
           );
+
+          // Create notification for failed upload
+          await createFailedUploadNotification(platformPost, "No container ID found");
+
           errors.push(`Post ${platformPost.postId}: No container ID found`);
           continue;
         }
@@ -390,7 +382,7 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
         const updatedAt = new Date(platformPost.updatedAt);
 
         if (updatedAt < fifteenMinutesAgo) {
-          // Requirement 6.22: If polling times out after 15 minutes, mark as FAILED
+          // If polling times out after 15 minutes, mark as FAILED
           console.error("[processPublishingPosts] Polling timeout (15 minutes exceeded):", {
             platformPostId: platformPost.id,
             postId: platformPost.postId,
@@ -404,6 +396,12 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
             "FAILED",
             undefined,
             "Container processing timeout (15 minutes exceeded)",
+          );
+
+          // Create notification for failed upload
+          await createFailedUploadNotification(
+            platformPost,
+            "Container processing timeout (15 minutes exceeded)"
           );
 
           // Sync post status after marking as FAILED
@@ -432,6 +430,9 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
             "Failed to decrypt access token",
           );
 
+          // Create notification for failed upload
+          await createFailedUploadNotification(platformPost, "Failed to decrypt access token");
+
           // Sync post status after marking as FAILED
           await syncPostStatus(platformPost.postId);
 
@@ -440,7 +441,7 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
         }
 
         // Poll container status
-        // Requirement 6.9: Poll container status with container ID
+        // Poll container status with container ID
         console.log("[processPublishingPosts] Polling container status:", {
           platformPostId: platformPost.id,
           postId: platformPost.postId,
@@ -479,7 +480,7 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
           continue;
         }
 
-        // Requirement 6.10: Check status_code
+        // Check status_code
         if (statusResult.statusCode === "IN_PROGRESS") {
           // Still processing - continue polling on next cron run
           console.log("[processPublishingPosts] Container still processing:", {
@@ -493,7 +494,7 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
         }
 
         if (statusResult.statusCode === "ERROR") {
-          // Requirement 6.21: If status_code is "ERROR", mark as FAILED with error message
+          //If status_code is "ERROR", mark as FAILED with error message
           const errorMessage =
             statusResult.errorMessage || "Container processing failed on Instagram";
 
@@ -507,6 +508,9 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
 
           await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
 
+          // Create notification for failed upload
+          await createFailedUploadNotification(platformPost, errorMessage);
+
           // Sync post status after marking as FAILED
           await syncPostStatus(platformPost.postId);
 
@@ -515,7 +519,7 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
         }
 
         if (statusResult.statusCode === "FINISHED") {
-          // Container is ready to publish - proceed to publish step (Task 6.4)
+          // Container is ready to publish - proceed to publish step
           console.log("[processPublishingPosts] Container ready to publish:", {
             platformPostId: platformPost.id,
             postId: platformPost.postId,
@@ -546,6 +550,12 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
               "FAILED",
               undefined,
               publishResult.error || "Failed to publish container",
+            );
+
+            // Create notification for failed upload
+            await createFailedUploadNotification(
+              platformPost,
+              publishResult.error || "Failed to publish container"
             );
 
             // Sync post status after marking as FAILED
@@ -579,6 +589,28 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
               updatedAt: new Date(),
             },
           });
+
+          // Create notification for successful upload
+          try {
+            const notificationContent = formatUploadSuccess(
+              platformPost.Post.title,
+              "Instagram"
+            );
+            await createNotification(
+              platformPost.Post.userId,
+              notificationContent.title,
+              notificationContent.description,
+              "UPLOAD_SUCCESS"
+            );
+          } catch (notificationError) {
+            console.error("[processPublishingPosts] Failed to create success notification:", {
+              platformPostId: platformPost.id,
+              postId: platformPost.postId,
+              userId: platformPost.Post.userId,
+              error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+              timestamp: new Date().toISOString(),
+            });
+          }
 
           // Sync post status after successful publish
           await syncPostStatus(platformPost.postId);
@@ -614,20 +646,17 @@ async function processPublishingPosts(): Promise<{ errors: string[] }> {
 /**
  * Validate video requirements for Instagram
  *
- * This function validates that the video meets Instagram's requirements:
- * - Format: MP4 or MOV (inferred from file extension)
+ * This function validates that the video meets Instagram's : MP4 or MOV (inferred from file extension)
  * - Size: <1GB (not validated here, assumed to be enforced at upload time)
  * - Duration: 3-90 seconds (not validated here, assumed to be enforced at upload time)
  * - Resolution: ≥540px (not validated here, assumed to be enforced at upload time)
  * - Caption: ≤2200 characters
  *
- * Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7
- *
  * @param post - The Post record
  * @returns Validation result with error message if invalid
  */
 function validateVideoRequirements(post: Post): { valid: boolean; error?: string } {
-  // Requirement 11.1: Validate video format is MP4 or MOV
+  // Validate video format is MP4 or MOV
   const videoFileKey = post.videoFileKey.toLowerCase();
   if (!videoFileKey.endsWith(".mp4") && !videoFileKey.endsWith(".mov")) {
     return {
@@ -636,7 +665,7 @@ function validateVideoRequirements(post: Post): { valid: boolean; error?: string
     };
   }
 
-  // Requirement 11.5: Validate caption length does not exceed 2,200 characters
+  // Validate caption length does not exceed 2,200 characters
   const caption = post.description ? `${post.title}\n\n${post.description}` : post.title;
   if (caption.length > 2200) {
     return {
@@ -646,7 +675,7 @@ function validateVideoRequirements(post: Post): { valid: boolean; error?: string
   }
 
   // Note: File size, duration, and resolution validation are handled by Instagram API
-  // Requirements 11.2, 11.3, 11.4 are enforced by Instagram during container creation
+  // They are enforced by Instagram during container creation
 
   return { valid: true };
 }
@@ -660,8 +689,6 @@ function validateVideoRequirements(post: Post): { valid: boolean; error?: string
  * - HTTP 429: Log error and skip (retry on next cron run)
  * - HTTP 5xx: Increment retryCount, mark as FAILED if > 3
  * - Network timeout: Increment retryCount, mark as FAILED if > 3
- *
- * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9
  *
  * @param post - The Post record
  * @param platformPost - The PlatformPost record
@@ -679,9 +706,9 @@ async function handleUploadError(
   const errorCode = uploadResult.errorCode || "unknown_error";
   const errorMessage = uploadResult.error || "Instagram API error";
 
-  // Requirement 7.1: HTTP 400 - Mark as FAILED with error message (no retry)
+  // HTTP 400 - Mark as FAILED with error message (no retry)
   if (errorCode === "bad_request") {
-    // Requirement 12.7: Log all errors with full context
+    // Log all errors with full context
     console.error("[handleUploadError] Bad request error (HTTP 400):", {
       userId: post.userId,
       postId: post.id,
@@ -692,15 +719,18 @@ async function handleUploadError(
 
     await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
 
+    // Create notification for failed upload
+    await createFailedUploadNotificationById(post.id, errorMessage);
+
     return {
       success: false,
       error: errorMessage,
     };
   }
 
-  // Requirement 7.2: HTTP 401/403 - Attempt token refresh and retry once
+  // HTTP 401/403 - Attempt token refresh and retry once
   if (errorCode === "auth_error") {
-    // Requirement 12.2: Log token refresh attempts
+    // Log token refresh attempts
     console.warn(
       "[handleUploadError] Authentication error (HTTP 401/403), attempting token refresh:",
       {
@@ -714,7 +744,7 @@ async function handleUploadError(
     const refreshResult = await refreshInstagramToken(socialAccount);
 
     if (!refreshResult.success) {
-      // Requirement 12.2: Log token refresh results
+      // Log token refresh results
       console.error("[handleUploadError] Token refresh failed after auth error:", {
         userId: post.userId,
         postId: post.id,
@@ -729,6 +759,12 @@ async function handleUploadError(
         "Token refresh failed after authentication error",
       );
 
+      // Create notification for failed upload
+      await createFailedUploadNotificationById(
+        post.id,
+        "Token refresh failed after authentication error"
+      );
+
       return {
         success: false,
         error: "Token refresh failed after authentication error",
@@ -736,7 +772,7 @@ async function handleUploadError(
     }
 
     // Retry upload once with refreshed token
-    // Requirement 12.2: Log token refresh results
+    // Log token refresh results
     console.log("[handleUploadError] Retrying upload with refreshed token:", {
       userId: post.userId,
       postId: post.id,
@@ -749,7 +785,7 @@ async function handleUploadError(
     return await uploadToInstagram(post, platformPost, refreshResult.updatedAccount!);
   }
 
-  // Requirement 7.3: HTTP 429 - Log error and skip until next cron run
+  // HTTP 429 - Log error and skip until next cron run
   if (errorCode === "rate_limit") {
     console.warn("[handleUploadError] Instagram API rate limit exceeded (HTTP 429):", {
       userId: post.userId,
@@ -767,12 +803,12 @@ async function handleUploadError(
     };
   }
 
-  // Requirements 7.4, 7.5, 7.6, 7.7: HTTP 5xx or timeout - Increment retryCount
+  // HTTP 5xx or timeout - Increment retryCount
   if (errorCode === "server_error" || errorCode === "timeout" || errorCode === "network_error") {
     const currentRetryCount = platformPost.retryCount;
     const newRetryCount = currentRetryCount + 1;
 
-    // Requirement 12.7: Log all errors with full context
+    // Log all errors with full context
     console.warn("[handleUploadError] Retryable error occurred:", {
       userId: post.userId,
       postId: post.id,
@@ -793,9 +829,9 @@ async function handleUploadError(
       },
     });
 
-    // Requirement 7.5: If retryCount > 3, mark as FAILED
+    // If retryCount > 3, mark as FAILED
     if (newRetryCount > 3) {
-      // Requirement 12.7: Log all errors with full context
+      // Log all errors with full context
       console.error("[handleUploadError] Max retries exceeded:", {
         userId: post.userId,
         postId: post.id,
@@ -811,13 +847,19 @@ async function handleUploadError(
         `${errorMessage} (max retries exceeded)`,
       );
 
+      // Create notification for failed upload
+      await createFailedUploadNotificationById(
+        post.id,
+        `${errorMessage} (max retries exceeded)`
+      );
+
       return {
         success: false,
         error: `${errorMessage} (max retries exceeded)`,
       };
     }
 
-    // Requirement 7.6: Leave status as PENDING for retry on next cron run
+    // Leave status as PENDING for retry on next cron run
     console.log("[handleUploadError] Will retry on next cron run:", {
       userId: post.userId,
       postId: post.id,
@@ -834,7 +876,7 @@ async function handleUploadError(
   }
 
   // Unknown error - treat as non-retryable
-  // Requirement 12.7: Log all errors with full context
+  // Log all errors with full context
   console.error("[handleUploadError] Unknown error type:", {
     userId: post.userId,
     postId: post.id,
@@ -845,6 +887,9 @@ async function handleUploadError(
   });
 
   await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, errorMessage);
+
+  // Create notification for failed upload
+  await createFailedUploadNotificationById(post.id, errorMessage);
 
   return {
     success: false,
@@ -858,8 +903,6 @@ async function handleUploadError(
  * This function refreshes an expired or expiring Instagram long-lived token.
  * Instagram tokens must be at least 24 hours old to be refreshed.
  *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
- *
  * @param socialAccount - The SocialAccount record with the token to refresh
  * @returns TokenRefreshResult indicating success or failure
  */
@@ -870,7 +913,6 @@ async function refreshInstagramToken(
 
   try {
     // Decrypt the current access token
-    // Requirement 3.3
     let currentAccessToken: string;
     try {
       currentAccessToken = decryptToken(socialAccount.accessToken);
@@ -887,12 +929,12 @@ async function refreshInstagramToken(
       };
     }
 
-    // Requirement 3.2: Refresh token via GET to Instagram API
+    // Refresh token via GET to Instagram API
     const refreshUrl = new URL("https://graph.instagram.com/refresh_access_token");
     refreshUrl.searchParams.append("grant_type", "ig_refresh_token");
     refreshUrl.searchParams.append("access_token", currentAccessToken);
 
-    // Requirement 3.6: Set 10-second timeout for refresh request
+    // Set 10-second timeout for refresh request
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
@@ -936,7 +978,7 @@ async function refreshInstagramToken(
         timestamp: new Date().toISOString(),
       });
 
-      // Requirement 3.7: If token refresh fails, mark PlatformPost as FAILED
+      // If token refresh fails, mark PlatformPost as FAILED
       return {
         success: false,
         error: errorMessage,
@@ -963,10 +1005,10 @@ async function refreshInstagramToken(
       };
     }
 
-    // Requirement 3.4: Encrypt new access token
+    // Encrypt new access token
     const encryptedAccessToken = encryptToken(newAccessToken);
 
-    // Requirement 3.5: Calculate new expiration timestamp
+    // Calculate new expiration timestamp
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
     // Update the database with new token and expiration
@@ -986,7 +1028,7 @@ async function refreshInstagramToken(
       timestamp: new Date().toISOString(),
     });
 
-    // Requirement 3.8: If token refresh succeeds, use new token for upload attempt
+    // If token refresh succeeds, use new token for upload attempt
     return {
       success: true,
       updatedAccount,
@@ -1021,10 +1063,6 @@ async function refreshInstagramToken(
  * 8. Update database with container ID and status
  * 9. Increment rate limit counter
  *
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 6.1, 6.2, 6.3,
- *               6.4, 6.5, 6.6, 6.17, 6.18, 6.19, 11.1, 11.2, 11.3, 11.4,
- *               11.5, 11.6, 11.7, 12.5, 12.6
- *
  * @param post - The Post record
  * @param platformPost - The PlatformPost record
  * @param socialAccount - The SocialAccount record with encrypted tokens
@@ -1036,15 +1074,14 @@ async function uploadToInstagram(
   socialAccount: SocialAccount,
 ): Promise<UploadResult> {
   // Step 1: Check if access token is expired and refresh if needed
-  // Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
   let currentSocialAccount = socialAccount;
 
-  // Requirement 3.1: Check if access token is expired (expiresAt < now + 24 hours)
+  // Check if access token is expired (expiresAt < now + 24 hours)
   const now = new Date();
   const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
   if (socialAccount.expiresAt && new Date(socialAccount.expiresAt) < twentyFourHoursFromNow) {
-    // Requirement 12.2: Log token refresh attempts
+    // Log token refresh attempts
     console.log("[uploadToInstagram] Token expired or expiring soon, refreshing:", {
       userId: post.userId,
       postId: post.id,
@@ -1057,8 +1094,10 @@ async function uploadToInstagram(
 
     if (!refreshResult.success) {
       // Token refresh failed - mark as FAILED
-      // Requirement: 3.7
       await updatePlatformPostStatus(platformPost.id, "FAILED", undefined, "Token refresh failed");
+
+      // Create notification for failed upload
+      await createFailedUploadNotificationById(post.id, "Token refresh failed");
 
       return {
         success: false,
@@ -1069,7 +1108,7 @@ async function uploadToInstagram(
     // Use the updated account with new tokens
     currentSocialAccount = refreshResult.updatedAccount!;
 
-    // Requirement 12.2: Log token refresh results
+    // Log token refresh results
     console.log("[uploadToInstagram] Token refreshed successfully:", {
       userId: post.userId,
       postId: post.id,
@@ -1079,13 +1118,12 @@ async function uploadToInstagram(
   }
 
   // Step 2: Decrypt access token
-  // Requirement: 6.1
-  // Requirement 12.8: NEVER log plaintext access tokens
+  // NEVER log plaintext access tokens
   let accessToken: string;
   try {
     accessToken = decryptToken(currentSocialAccount.accessToken);
   } catch (error) {
-    // Requirement 12.7: Log all errors with full context
+    // Log all errors with full context
     console.error("[uploadToInstagram] Failed to decrypt access token:", {
       userId: post.userId,
       postId: post.id,
@@ -1107,11 +1145,10 @@ async function uploadToInstagram(
   }
 
   // Step 3: Check upload rate limit
-  // Requirement: 6.3
   const rateLimitResult = await checkUploadRateLimit(post.userId);
 
   if (!rateLimitResult.allowed) {
-    // Requirement 6.18: If rate limit exceeded, skip post and log warning
+    // If rate limit exceeded, skip post and log warning
     console.warn("[uploadToInstagram] Upload rate limit exceeded:", {
       userId: post.userId,
       postId: post.id,
@@ -1128,7 +1165,6 @@ async function uploadToInstagram(
   }
 
   // Step 4: Generate signed Backblaze URL
-  // Requirement: 6.4
   let signedUrl: string;
   try {
     const urlResult = await buildSignedVideoUrl(post.videoFileKey);
@@ -1142,7 +1178,7 @@ async function uploadToInstagram(
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    // Requirement 6.19: If signed URL generation fails, mark PlatformPost as FAILED
+    // If signed URL generation fails, mark PlatformPost as FAILED
     console.error("[uploadToInstagram] Failed to generate signed URL:", {
       userId: post.userId,
       postId: post.id,
@@ -1165,10 +1201,9 @@ async function uploadToInstagram(
   }
 
   // Step 5: Validate video requirements
-  // Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7
   const validation = validateVideoRequirements(post);
   if (!validation.valid) {
-    // Requirement 11.6: If validation fails, mark PlatformPost as FAILED with descriptive error message
+    // If validation fails, mark PlatformPost as FAILED with descriptive error message
     console.error("[uploadToInstagram] Video validation failed:", {
       userId: post.userId,
       postId: post.id,
@@ -1185,12 +1220,10 @@ async function uploadToInstagram(
   }
 
   // Step 6: Format caption
-  // Requirement: 6.6
   const caption = post.description ? `${post.title}\n\n${post.description}` : post.title;
 
   // Step 7: Call Instagram API to create media container
-  // Requirements: 6.5, 6.6, 12.5
-  // Requirement 12.5: Log each Instagram API request with userId, postId, endpoint
+  // Log each Instagram API request with userId, postId, endpoint
   console.log("[uploadToInstagram] Calling Instagram API:", {
     userId: post.userId,
     postId: post.id,
@@ -1208,7 +1241,7 @@ async function uploadToInstagram(
     shareToFeed: true,
   });
 
-  // Requirement 12.6: Log each Instagram API response with status code and container ID
+  // Log each Instagram API response with status code and container ID
   console.log("[uploadToInstagram] Instagram API response:", {
     userId: post.userId,
     postId: post.id,
@@ -1221,16 +1254,13 @@ async function uploadToInstagram(
 
   if (!uploadResult.success) {
     // Handle Instagram API errors with appropriate retry logic
-    // Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9
     return await handleUploadError(post, platformPost, socialAccount, uploadResult);
   }
 
   // Step 8: Update database with container ID and status
-  // Requirements: 6.7, 6.8
   await updatePlatformPostStatus(platformPost.id, "PUBLISHING", uploadResult.containerId);
 
   // Step 9: Increment upload rate limit counter
-  // Requirement: 6.17
   await incrementUploadCounter(post.userId);
 
   return {
@@ -1240,12 +1270,97 @@ async function uploadToInstagram(
 }
 
 /**
+ * Create a notification for a failed upload
+ *
+ * This helper function creates a notification when an upload fails.
+ * It wraps the notification creation in a try-catch to ensure that
+ * notification failures don't break the upload processing flow.
+ *
+ * @param platformPost - The PlatformPost record with Post data
+ * @param errorMessage - The error message describing the failure
+ */
+async function createFailedUploadNotification(
+  platformPost: PlatformPost & { Post: Post },
+  errorMessage: string
+): Promise<void> {
+  try {
+    const notificationContent = formatUploadFailed(
+      platformPost.Post.title,
+      "Instagram",
+      errorMessage
+    );
+    await createNotification(
+      platformPost.Post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_FAILED"
+    );
+  } catch (notificationError) {
+    console.error("[createFailedUploadNotification] Failed to create failure notification:", {
+      platformPostId: platformPost.id,
+      postId: platformPost.postId,
+      userId: platformPost.Post.userId,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Create a notification for a failed upload by querying the Post
+ *
+ * This helper function queries the Post to get the title and userId,
+ * then creates a notification when an upload fails.
+ * It wraps the notification creation in a try-catch to ensure that
+ * notification failures don't break the upload processing flow.
+ *
+ * @param postId - The ID of the Post
+ * @param errorMessage - The error message describing the failure
+ */
+async function createFailedUploadNotificationById(
+  postId: string,
+  errorMessage: string
+): Promise<void> {
+  try {
+    const prisma = getPrisma();
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { title: true, userId: true },
+    });
+
+    if (!post) {
+      console.error("[createFailedUploadNotificationById] Post not found:", {
+        postId,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const notificationContent = formatUploadFailed(
+      post.title,
+      "Instagram",
+      errorMessage
+    );
+    await createNotification(
+      post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_FAILED"
+    );
+  } catch (notificationError) {
+    console.error("[createFailedUploadNotificationById] Failed to create failure notification:", {
+      postId,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
  * Update the status of a PlatformPost record
  *
  * This function updates a PlatformPost record with new status, publishId (container ID),
  * and error message. It uses a database transaction to ensure atomic updates.
- *
- * Requirements: 6.7, 6.8, 7.7
  *
  * @param platformPostId - The ID of the PlatformPost to update
  * @param status - The new status to set
@@ -1322,8 +1437,6 @@ async function updatePlatformPostStatus(
  * - Any PUBLISHING → PUBLISHING
  * - Mix of PUBLISHED and FAILED → PARTIALLY_PUBLISHED
  *
- * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6
- *
  * @param postId - The ID of the Post to sync
  * @returns Promise<void>
  */
@@ -1332,7 +1445,6 @@ async function syncPostStatus(postId: string): Promise<void> {
 
   try {
     // Use transaction for atomic update
-    // Requirement 8.6
     await prisma.$transaction(async (tx) => {
       // Get all PlatformPost records for this Post
       const platformPosts = await tx.platformPost.findMany({
@@ -1363,19 +1475,19 @@ async function syncPostStatus(postId: string): Promise<void> {
       // Determine overall Post status
       let newPostStatus: PostStatus;
 
-      // Requirement 8.4: Any PUBLISHING → PUBLISHING
+      // Any PUBLISHING → PUBLISHING
       if (statusCounts.PUBLISHING > 0) {
         newPostStatus = "PUBLISHING";
       }
-      // Requirement 8.1: All PUBLISHED → PUBLISHED
+      // All PUBLISHED → PUBLISHED
       else if (statusCounts.PUBLISHED === platformPosts.length) {
         newPostStatus = "PUBLISHED";
       }
-      // Requirement 8.3: All FAILED → FAILED
+      // All FAILED → FAILED
       else if (statusCounts.FAILED === platformPosts.length) {
         newPostStatus = "FAILED";
       }
-      // Requirement 8.2: Mix of PUBLISHED and FAILED → PARTIALLY_PUBLISHED
+      // Mix of PUBLISHED and FAILED → PARTIALLY_PUBLISHED
       else if (statusCounts.PUBLISHED > 0 && statusCounts.FAILED > 0) {
         newPostStatus = "PARTIALLY_PUBLISHED";
       }
@@ -1384,7 +1496,7 @@ async function syncPostStatus(postId: string): Promise<void> {
         newPostStatus = "SCHEDULED";
       }
 
-      // Requirement 8.5: Update Post.updatedAt timestamp when status changes
+      // Update Post.updatedAt timestamp when status changes
       await tx.post.update({
         where: { id: postId },
         data: {

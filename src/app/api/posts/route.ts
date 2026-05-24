@@ -3,10 +3,10 @@ import { z } from "zod";
 import crypto from "crypto";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
+import { createNotification, formatPostScheduled } from "@/lib/notifications";
 
 /**
  * Convert a datetime string from a specific timezone to UTC
- * Requirements: 10.1, 10.2, 10.3
  * @param dateTimeStr - ISO datetime string representing local time in the user's timezone (e.g., "2025-01-15T15:00:00")
  * @param timezone - IANA timezone identifier (e.g., 'America/New_York')
  * @returns Date object in UTC
@@ -79,7 +79,6 @@ function convertToUTC(dateTimeStr: string, timezone: string): Date {
 
 /**
  * Zod schema for post creation request validation
- * Requirements: 2.7, 2.8, 2.9, 2.10, 2.11, 2.12
  */
 const createPostSchema = z.object({
   title: z
@@ -111,11 +110,10 @@ const createPostSchema = z.object({
 /**
  * POST /api/posts
  * Creates a new post with platform associations
- * Requirements: 2.1, 2.6
  */
 export async function POST(request: NextRequest) {
   // Authenticate user
-  // Requirement: 2.6 - Handle authentication errors (401)
+  //  - Handle authentication errors (401)
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[POST /api/posts] Authentication failed:", {
@@ -130,7 +128,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request data
-    // Requirements: 2.7-2.12 - Handle validation errors (400)
+    // Handle validation errors (400)
     const validationResult = createPostSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -159,7 +157,7 @@ export async function POST(request: NextRequest) {
     const prisma = getPrisma();
 
     // Retrieve user's timezone from preferences
-    // Requirements: 10.1, 10.2, 10.3 - Apply user timezone to scheduled posts
+    // Apply user timezone to scheduled posts
     const userPreferences = await prisma.userPreferences.findUnique({
       where: { userId: user.id },
       select: { timezone: true },
@@ -171,7 +169,6 @@ export async function POST(request: NextRequest) {
     const scheduledForUTC = convertToUTC(scheduledFor, userTimezone);
 
     // Query SocialAccount records for user and selected platforms
-    // Requirements: 2.2, 2.3
     const socialAccounts = await prisma.socialAccount.findMany({
       where: {
         userId: user.id,
@@ -181,7 +178,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Validate all platforms have corresponding SocialAccount records
-    // Requirement: 4.7, 5.8, 11.1, 11.4 - Handle missing SocialAccount errors (400)
+    //  Handle missing SocialAccount errors (400)
     const foundPlatforms = socialAccounts.map((sa) => sa.platform);
     const missingPlatforms = selectedPlatforms.filter(
       (platform) => !foundPlatforms.includes(platform),
@@ -197,7 +194,7 @@ export async function POST(request: NextRequest) {
         foundPlatforms,
       });
 
-      // Provide specific error message for single platform (Requirement 11.4)
+      // Provide specific error message for single platform 
       const errorMessage =
         missingPlatforms.length === 1
           ? `${missingPlatforms[0]} account not connected`
@@ -207,7 +204,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Use Prisma transaction to ensure atomicity
-    // Requirements: 2.3, 2.4, 2.5, 4.8
     const result = await prisma.$transaction(async (tx) => {
       // Create Post record with status SCHEDULED
       const post = await tx.post.create({
@@ -258,13 +254,40 @@ export async function POST(request: NextRequest) {
       scheduledForUTC: scheduledForUTC.toISOString(),
     });
 
+    // Create notification for post scheduling
+    try {
+      const { title: notificationTitle, description: notificationDescription } = formatPostScheduled(
+        title,
+        scheduledForUTC
+      );
+      await createNotification(
+        user.id,
+        notificationTitle,
+        notificationDescription,
+        "POST_SCHEDULED"
+      );
+      console.log("[POST /api/posts] Notification created successfully:", {
+        userId: user.id,
+        postId: result.post.id,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (notificationError) {
+      // Log error but don't fail post creation
+      console.error("[POST /api/posts] Failed to create notification:", {
+        userId: user.id,
+        postId: result.post.id,
+        timestamp: new Date().toISOString(),
+        error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      });
+    }
+
     // Return 201 with postId on success
     return NextResponse.json(
       { success: true, postId: result.post.id, message: "Post created successfully" },
       { status: 201 },
     );
   } catch (error) {
-    // Requirement: 2.13, 5.6 - Handle database errors (500) and log with user context
+    // Handle database errors (500) and log with user context
     console.error("[POST /api/posts] Database error:", {
       userId: user.id,
       timestamp: new Date().toISOString(),

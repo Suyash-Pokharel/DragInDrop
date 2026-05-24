@@ -3,8 +3,6 @@
  *
  * This module provides utility functions for formatting video metadata according to
  * YouTube's requirements and constraints.
- *
- * Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7
  */
 
 /**
@@ -67,7 +65,6 @@ export interface FormattedMetadata {
  * @param maxLength - Maximum allowed length
  * @returns Truncated text
  *
- * Requirements: 16.1, 16.2
  */
 function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
@@ -85,7 +82,6 @@ function truncateText(text: string, maxLength: number): string {
  * @param text - The text to escape
  * @returns Escaped text
  *
- * Requirement: 16.3
  */
 function escapeSpecialCharacters(text: string): string {
   return text
@@ -105,7 +101,6 @@ function escapeSpecialCharacters(text: string): string {
  * @param title - The video title
  * @returns Formatted title
  *
- * Requirements: 16.1, 16.3
  *
  * @example
  * formatTitle('My Amazing Video Title That Is Way Too Long And Needs To Be Truncated Because It Exceeds The Maximum Length Allowed By YouTube API')
@@ -128,8 +123,6 @@ export function formatTitle(title: string): string {
  *
  * @param description - The video description (optional)
  * @returns Formatted description
- *
- * Requirements: 16.2, 16.3
  *
  * @example
  * formatDescription('Check out this amazing video! <script>alert("xss")</script>')
@@ -157,8 +150,6 @@ export function formatDescription(description?: string): string {
  * @param params - Metadata parameters
  * @returns Formatted metadata object ready for YouTube API
  *
- * Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7
- *
  * @example
  * const metadata = formatVideoMetadata({
  *   title: 'My Video Title',
@@ -178,8 +169,8 @@ export function formatVideoMetadata(params: FormatMetadataParams): FormattedMeta
   const {
     title,
     description,
-    categoryId = YouTubeCategory.PEOPLE_BLOGS, // Requirement: 16.4, 16.6
-    privacyStatus = "PUBLIC", // Requirement: 16.5, 16.7
+    categoryId = YouTubeCategory.PEOPLE_BLOGS, 
+    privacyStatus = "PUBLIC", 
   } = params;
 
   return {

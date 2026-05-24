@@ -3,15 +3,16 @@ import { ensureAuth } from "@/lib/ensureAuth";
 import { encryptToken } from "@/lib/encryption";
 import { sanitizeThreadsProfile } from "@/lib/sanitize";
 import { getPrisma } from "@/lib/prisma";
+import { createNotification, formatSocialAccountConnected } from "@/lib/notifications";
+import { NotificationType } from "@prisma/client";
 
 /**
  * GET /api/oauth/threads/callback
  * Handles OAuth 2.0 callback from Threads for account authorization
- * Requirements: 2.1, 2.2, 2.3, 2.4, 2.18, 2.19, 2.20
  */
 export async function GET(request: NextRequest) {
   // Authenticate user
-  // Requirement: 2.1 - Return HTTP 401 if user not authenticated
+  //  Return HTTP 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[GET /api/oauth/threads/callback] Authentication failed:", {
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Extract query parameters
-    // Requirement: 2.1 - Extract authorization code and state parameter from query string
+    //  Extract authorization code and state parameter from query string
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const state = searchParams.get("state");
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     const errorDescription = searchParams.get("error_description");
 
     // Handle user authorization denial
-    // Requirement: 2.20 - Handle user denial: if error=access_denied, redirect to settings
+    //  Handle user denial: if error=access_denied, redirect to settings
     if (error) {
       console.log("[GET /api/oauth/threads/callback] Authorization denied:", {
         userId: user.id,
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate authorization code is present
-    // Requirement: 2.4 - Return HTTP 400 if code missing
+    //  Return HTTP 400 if code missing
     if (!code) {
       console.error("[GET /api/oauth/threads/callback] Missing authorization code:", {
         userId: user.id,
@@ -59,12 +60,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Retrieve CSRF token from cookie
-    // Requirement: 2.2 - Retrieve CSRF token from httpOnly cookie
+    //  Retrieve CSRF token from httpOnly cookie
     const storedState = request.cookies.get("threads_oauth_state")?.value;
 
     // Validate state parameter matches stored CSRF token
-    // Requirement: 2.3 - Validate state parameter matches stored CSRF token
-    // Requirement: 2.4 - Return HTTP 400 if state invalid
+    //  Validate state parameter matches stored CSRF token
+    //  Return HTTP 400 if state invalid
     if (!state || !storedState || state !== storedState) {
       console.error("[GET /api/oauth/threads/callback] Invalid state parameter:", {
         userId: user.id,
@@ -88,8 +89,7 @@ export async function GET(request: NextRequest) {
       codeLength: code.length,
     });
 
-    // Task 4.2 - Implement short-lived token exchange (Step 1)
-    // Requirement: 2.5, 2.6, 2.7, 2.8, 2.9, 2.10
+    // Implement short-lived token exchange (Step 1)
     const threadsAppId = process.env.THREADS_APP_ID;
     const threadsAppSecret = process.env.THREADS_APP_SECRET;
     const redirectUri = `${appUrl}/api/oauth/threads/callback`;
@@ -103,17 +103,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange authorization code for short-lived token
-    // Requirement: 2.5 - POST to https://graph.threads.net/oauth/access_token
+    //  POST to https://graph.threads.net/oauth/access_token
     let shortLivedToken: string;
     let threadsUserId: string;
 
     try {
       // Create abort controller for 10-second timeout
-      // Requirement: 2.7 - Set 10-second timeout for request
+      //  Set 10-second timeout for request
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      // Requirement: 2.6 - Include client_id, client_secret, grant_type, redirect_uri, code
+      //  Include client_id, client_secret, grant_type, redirect_uri, code
       const tokenExchangeUrl = "https://graph.threads.net/oauth/access_token";
       const tokenExchangeBody = new URLSearchParams({
         client_id: threadsAppId,
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
 
       clearTimeout(timeoutId);
 
-      // Requirement: 2.10 - Return HTTP 500 on exchange failure
+      //  Return HTTP 500 on exchange failure
       if (!tokenResponse.ok) {
         console.error("[GET /api/oauth/threads/callback] Short-lived token exchange failed:", {
           userId: user.id,
@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Requirement: 2.8 - Extract access_token and user_id from response
+      //  Extract access_token and user_id from response
       const tokenData = await tokenResponse.json();
       shortLivedToken = tokenData.access_token;
       threadsUserId = tokenData.user_id;
@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      // Requirement: 2.9 - Return HTTP 504 on timeout
+      //  Return HTTP 504 on timeout
       if (error instanceof Error && error.name === "AbortError") {
         console.error("[GET /api/oauth/threads/callback] Short-lived token exchange timeout:", {
           userId: user.id,
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Request timeout" }, { status: 504 });
       }
 
-      // Requirement: 2.10 - Return HTTP 500 on exchange failure
+      //  Return HTTP 500 on exchange failure
       console.error("[GET /api/oauth/threads/callback] Short-lived token exchange error:", {
         userId: user.id,
         timestamp: new Date().toISOString(),
@@ -191,19 +191,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to exchange authorization code" }, { status: 500 });
     }
 
-    // Task 4.3 - Implement long-lived token exchange (Step 2)
-    // Requirement: 2.11, 2.12, 2.13, 2.14, 2.15, 2.16
+    //  Implement long-lived token exchange (Step 2)
     let longLivedToken: string;
     let tokenExpiresIn: number;
 
     try {
       // Create abort controller for 10-second timeout
-      // Requirement: 2.12 - Set 10-second timeout for request
+      //  Set 10-second timeout for request
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       // Exchange short-lived token for long-lived token
-      // Requirement: 2.11 - GET to https://graph.threads.net/access_token?grant_type=th_exchange_token
+      //  GET to https://graph.threads.net/access_token?grant_type=th_exchange_token
       const longLivedTokenUrl = new URL("https://graph.threads.net/access_token");
       longLivedTokenUrl.searchParams.append("grant_type", "th_exchange_token");
       longLivedTokenUrl.searchParams.append("client_secret", threadsAppSecret);
@@ -216,7 +215,7 @@ export async function GET(request: NextRequest) {
 
       clearTimeout(timeoutId);
 
-      // Requirement: 2.14 - Return HTTP 500 on exchange failure
+      //  Return HTTP 500 on exchange failure
       if (!longLivedTokenResponse.ok) {
         console.error("[GET /api/oauth/threads/callback] Long-lived token exchange failed:", {
           userId: user.id,
@@ -230,7 +229,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Requirement: 2.15 - Extract access_token, token_type, expires_in from response
+      //  Extract access_token, token_type, expires_in from response
       // NOTE: Threads does NOT provide refresh_token
       const longLivedTokenData = await longLivedTokenResponse.json();
       longLivedToken = longLivedTokenData.access_token;
@@ -252,7 +251,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Requirement: 2.16 - Calculate expiration timestamp as current_time + expires_in seconds (~60 days)
+      //  Calculate expiration timestamp as current_time + expires_in seconds (~60 days)
       const expiresAt = new Date(Date.now() + tokenExpiresIn * 1000);
 
       console.log("[GET /api/oauth/threads/callback] Long-lived token obtained successfully:", {
@@ -263,16 +262,15 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       });
 
-      // Task 4.4 - Fetch profile and save account
-      // Requirement: 2.17, 2.18, 2.19, 2.20, 2.21, 2.22, 2.23, 2.24, 2.25, 2.26, 2.27
+      //  Fetch profile and save account
 
       // Fetch Threads user profile
-      // Requirement: 2.17 - GET to https://graph.threads.net/v1.0/me?fields=id,username,name
+      //  GET to https://graph.threads.net/v1.0/me?fields=id,username,name
       let profileData: { id: string; username: string; name: string };
 
       try {
         // Create abort controller for 10-second timeout
-        // Requirement: 2.18 - Set 10-second timeout for profile fetch
+        //  Set 10-second timeout for profile fetch
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -287,7 +285,7 @@ export async function GET(request: NextRequest) {
 
         clearTimeout(timeoutId);
 
-        // Requirement: 2.19 - Return HTTP 500 on profile fetch failure
+        //  Return HTTP 500 on profile fetch failure
         if (!profileResponse.ok) {
           console.error("[GET /api/oauth/threads/callback] Profile fetch failed:", {
             userId: user.id,
@@ -298,10 +296,10 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: "Failed to fetch Threads profile" }, { status: 500 });
         }
 
-        // Requirement: 2.20 - Extract id, username, name from profile response
+        //  Extract id, username, name from profile response
         const rawProfile = await profileResponse.json();
 
-        // Requirement: 2.21 - Sanitize all user inputs from Threads API response
+        //  Sanitize all user inputs from Threads API response
         profileData = sanitizeThreadsProfile(rawProfile);
 
         if (!profileData.id || !profileData.username) {
@@ -330,7 +328,7 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: "Request timeout" }, { status: 504 });
         }
 
-        // Requirement: 2.19 - Return HTTP 500 on profile fetch failure
+        //  Return HTTP 500 on profile fetch failure
         console.error("[GET /api/oauth/threads/callback] Profile fetch error:", {
           userId: user.id,
           timestamp: new Date().toISOString(),
@@ -341,7 +339,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Encrypt the long-lived access token
-      // Requirement: 2.22 - Encrypt long-lived access_token using AES-256-GCM
+      //  Encrypt long-lived access_token using AES-256-GCM
       let encryptedAccessToken: string;
       try {
         encryptedAccessToken = encryptToken(longLivedToken);
@@ -359,7 +357,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Upsert SocialAccount record
-      // Requirement: 2.23 - Upsert SocialAccount record with platform="Threads", refreshToken=NULL
+      //  Upsert SocialAccount record with platform="Threads", refreshToken=NULL
       try {
         const prisma = getPrisma();
 
@@ -398,8 +396,36 @@ export async function GET(request: NextRequest) {
           platformUsername: profileData.username,
           timestamp: new Date().toISOString(),
         });
+
+        // Create notification for successful account connection
+        try {
+          const { title, description } = formatSocialAccountConnected(
+            "Threads",
+            profileData.username
+          );
+          await createNotification(
+            user.id,
+            title,
+            description,
+            NotificationType.SOCIAL_ACCOUNT_CONNECTED
+          );
+          console.log("[GET /api/oauth/threads/callback] Notification created successfully:", {
+            userId: user.id,
+            platform: "Threads",
+            timestamp: new Date().toISOString(),
+          });
+        } catch (error) {
+          // Log error but don't fail OAuth flow
+          console.error("[GET /api/oauth/threads/callback] Notification creation failed:", {
+            userId: user.id,
+            platform: "Threads",
+            timestamp: new Date().toISOString(),
+            error: error instanceof Error ? error.message : "Unknown error",
+            stack: error instanceof Error ? error.stack : undefined,
+          });
+        }
       } catch (error) {
-        // Requirement: 2.24 - Return HTTP 500 on database save failure
+        //  Return HTTP 500 on database save failure
         console.error("[GET /api/oauth/threads/callback] Database save failed:", {
           userId: user.id,
           timestamp: new Date().toISOString(),
@@ -410,14 +436,14 @@ export async function GET(request: NextRequest) {
       }
 
       // Clear CSRF token cookie after successful validation
-      // Requirement: 2.25 - Clear CSRF token cookie after successful validation
+      //  Clear CSRF token cookie after successful validation
       const response = NextResponse.redirect(
         `${appUrl}/settings/social-accounts?success=${encodeURIComponent("Threads account connected successfully")}`,
       );
       response.cookies.delete("threads_oauth_state");
 
-      // Requirement: 2.26 - Redirect to settings page with success message
-      // Requirement: 2.29 - Log successful connection with userId, platform, and timestamp
+      //  Redirect to settings page with success message
+      //  Log successful connection with userId, platform, and timestamp
       console.log("[GET /api/oauth/threads/callback] OAuth callback completed successfully:", {
         userId: user.id,
         platform: "Threads",
@@ -428,7 +454,7 @@ export async function GET(request: NextRequest) {
 
       return response;
     } catch (error) {
-      // Requirement: 2.13 - Return HTTP 504 on timeout
+      //  Return HTTP 504 on timeout
       if (error instanceof Error && error.name === "AbortError") {
         console.error("[GET /api/oauth/threads/callback] Long-lived token exchange timeout:", {
           userId: user.id,
@@ -437,7 +463,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Request timeout" }, { status: 504 });
       }
 
-      // Requirement: 2.14 - Return HTTP 500 on exchange failure
+      //  Return HTTP 500 on exchange failure
       console.error("[GET /api/oauth/threads/callback] Long-lived token exchange error:", {
         userId: user.id,
         timestamp: new Date().toISOString(),

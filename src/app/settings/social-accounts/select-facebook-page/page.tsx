@@ -4,7 +4,6 @@ import SelectFacebookPageClient from "./SelectFacebookPageClient";
 /**
  * Server Component for Facebook Page Selection
  * This page is displayed after OAuth callback with available Pages data
- * Requirements: 5.1, 5.2, 5.3, 5.9
  */
 export default function SelectFacebookPage() {
   return (

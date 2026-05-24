@@ -10,8 +10,6 @@
  *
  * NOTE: This endpoint is simpler than Instagram/Threads because Facebook videos
  * publish immediately (no container polling needed).
- *
- * Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9, 13.10
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -30,6 +28,11 @@ import {
   publishVideo,
   refreshFacebookToken,
 } from "@/lib/facebook/api";
+import {
+  createNotification,
+  formatUploadSuccess,
+  formatUploadFailed,
+} from "@/lib/notifications";
 
 /**
  * Summary of processing results
@@ -58,8 +61,6 @@ enum ErrorType {
  *
  * This function maps error codes from the Facebook API client to error types
  * that determine the retry strategy.
- *
- * Requirements: 15.1, 15.2, 15.4, 15.5, 15.6
  *
  * @param {string | undefined} errorCode - Error code from Facebook API response
  * @returns {ErrorType} The classified error type
@@ -109,8 +110,6 @@ function classifyError(errorCode: string | undefined): ErrorType {
  * - Mark as FAILED when retryCount exceeds 3
  * - Leave as PENDING when retryCount is 3 or less
  *
- * Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8, 15.9, 15.10
- *
  * @param {ErrorType} errorType - The classified error type
  * @param {string} errorMessage - The error message
  * @param {string} errorCode - The error code from API
@@ -131,7 +130,7 @@ async function handleUploadError(
 
   switch (errorType) {
     case ErrorType.CLIENT_ERROR:
-      // Requirement 15.1: Mark as FAILED for HTTP 400 errors (do NOT retry)
+      // Mark as FAILED for HTTP 400 errors (do NOT retry)
       console.error(
         "[process-scheduled-facebook-pages-uploads] Client error - marking as FAILED:",
         {
@@ -152,10 +151,13 @@ async function handleUploadError(
           updatedAt: new Date(),
         },
       });
+
+      // Create notification for failed upload
+      await createFailedUploadNotification(post, platformPost, `Client error: ${errorMessage}`);
       break;
 
     case ErrorType.AUTH_ERROR:
-      // Requirement 15.2: Attempt token refresh and retry once for HTTP 401/403 errors
+      // Attempt token refresh and retry once for HTTP 401/403 errors
       console.warn(
         "[process-scheduled-facebook-pages-uploads] Auth error - attempting token refresh:",
         {
@@ -173,7 +175,7 @@ async function handleUploadError(
         const refreshResult = await refreshFacebookToken({ accessToken: decryptedToken });
 
         if (!refreshResult.success) {
-          // Requirement 15.3: Mark as FAILED if token refresh fails after auth error
+          // Mark as FAILED if token refresh fails after auth error
           console.error(
             "[process-scheduled-facebook-pages-uploads] Token refresh failed - marking as FAILED:",
             {
@@ -193,6 +195,9 @@ async function handleUploadError(
               updatedAt: new Date(),
             },
           });
+
+          // Create notification for failed upload
+          await createFailedUploadNotification(post, platformPost, `Auth error - token refresh failed: ${refreshResult.error}`);
         } else {
           // Token refresh succeeded - leave as PENDING for retry on next cron run
           console.log(
@@ -227,11 +232,14 @@ async function handleUploadError(
             updatedAt: new Date(),
           },
         });
+
+        // Create notification for failed upload
+        await createFailedUploadNotification(post, platformPost, `Auth error - token refresh failed: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
       break;
 
     case ErrorType.RATE_LIMIT:
-      // Requirement 15.4: Log error and skip post until next cron run for HTTP 429 errors
+      // Log error and skip post until next cron run for HTTP 429 errors
       console.warn(
         "[process-scheduled-facebook-pages-uploads] Rate limit exceeded - skipping until next cron run:",
         {
@@ -250,10 +258,10 @@ async function handleUploadError(
     case ErrorType.TIMEOUT:
     case ErrorType.NETWORK_ERROR:
     case ErrorType.UNKNOWN_ERROR:
-      // Requirements 15.5, 15.6: Increment retryCount for HTTP 5xx errors and network timeout errors
+      // Increment retryCount for HTTP 5xx errors and network timeout errors
       const newRetryCount = platformPost.retryCount + 1;
 
-      // Requirement 15.10: Log retry attempts with current retry count
+      // Log retry attempts with current retry count
       console.warn(
         "[process-scheduled-facebook-pages-uploads] Retryable error - incrementing retry count:",
         {
@@ -270,7 +278,7 @@ async function handleUploadError(
       );
 
       if (newRetryCount > 3) {
-        // Requirement 15.7: Mark as FAILED when retryCount exceeds 3
+        // Mark as FAILED when retryCount exceeds 3
         console.error(
           "[process-scheduled-facebook-pages-uploads] Max retries exceeded - marking as FAILED:",
           {
@@ -292,8 +300,11 @@ async function handleUploadError(
             updatedAt: new Date(),
           },
         });
+
+        // Create notification for failed upload
+        await createFailedUploadNotification(post, platformPost, `Failed after ${newRetryCount} retries: ${errorMessage}`);
       } else {
-        // Requirement 15.8: Leave status as PENDING when retryCount is 3 or less (retry on next cron run)
+        //  Leave status as PENDING when retryCount is 3 or less (retry on next cron run)
         console.log(
           "[process-scheduled-facebook-pages-uploads] Incrementing retry count - will retry on next cron run:",
           {
@@ -326,7 +337,7 @@ async function handleUploadError(
  * @param {NextRequest} request - The incoming request
  * @returns {boolean} True if the secret is valid, false otherwise
  *
- * Requirements: 13.1, 13.2
+ *  13.2
  *
  * @example
  * if (!verifyCronSecret(request)) {
@@ -373,8 +384,7 @@ function verifyCronSecret(request: NextRequest): boolean {
  *
  * @returns {{ start: Date; end: Date }} The start and end of the scheduling window
  *
- * Requirements: 13.3
- *
+ * 
  * @example
  * const window = getSchedulingWindow();
  * // If current time is 10:30:00
@@ -404,8 +414,6 @@ function getSchedulingWindow(): { start: Date; end: Date } {
  * 7. Publish video
  * 8. Update database with result
  *
- * Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 14.10, 14.11, 14.12, 14.13, 14.14, 14.15, 14.16, 14.17, 14.18
- *
  * @param {Post} post - The post to upload
  * @param {PlatformPost} platformPost - The platform post record
  * @param {SocialAccount} socialAccount - The social account with access token
@@ -419,7 +427,7 @@ async function executeUpload(
   const prisma = getPrisma();
 
   try {
-    // Requirement 14.18: Log each upload attempt with userId, postId, and result
+    // Log each upload attempt with userId, postId, and result
     console.log("[process-scheduled-facebook-pages-uploads] Starting upload:", {
       userId: post.userId,
       postId: post.id,
@@ -428,12 +436,12 @@ async function executeUpload(
       timestamp: new Date().toISOString(),
     });
 
-    // Requirement 14.1: Decrypt Page access_token using AES-256-GCM
+    // Decrypt Page access_token using AES-256-GCM
     let accessToken: string;
     try {
       accessToken = decryptToken(socialAccount.accessToken);
     } catch (error) {
-      // Requirement 14.2: Mark PlatformPost as FAILED if decryption fails
+      // Mark PlatformPost as FAILED if decryption fails
       const errorMessage = "Failed to decrypt access token";
       console.error("[process-scheduled-facebook-pages-uploads] Token decryption failed:", {
         userId: post.userId,
@@ -451,11 +459,14 @@ async function executeUpload(
         },
       });
 
+      // Create notification for failed upload
+      await createFailedUploadNotification(post, platformPost, errorMessage);
+
       return { success: false, error: errorMessage };
     }
 
-    // Requirement 14.3: Check if access_token has expiration date (expiresAt not NULL)
-    // Requirement 14.4: Refresh token if expires within 7 days (defensive programming for edge cases)
+    // Check if access_token has expiration date (expiresAt not NULL)
+    // Refresh token if expires within 7 days (defensive programming for edge cases)
     if (socialAccount.expiresAt !== null) {
       const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -469,7 +480,7 @@ async function executeUpload(
 
         const refreshResult = await refreshFacebookToken({ accessToken });
 
-        // Requirement 14.5: Mark PlatformPost as FAILED if token refresh fails
+        // Mark PlatformPost as FAILED if token refresh fails
         if (!refreshResult.success) {
           const errorMessage = `Token refresh failed: ${refreshResult.error}`;
           console.error("[process-scheduled-facebook-pages-uploads] Token refresh failed:", {
@@ -488,6 +499,9 @@ async function executeUpload(
             },
           });
 
+          // Create notification for failed upload
+          await createFailedUploadNotification(post, platformPost, errorMessage);
+
           return { success: false, error: errorMessage };
         }
 
@@ -504,13 +518,13 @@ async function executeUpload(
       }
     }
 
-    // Requirement 14.6: Generate signed Backblaze URL with 1-hour expiration
+    // Generate signed Backblaze URL with 1-hour expiration
     let signedUrl: string;
     try {
       const urlResult = await buildSignedVideoUrl(post.videoFileKey);
       signedUrl = urlResult.signedUrl;
     } catch (error) {
-      // Requirement 14.7: Mark PlatformPost as FAILED if URL generation fails
+      // Mark PlatformPost as FAILED if URL generation fails
       const errorMessage = `Failed to generate signed URL: ${error instanceof Error ? error.message : "Unknown error"}`;
       console.error("[process-scheduled-facebook-pages-uploads] URL generation failed:", {
         userId: post.userId,
@@ -528,11 +542,14 @@ async function executeUpload(
         },
       });
 
+      // Create notification for failed upload
+      await createFailedUploadNotification(post, platformPost, errorMessage);
+
       return { success: false, error: errorMessage };
     }
 
-    // Requirement 14.8, 14.9: Validate video format is MP4 or MOV
-    // Requirement 14.10, 14.11: Validate caption length does not exceed 2,200 characters
+    // Validate video format is MP4 or MOV
+    // Validate caption length does not exceed 2,200 characters
     const validationResult = validateVideoForFacebook({
       videoFileKey: post.videoFileKey,
       videoFileSize: post.videoFileSize,
@@ -558,10 +575,13 @@ async function executeUpload(
         },
       });
 
+      // Create notification for failed upload
+      await createFailedUploadNotification(post, platformPost, validationResult.error!);
+
       return { success: false, error: validationResult.error };
     }
 
-    // Requirement 14.12: Format caption as title concatenated with description using double newline separator
+    // Format caption as title concatenated with description using double newline separator
     const caption = formatCaptionForFacebook(post.title, post.description || undefined);
 
     // Get Facebook App ID from environment
@@ -583,6 +603,9 @@ async function executeUpload(
         },
       });
 
+      // Create notification for failed upload
+      await createFailedUploadNotification(post, platformPost, errorMessage);
+
       return { success: false, error: errorMessage };
     }
 
@@ -599,7 +622,7 @@ async function executeUpload(
     if (!sessionResult.success) {
       const errorMessage = `Upload session initialization failed: ${sessionResult.error}`;
 
-      // Requirement 15.9: Log all errors with userId, postId, error message, and stack trace
+      // Log all errors with userId, postId, error message, and stack trace
       console.error("[process-scheduled-facebook-pages-uploads] Session initialization failed:", {
         userId: post.userId,
         postId: post.id,
@@ -649,6 +672,9 @@ async function executeUpload(
         },
       });
 
+      // Create notification for failed upload
+      await createFailedUploadNotification(post, platformPost, errorMessage);
+
       return { success: false, error: errorMessage };
     }
 
@@ -664,7 +690,7 @@ async function executeUpload(
     if (!uploadResult.success) {
       const errorMessage = `Video upload failed: ${uploadResult.error}`;
 
-      // Requirement 15.9: Log all errors with userId, postId, error message, and stack trace
+      //  Log all errors with userId, postId, error message, and stack trace
       console.error("[process-scheduled-facebook-pages-uploads] Video upload failed:", {
         userId: post.userId,
         postId: post.id,
@@ -698,7 +724,7 @@ async function executeUpload(
     if (!publishResult.success) {
       const errorMessage = `Video publish failed: ${publishResult.error}`;
 
-      // Requirement 15.9: Log all errors with userId, postId, error message, and stack trace
+      // Log all errors with userId, postId, error message, and stack trace
       console.error("[process-scheduled-facebook-pages-uploads] Video publish failed:", {
         userId: post.userId,
         postId: post.id,
@@ -721,7 +747,7 @@ async function executeUpload(
       return { success: false, error: errorMessage };
     }
 
-    // Requirement 14.16, 17.2: Update PlatformPost status to PUBLISHED with video id and platform URL
+    //  Update PlatformPost status to PUBLISHED with video id and platform URL
     // Mark as PUBLISHED immediately after successful publish API response
     await prisma.platformPost.update({
       where: { id: platformPost.id },
@@ -735,7 +761,7 @@ async function executeUpload(
       },
     });
 
-    // Requirement 14.18, 17.7: Log upload success with userId, postId, video ID, and timestamp
+    // Log upload success with userId, postId, video ID, and timestamp
     console.log("[process-scheduled-facebook-pages-uploads] Upload successful:", {
       userId: post.userId,
       postId: post.id,
@@ -744,7 +770,26 @@ async function executeUpload(
       timestamp: new Date().toISOString(),
     });
 
-    // Requirement 17.1, 17.3: Log that Facebook processes videos asynchronously
+    // Create notification for successful upload
+    try {
+      const notificationContent = formatUploadSuccess(post.title, "Facebook Pages");
+      await createNotification(
+        post.userId,
+        notificationContent.title,
+        notificationContent.description,
+        "UPLOAD_SUCCESS"
+      );
+    } catch (notificationError) {
+      console.error("[process-scheduled-facebook-pages-uploads] Failed to create success notification:", {
+        userId: post.userId,
+        postId: post.id,
+        platformPostId: platformPost.id,
+        error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Log that Facebook processes videos asynchronously
     // Video processing may still be in progress on Facebook's servers
     console.log("[process-scheduled-facebook-pages-uploads] Video published successfully:", {
       userId: post.userId,
@@ -757,8 +802,8 @@ async function executeUpload(
 
     return { success: true };
   } catch (error) {
-    // Requirement 14.17: Handle errors according to error handling requirements
-    // Requirement 15.9: Log all errors with userId, postId, error message, and stack trace
+    //  Handle errors according to error handlingrequirements
+    // Log all errors with userId, postId, error message, and stack trace
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("[process-scheduled-facebook-pages-uploads] Unexpected error during upload:", {
       userId: post.userId,
@@ -789,20 +834,18 @@ async function executeUpload(
  * 1. Verifies the CRON_SECRET for authentication
  * 2. Queries for scheduled posts within the scheduling window
  * 3. Filters for posts with PENDING PlatformPost records for active FacebookPage accounts
- * 4. Processes uploads (to be implemented in Task 13.2)
+ * 4. Processes uploads
  * 5. Returns a summary of operations
  *
  * NOTE: Unlike Instagram/Threads, Facebook videos publish immediately without
  * container polling, so this endpoint is simpler.
  *
- * Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9, 13.10
  *
  * @param {NextRequest} request - The incoming request from cron-job.org
  * @returns {Promise<NextResponse>} Response with processing summary or error
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify CRON_SECRET
-  // Requirements: 13.1, 13.2
   if (!verifyCronSecret(request)) {
     console.error("[process-scheduled-facebook-pages-uploads] Unauthorized request:", {
       timestamp: new Date().toISOString(),
@@ -811,7 +854,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Requirement 13.10: Log cron execution start with timestamp
+  //  Log cron execution start with timestamp
   console.log("[process-scheduled-facebook-pages-uploads] Cron execution started:", {
     timestamp: new Date().toISOString(),
   });
@@ -821,7 +864,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const window = getSchedulingWindow();
 
     // Query for scheduled posts within the scheduling window
-    // Requirements: 13.4, 13.5, 13.6
     const scheduledPosts = await prisma.post.findMany({
       where: {
         status: "SCHEDULED",
@@ -843,7 +885,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     // Filter to only include posts with FacebookPage PlatformPost records that have active FacebookPage accounts
-    // Requirements: 13.5, 13.6
+    //  13.6
     const postsToProcess = scheduledPosts
       .map((post) => ({
         ...post,
@@ -853,7 +895,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }))
       .filter((post) => post.PlatformPost.length > 0);
 
-    // Requirement 13.7: Log count of posts found in scheduling window with timestamp
+    // Log count of posts found in scheduling window with timestamp
     console.log("[process-scheduled-facebook-pages-uploads] Found posts to process:", {
       timestamp: new Date().toISOString(),
       windowStart: window.start.toISOString(),
@@ -882,19 +924,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Requirement 13.10: Log cron execution end with timestamp
+    // Log cron execution end with timestamp
     console.log("[process-scheduled-facebook-pages-uploads] Cron execution completed:", {
       timestamp: new Date().toISOString(),
       result,
     });
 
-    // Requirement 13.9: Return HTTP 200 with summary of processed, uploaded, and error counts
+    //  Return HTTP 200 with summary of processed, uploaded, and error counts
     return NextResponse.json({
       success: true,
       ...result,
     });
   } catch (error) {
-    // Requirement 13.8: Return HTTP 500 on database query failures
+    // Return HTTP 500 on database query failures
     console.error("[process-scheduled-facebook-pages-uploads] Database error:", {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",
@@ -908,5 +950,40 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * Create a failure notification for a failed upload
+ *
+ * This helper function creates a notification when a Facebook Pages upload fails.
+ * It queries the Post to get the title and uses the formatUploadFailed helper.
+ * Errors are logged but do not propagate to avoid breaking the upload processing flow.
+ *
+ * @param post - The Post record
+ * @param platformPost - The PlatformPost record
+ * @param errorMessage - The error message describing the failure
+ */
+async function createFailedUploadNotification(
+  post: Post,
+  platformPost: PlatformPost,
+  errorMessage: string
+): Promise<void> {
+  try {
+    const notificationContent = formatUploadFailed(post.title, "Facebook Pages", errorMessage);
+    await createNotification(
+      post.userId,
+      notificationContent.title,
+      notificationContent.description,
+      "UPLOAD_FAILED"
+    );
+  } catch (notificationError) {
+    console.error("[createFailedUploadNotification] Failed to create failure notification:", {
+      userId: post.userId,
+      postId: post.id,
+      platformPostId: platformPost.id,
+      error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
   }
 }

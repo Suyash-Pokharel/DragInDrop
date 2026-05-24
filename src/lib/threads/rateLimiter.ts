@@ -5,7 +5,6 @@
  * distributed serverless instances. Rate limits are enforced per user per 24-hour
  * rolling window. Falls back to in-memory rate limiting if Redis is unavailable.
  *
- * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
  */
 
 import { getRedis } from "../redis";
@@ -28,7 +27,7 @@ export interface RateLimitResult {
 
 /**
  * Default rate limit configuration
- * Requirement: 9.2
+ * 
  */
 const DEFAULT_CONFIG: RateLimitConfig = {
   maxUploadsPerDay: 250,
@@ -130,13 +129,12 @@ function incrementInMemoryCounter(userId: string, timestamp: number, expireAt: n
  * Check if a user has exceeded the upload rate limit
  *
  * This function checks if the user has remaining upload quota for the current 24-hour window.
- * Rate limit: 250 uploads per user per 24 hours (Requirement 9.2)
- * Falls back to in-memory rate limiting if Redis is unavailable (Requirement 9.6)
+ * Rate limit: 250 uploads per user per 24 hours (
+ * Falls back to in-memory rate limiting if Redis is unavailable (
  *
  * @param {string} userId - The user ID to check
  * @returns {Promise<RateLimitResult>} Rate limit check result
  *
- * Requirements: 9.1, 9.2, 9.3, 9.4, 9.6, 9.7
  *
  * Redis Key Format: threads:upload:{userId}:{timestamp}
  * Expiration: 24 hours from creation
@@ -159,7 +157,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
     const redis = getRedis();
 
     // Get all keys for this user within the 24-hour window
-    // Requirement: 9.3 - Use Redis key format threads:upload:{userId}:{timestamp}
+    //  Use Redis key format threads:upload:{userId}:{timestamp}
     const pattern = `threads:upload:${userId}:*`;
     const keys = await redis.keys(pattern);
 
@@ -180,7 +178,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
     }
 
     // Log when approaching rate limit (80% threshold)
-    // Requirement: 9.7
+    // 
     if (count >= limit * 0.8 && count < limit) {
       console.warn(
         `[Threads rateLimiter] User ${userId} approaching Threads upload rate limit: ${count}/${limit}`,
@@ -188,7 +186,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
     }
 
     // Check if limit exceeded
-    // Requirement: 9.4
+    // 
     if (count >= limit) {
       return {
         allowed: false,
@@ -204,7 +202,7 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
     };
   } catch (error) {
     // Fall back to in-memory rate limiting if Redis is unavailable
-    // Requirement: 9.6
+    // 
     console.error(
       "[Threads rateLimiter] Redis error, falling back to in-memory rate limiting:",
       error,
@@ -217,13 +215,12 @@ export async function checkUploadRateLimit(userId: string): Promise<RateLimitRes
  * Increment the upload counter for a user
  *
  * This function increments the upload counter and sets expiration to 24 hours.
- * The counter uses a rolling 24-hour window (Requirement 9.5).
- * Falls back to in-memory counter if Redis is unavailable (Requirement 9.6).
+ * The counter uses a rolling 24-hour window (
+ * Falls back to in-memory counter if Redis is unavailable (
  *
  * @param {string} userId - The user ID to increment
  * @returns {Promise<void>}
  *
- * Requirements: 9.1, 9.3, 9.5, 9.6
  *
  * Redis Key Format: threads:upload:{userId}:{timestamp}
  * Expiration: 24 hours from creation
@@ -243,11 +240,11 @@ export async function incrementUploadCounter(userId: string): Promise<void> {
     await redis.incr(key);
 
     // Set expiration to 24 hours
-    // Requirement: 9.5
+    // 
     await redis.expireat(key, expireAt);
   } catch (error) {
     // Fall back to in-memory counter if Redis is unavailable
-    // Requirement: 9.6
+    // 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error(
       "[Threads rateLimiter] Redis error, falling back to in-memory counter:",

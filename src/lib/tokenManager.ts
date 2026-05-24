@@ -88,7 +88,7 @@ export async function refreshToken(
   userId?: string,
 ): Promise<TokenRefreshResult> {
   // Authorization check: Validate user owns SocialAccount
-  // Requirement: 10.12 - Validate user owns SocialAccount before token refresh
+  //  Validate user owns SocialAccount before token refresh
   if (userId && socialAccount.userId !== userId) {
     console.error("Authorization failed: User does not own SocialAccount:", {
       requestingUserId: userId,
@@ -193,7 +193,7 @@ export async function refreshToken(
       }
 
       // If rate limited, don't retry immediately
-      // Requirement: 8.6 - Handle rate limit errors
+      //  Handle rate limit errors
       if (result.isRateLimited) {
         console.error(`Token refresh rate limited by ${socialAccount.platform} API:`, {
           userId: socialAccount.userId,
@@ -284,7 +284,7 @@ async function attemptTokenRefresh(
   retryAfter?: number;
   isTimeout?: boolean;
 }> {
-  // Requirement: 8.7 - Handle network timeouts
+  //  Handle network timeouts
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
@@ -352,7 +352,7 @@ async function attemptTokenRefresh(
     clearTimeout(timeout);
   }
 
-  // Requirement: 8.6 - Handle rate limit errors from TikTok API
+  //  Handle rate limit errors from TikTok API
   if (response.status === 429) {
     const retryAfter = parseInt(response.headers.get("retry-after") || "60", 10);
     return {
@@ -416,8 +416,8 @@ async function updateSocialAccountTokens(
         encryptedRefreshToken = encryptToken(refreshToken);
       }
     } catch (encryptionError) {
-      // Requirement: 10.14 - Log encryption errors without logging plaintext tokens
-      // Requirement: 10.15 - Never log plaintext tokens
+      //  Log encryption errors without logging plaintext tokens
+      //  Never log plaintext tokens
       console.error("[updateSocialAccountTokens] Token encryption failed:", {
         userId: socialAccount.userId,
         platform: socialAccount.platform,
@@ -535,7 +535,7 @@ export async function getValidAccessToken(
   userId?: string,
 ): Promise<string | null> {
   // Authorization check: Validate user owns SocialAccount
-  // Requirement: 10.12 - Validate user owns SocialAccount before token access
+  //  Validate user owns SocialAccount before token access
   if (userId && socialAccount.userId !== userId) {
     console.error("Authorization failed: User does not own SocialAccount:", {
       requestingUserId: userId,

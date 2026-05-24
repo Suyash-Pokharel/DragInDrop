@@ -25,6 +25,8 @@ import PricingPopup from "../pricing/PricingPopup";
 import { useModal } from "../components/ModalProvider";
 import { useUser } from "../components/UserProvider";
 import { PublicUser } from "@/lib/getCurrentUser";
+import NotificationDropdown from "@/components/NotificationDropdown";
+import UnreadBadge from "@/components/UnreadBadge";
 
 interface NavbarProps {
   imageSrc?: string | StaticImageData;
@@ -32,49 +34,13 @@ interface NavbarProps {
   user?: PublicUser | null;
 }
 
-const NOTIFICATIONS = [
-  {
-    id: 1,
-    title: "New file uploaded",
-    desc: "John uploaded 'Q3_Report.pdf'",
-    time: "1 min ago",
-    unread: true,
-  },
-  {
-    id: 2,
-    title: "System Update",
-    desc: "Server maintenance scheduled",
-    time: "1 hour ago",
-    unread: true,
-  },
-  {
-    id: 3,
-    title: "Meeting Reminder",
-    desc: "Team sync at 3:00 PM",
-    time: "2 hours ago",
-    unread: false,
-  },
-  {
-    id: 4,
-    title: "Welcome!",
-    desc: "Thanks for joining DragInDrop",
-    time: "1 day ago",
-    unread: false,
-  },
-  {
-    id: 5,
-    title: "Storage Warning",
-    desc: "You used 80% of storage",
-    time: "2 days ago",
-    unread: true,
-  },
-];
-
 const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
   // Change: Add state to control modal visibility
   const [showPricingPopup, setShowPricingPopup] = useState(false);
 
   const [activeDropdown, setActiveDropdown] = useState<"notifications" | "profile" | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationDropdownKey, setNotificationDropdownKey] = useState(0);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -106,6 +72,28 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
     }
   };
 
+  // Fetch unread notification count
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await fetch("/api/notifications");
+      if (!response.ok) {
+        throw new Error("Failed to fetch notifications");
+      }
+      const data = await response.json();
+      const unread = data.notifications.filter((n: { isRead: boolean }) => !n.isRead).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error("[UserNavbar] Failed to fetch unread count:", error);
+    }
+  };
+
+  // Handle notification read event to update unread count
+  const handleNotificationRead = () => {
+    fetchUnreadCount();
+    // Force re-render of NotificationDropdown by changing key
+    setNotificationDropdownKey((prev) => prev + 1);
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
     const handleClickOutside = (event: MouseEvent) => {
@@ -120,9 +108,17 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
+    
+    // Fetch unread count on mount
+    fetchUnreadCount();
+    
+    // Poll for unread count every 30 seconds
+    const pollInterval = setInterval(fetchUnreadCount, 30000);
+    
     return () => {
       clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
+      clearInterval(pollInterval);
     };
   }, []);
 
@@ -168,62 +164,16 @@ const UserNavbar = ({ imageSrc, isAdmin = false, user }: NavbarProps) => {
             aria-label="Notifications"
           >
             <Bell strokeWidth={2} className="w-5 h-5 xl:w-7 xl:h-7 2xl:w-9 2xl:h-9" />
-            {/* Unread Badge (Using 'error' color from globals) */}
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-error border border-surface"></span>
+            <UnreadBadge count={unreadCount} />
           </button>
 
           {activeDropdown === "notifications" && (
-            <div
-              className="absolute -right-15 md:right-0 shadow-2xl rounded-[1.5rem] border border-border/50
-                top-12 xl:top-16 2xl:top-20
-                w-72 md:w-80 xl:w-96 2xl:w-md
-                animate-in fade-in zoom-in-95 duration-200 origin-top-right
-                overflow-hidden
-                /* Dropdown Styling */
-                bg-surface/90 backdrop-blur-xl"
-            >
-              <div className="px-5 py-4 border-b border-border/50 flex justify-between items-center bg-surface/50 backdrop-blur-md">
-                <span className="font-semibold text-text-main text-sm xl:text-base">
-                  Notifications
-                </span>
-                <button className="text-xs text-primary hover:text-secondary transition-colors">
-                  Mark all read
-                </button>
-              </div>
-
-              <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                {NOTIFICATIONS.map((note) => (
-                  <div
-                    key={note.id}
-                    className={`px-5 py-4 flex gap-3 transition-colors cursor-pointer border-b border-border/40 last:border-0
-                      ${
-                        note.unread
-                          ? "bg-primary/10 hover:bg-primary/20 backdrop-blur-sm"
-                          : "hover:bg-surface-highlight/70"
-                      }`}
-                  >
-                    <div className="mt-1 text-primary">
-                      {note.title.includes("Update") ? (
-                        <CheckCircle size={18} />
-                      ) : note.title.includes("Warning") ? (
-                        <AlertCircle size={18} className="text-warning" />
-                      ) : (
-                        <MessageSquare size={18} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm xl:text-base font-medium text-text-main">
-                        {note.title}
-                      </p>
-                      <p className="text-xs xl:text-sm text-text-secondary mt-0.5">{note.desc}</p>
-                      <p className="text-[10px] xl:text-xs text-text-secondary/70 mt-1">
-                        {note.time}
-                      </p>
-                    </div>
-                    {note.unread && <div className="w-2 h-2 mt-2 rounded-full bg-primary"></div>}
-                  </div>
-                ))}
-              </div>
+            <div className="absolute -right-15 md:right-0 top-12 xl:top-16 2xl:top-20">
+              <NotificationDropdown 
+                key={notificationDropdownKey}
+                isOpen={activeDropdown === "notifications"}
+                onNotificationRead={handleNotificationRead}
+              />
             </div>
           )}
         </div>

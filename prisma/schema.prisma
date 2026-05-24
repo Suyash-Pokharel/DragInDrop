@@ -122,6 +122,7 @@ model User {
   SocialAccount     SocialAccount[]
   UserPreferences   UserPreferences?
   VerificationToken VerificationToken[]
+  Notification      Notification[]
 }
 
 model UserPreferences {
@@ -146,6 +147,30 @@ model VerificationToken {
   expiresAt DateTime
   userId    String
   User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  title       String           @db.VarChar(200)
+  description String?          @db.VarChar(500)
+  type        NotificationType
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  User        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, isRead])
+}
+
+enum NotificationType {
+  SOCIAL_ACCOUNT_CONNECTED
+  SOCIAL_ACCOUNT_DISCONNECTED
+  POST_SCHEDULED
+  POST_DRAFT_SAVED
+  UPLOAD_SUCCESS
+  UPLOAD_FAILED
 }
 
 enum PlatformPostStatus {

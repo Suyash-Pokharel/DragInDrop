@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { ensureAuth } from "@/lib/ensureAuth";
 import { getPrisma } from "@/lib/prisma";
 import { perIpOAuthLimiter, perUserOAuthLimiter } from "@/lib/limiter";
+import { createNotification, formatSocialAccountDisconnected } from "@/lib/notifications";
 
 /**
  * DELETE /api/oauth/instagram/disconnect
  * Disconnects a user's Instagram account by deactivating the SocialAccount
- * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9
  */
 export async function DELETE(request: NextRequest) {
   // Rate limiting
-  // Requirement: 4.8 - Apply per-IP rate limiting (10 requests per 15 minutes)
+  //  Apply per-IP rate limiting (10 requests per 15 minutes)
   const ip =
     request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
 
@@ -30,7 +30,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   // Authenticate user
-  // Requirement: 4.2 - Return 401 if user not authenticated
+  //  Return 401 if user not authenticated
   const user = await ensureAuth();
   if (user instanceof NextResponse) {
     console.error("[DELETE /api/oauth/instagram/disconnect] Authentication failed:", {
@@ -41,7 +41,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   // Per-user rate limiting
-  // Requirement: 4.9 - Apply per-user rate limiting (5 requests per 15 minutes)
+  //  Apply per-user rate limiting (5 requests per 15 minutes)
   try {
     await perUserOAuthLimiter.consume(user.id);
   } catch {
@@ -59,8 +59,8 @@ export async function DELETE(request: NextRequest) {
 
   try {
     // Find the user's Instagram SocialAccount
-    // Requirements: 4.3, 4.4 - Query SocialAccount where userId matches and platform="Instagram"
-    // Requirement: 4.4 - Validate user owns SocialAccount before disconnection
+    //  Query SocialAccount where userId matches and platform="Instagram"
+    //  Validate user owns SocialAccount before disconnection
     console.log("[DELETE /api/oauth/instagram/disconnect] Finding SocialAccount:", {
       userId: user.id,
       platform: "Instagram",
@@ -75,7 +75,7 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-    // Requirement: 4.6 - Return 404 if no active account found
+    //  Return 404 if no active account found
     if (!socialAccount) {
       console.log("[DELETE /api/oauth/instagram/disconnect] No active account found:", {
         userId: user.id,
@@ -89,8 +89,12 @@ export async function DELETE(request: NextRequest) {
     // is marked inactive in our database, preventing further use. Users can also
     // revoke access directly in their Instagram account settings if needed.
 
+    // Retrieve platform and username before deactivation for notification
+    const platform = socialAccount.platform;
+    const username = socialAccount.platformUsername;
+
     // Deactivate the SocialAccount
-    // Requirements: 4.5, 4.7 - Set isActive to false, return 200 with success message
+    //  Set isActive to false, return 200 with success message
     console.log("[DELETE /api/oauth/instagram/disconnect] Deactivating SocialAccount:", {
       userId: user.id,
       socialAccountId: socialAccount.id,
@@ -106,20 +110,39 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-    // Requirement: 4.9 - Log disconnection with userId, platform, and timestamp
+    //  Log disconnection with userId, platform, and timestamp
     console.log("[DELETE /api/oauth/instagram/disconnect] Account disconnected successfully:", {
       userId: user.id,
       platform: "Instagram",
       timestamp: new Date().toISOString(),
     });
 
-    // Requirement: 4.7 - Return 200 with success message
+    // Create notification for social account disconnection
+    try {
+      const { title, description } = formatSocialAccountDisconnected(platform, username || "Unknown");
+      await createNotification(user.id, title, description, "SOCIAL_ACCOUNT_DISCONNECTED");
+      console.log("[DELETE /api/oauth/instagram/disconnect] Notification created successfully:", {
+        userId: user.id,
+        platform,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (notificationError) {
+      // Log error but don't fail the disconnection flow
+      console.error("[DELETE /api/oauth/instagram/disconnect] Failed to create notification:", {
+        userId: user.id,
+        platform,
+        timestamp: new Date().toISOString(),
+        error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+      });
+    }
+
+    //  Return 200 with success message
     return NextResponse.json(
       { success: true, message: "Instagram account disconnected" },
       { status: 200 },
     );
   } catch (error) {
-    // Requirement: 4.8 - Return 500 if database error occurs
+    //  Return 500 if database error occurs
     console.error("[DELETE /api/oauth/instagram/disconnect] Database error:", {
       userId: user.id,
       timestamp: new Date().toISOString(),
