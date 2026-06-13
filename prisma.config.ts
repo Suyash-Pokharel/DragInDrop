@@ -10,6 +10,6 @@ export default defineConfig({
   datasource: {
     // process.env is used instead of env() so prisma generate works
     // even when the env var isn't set (e.g. during CI install phase)
-    url: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? "",
+    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? "",
   },
 });
