@@ -14,9 +14,6 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1025.0
         version: 3.1025.0
-      '@neondatabase/serverless':
-        specifier: ^1.0.2
-        version: 1.0.2
       '@next-auth/prisma-adapter':
         specifier: ^1.0.7
         version: 1.0.7(@prisma/client@7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))(typescript@6.0.2))(next-auth@4.24.13(next@16.2.4(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
