@@ -5,7 +5,7 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
-    "build": "npx prisma generate && npx prisma db push --accept-data-loss && cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
+    "build": "prisma generate && prisma migrate deploy && cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",

@@ -15,11 +15,12 @@ export function getPrisma(): PrismaClient {
     throw new Error("DATABASE_URL must be set");
   }
 
+  // Parse the URL to adjust sslmode
+  const url = new URL(connectionString);
+  url.searchParams.set('sslmode', 'no-verify');
+
   const pool = new Pool({ 
-    connectionString,
-    ssl: {
-      rejectUnauthorized: false
-    }
+    connectionString: url.toString()
   });
   
   const adapter = new PrismaPg(pool);
